@@ -105,7 +105,7 @@ public class MapDigraph<V> implements Digraph<V> {
 			}
 		};
 	}
-	
+
 	private static <V> Object2IntMap<V> createEmptyMap() {
 		return Object2IntMaps.emptyMap();
 	}
@@ -246,17 +246,17 @@ public class MapDigraph<V> implements Digraph<V> {
 				vertexMap.remove(vertex);
 			}
 		}
-		for (V source : vertexMap.keySet()) {
-			Object2IntMap<V> edgeMap = vertexMap.get(source);
-			Iterator<V> iterator = edgeMap.keySet().iterator();
-			while (iterator.hasNext()) {
-				if (vertices.contains(iterator.next())) {
-					iterator.remove();
+		for (Map.Entry<V, Object2IntMap<V>> entry : vertexMap.entrySet()) {
+			Object2IntMap<V> edgeMap = entry.getValue();
+			for (Map.Entry<V, Integer> entry2 : edgeMap.entrySet()) {
+				if (vertices.contains(entry2.getValue())) {
+					edgeMap.remove(entry2);
 					edgeCount--;
 				}
 			}
+
 			if (edgeMap.isEmpty()) {
-				vertexMap.put(source, createEmptyMap());
+				vertexMap.put(entry.getKey(), createEmptyMap());
 			}
 		}
 	}
