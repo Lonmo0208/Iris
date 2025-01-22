@@ -71,5 +71,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Fabirc-${{ steps.ref.outputs.branch }}
+          name: Fabric-${{ steps.ref.outputs.branch }}
           path: fabric/build/libs
