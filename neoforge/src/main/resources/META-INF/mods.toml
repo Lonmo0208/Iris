@@ -5,7 +5,7 @@ license = "LGPLv3"
 [[mods]]
 modId = "iris"
 
-version = "${version}"
+version = "1.8.0+mc1.20.1"
 displayName = "Iris"
 
 logoFile="iris.png" #optional
@@ -18,10 +18,9 @@ A modern shaders mod for Minecraft intended to be compatible with existing OptiF
 
 [[mods]]
 modId = "oculus"
-version = "${version}"
-displayName = "Iris (Oculus Stub)"
+displayName = "Iris-OculusStub)"
 description = '''
-stub for oculus
+Stub for Oculus
 '''
 
 [mods."sodium:options"]
