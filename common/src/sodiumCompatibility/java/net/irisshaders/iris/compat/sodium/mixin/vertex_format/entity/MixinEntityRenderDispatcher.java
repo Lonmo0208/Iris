@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format.entity;
 
-import me.jellysquid.mods.sodium.api.math.MatrixHelper;
-import me.jellysquid.mods.sodium.api.util.ColorABGR;
-import me.jellysquid.mods.sodium.api.vertex.format.common.ModelVertex;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.irisshaders.iris.vertices.ImmediateState;

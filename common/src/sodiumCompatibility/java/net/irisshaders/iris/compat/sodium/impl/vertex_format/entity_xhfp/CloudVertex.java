@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.api.math.MatrixHelper;
-import me.jellysquid.mods.sodium.api.vertex.format.VertexFormatDescription;
-import me.jellysquid.mods.sodium.api.vertex.format.VertexFormatRegistry;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;

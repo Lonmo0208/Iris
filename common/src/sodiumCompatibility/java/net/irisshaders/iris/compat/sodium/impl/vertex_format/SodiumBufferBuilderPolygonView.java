@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.api.vertex.attributes.common.PositionAttribute;
-import me.jellysquid.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
 import net.irisshaders.iris.vertices.views.QuadView;
 
 public class SodiumBufferBuilderPolygonView implements QuadView {

@@ -2,11 +2,11 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.api.vertex.attributes.common.NormalAttribute;
-import me.jellysquid.mods.sodium.api.vertex.attributes.common.PositionAttribute;
-import me.jellysquid.mods.sodium.api.vertex.format.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.BufferBuilderExtension;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.DirectBufferBuilder;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.NormalAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.ExtendedBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.SodiumBufferBuilder;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisCommonVertexAttributes;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.SodiumBufferBuilderPolygonView;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DirectBufferBuilder.class)
+@Mixin(SodiumBufferBuilder.class)
 public abstract class MixinSodiumBufferBuilder implements BlockSensitiveBufferBuilder {
 	@Unique
 	private static final int
@@ -46,7 +46,7 @@ public abstract class MixinSodiumBufferBuilder implements BlockSensitiveBufferBu
 	private final Vector3f normal = new Vector3f();
 	@Shadow
 	@Final
-	private BufferBuilderExtension builder;
+	private ExtendedBufferBuilder builder;
 	@Shadow
 	private int attributeOffsetPosition;
 	@Shadow

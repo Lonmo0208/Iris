@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.api.vertex.serializer.VertexSerializer;
+import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;

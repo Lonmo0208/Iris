@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.api.util.NormI8;
-import me.jellysquid.mods.sodium.api.vertex.format.common.ModelVertex;
-import me.jellysquid.mods.sodium.api.vertex.serializer.VertexSerializer;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
+import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.NormalHelper;
