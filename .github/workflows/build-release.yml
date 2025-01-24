@@ -6,7 +6,7 @@ on: [ push ]
 
 jobs:
   job_1:
-    name: Fogre
+    name: Forge
     runs-on: ubuntu-latest
     steps:
       - name: Extract current branch name
