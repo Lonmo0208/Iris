@@ -8,7 +8,7 @@ modId = "iris"
 version = "1.8.0+mc1.20.1"
 displayName = "Iris"
 
-logoFile="iris.png" #optional
+logoFile="assets/iris/iris-logo.png" #optional
 
 authors="coderbot, IMS212, Justsnoopy30, FoundationGames"
 
