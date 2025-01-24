@@ -23,6 +23,13 @@ I first and foremost develop Iris to meet my own needs of a performance-oriented
 
 Canvas is another shaders mod that has already gained some traction. Its big downside for me, however, is the fact that it doesn't support the existing popular OptiFine shaderpacks that I want to use. This is because it uses a new format for shader packs that isn't compatible with the existing format, in order to achieve many of its goals for better mod integration with shaders. And while Canvas now has a few nice shaders like Lumi Lights, I still want to have the option of using existing shader packs that were designed for OptiFine. Shader packs just aren't interchangeable, just like how you cannot hand a copy of *The Last Supper* to someone who wants a copy of the *Mona Lisa*. They're both great pieces of art, but you absolutely cannot just swap one out for the other. That being said, if you're a fan of the shader packs available for Canvas, then great! Canvas and Iris are both perfectly fine ways to enjoy shaders with Minecraft.
 
+## This is Iris 1.8.0 Alpha 2 version, which includes Forge and Fabric
+But please be careful! The code is forked to the official Alpha 2 version 1.8.0
+I won't maintain it, it's just a fork I forked myself for testing
+Please do not provide any feedback to the official or to me regarding any issues encountered
+Because the official will not continue to update iris1.8.0 on mc1.20.1
+If you are a Forge player, you can use Oculus!
+
 ## Goals
 
 These are the goals of Iris. Iris hasn't fully achieved all these goals, however we are getting close.
