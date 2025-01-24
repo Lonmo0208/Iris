@@ -15,6 +15,13 @@
 - Iris supports almost all shaderpacks, but a list of unsupported shaderpacks is available [here](docs/unsupportedshaders.md).
 - A list of unfixable limitations in Iris is available [here](docs/usage/limitations.md).
 
+## This is Iris 1.8.0 Alpha 2 version, which includes Forge and Fabric
+Please note that! The source of the code is forked and the official Alpha 2 version 1.8.0. The only part I modified myself was the naming of the program package (to be compatible with some mods)
+I won't maintain it! This is just my own fork for testing~
+Please do not provide any feedback to the official if you encounter any issues!
+Because the official will not continue to update Iris for MC1.20.1!
+If you are a Forge player, you can use Oculus+embeddium
+
 ## Why did you make Iris?
 
 Iris was created to fill a void that I saw in the Minecraft customization and graphical enhancement community: the lack of an open-source shaders mod that would let me load my favorite shader packs on modern versions of the game, while retaining performance and compatibility with modpacks. OptiFine, the current dominant mod for loading shader packs, has restrictive licensing that firmly stands in the way of any sort of tinkering, and is fairly notorious for having compatibility issues with the mods that I like. It's also mutually incompatible with Sodium, the best rendering optimization mod in existence by a large margin. ShadersMod was never updated past 1.12, and it lacks support for many of the many modern popular shaderpacks. So I created Iris, to try and solve these issues, and also address many other longstanding issues with shader packs.
@@ -22,13 +29,6 @@ Iris was created to fill a void that I saw in the Minecraft customization and gr
 I first and foremost develop Iris to meet my own needs of a performance-oriented shaders mod with good compatibility and potential for tinkering. Iris when paired with Sodium delivers great performance on my machine, finally making it fully possible for me to actually play with shaders instead of just periodically switching them on to take pretty screenshots, then switching them off once I get tired of frame drops. Of course, as it turns out, I'm far from the only person who benefits from the development of Iris, which is why I've decided to release it to the public as an open-source mod.
 
 Canvas is another shaders mod that has already gained some traction. Its big downside for me, however, is the fact that it doesn't support the existing popular OptiFine shaderpacks that I want to use. This is because it uses a new format for shader packs that isn't compatible with the existing format, in order to achieve many of its goals for better mod integration with shaders. And while Canvas now has a few nice shaders like Lumi Lights, I still want to have the option of using existing shader packs that were designed for OptiFine. Shader packs just aren't interchangeable, just like how you cannot hand a copy of *The Last Supper* to someone who wants a copy of the *Mona Lisa*. They're both great pieces of art, but you absolutely cannot just swap one out for the other. That being said, if you're a fan of the shader packs available for Canvas, then great! Canvas and Iris are both perfectly fine ways to enjoy shaders with Minecraft.
-
-## This is Iris 1.8.0 Alpha 2 version, which includes Forge and Fabric
-Please note that! The code source is the Alpha 2 version forked to the official 1.8.0.
-I won't maintain it! This is just my own fork for testing~
-Please do not provide any feedback to the official if you encounter any issues!
-Because the official will not continue to update Iris for MC1.20.1!
-If you are a Forge player, you can use Oculus+embeddium
 
 ## Goals
 
