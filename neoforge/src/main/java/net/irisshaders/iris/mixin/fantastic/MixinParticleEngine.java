@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.fantastic;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.fantastic.ParticleRenderingPhase;
@@ -21,7 +22,8 @@ import java.util.function.Supplier;
 
 @Mixin(ParticleEngine.class)
 public class MixinParticleEngine implements PhasedParticleEngine {
-    private static final Set<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES = EnumSet.of(
+    // 改用 ImmutableSet 替代 EnumSet
+    private static final Set<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES = ImmutableSet.of(
         ParticleRenderType.PARTICLE_SHEET_OPAQUE,
         ParticleRenderType.PARTICLE_SHEET_LIT,
         ParticleRenderType.CUSTOM,
