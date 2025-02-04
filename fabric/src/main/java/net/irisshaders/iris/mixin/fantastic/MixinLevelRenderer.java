@@ -24,52 +24,63 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Uses the PhasedParticleManager changes to render opaque particles much earlier than other particles.
- * <p>
- * See the comments in {@link MixinParticleEngine} for more details.
- */
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
-	@Shadow
-	@Final
-	private Minecraft minecraft;
+    @Shadow
+    @Final
+    private Minecraft minecraft;
 
-	@Shadow
-	private RenderBuffers renderBuffers;
+    @Shadow
+    private RenderBuffers renderBuffers;
 
-	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$resetParticleManagerPhase(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
-	}
+    @Inject(method = "renderLevel", at = @At("HEAD"))
+    private void iris$resetParticleManagerPhase(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+        getPhasedParticleEngine().setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
+    }
 
-	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=entities"))
-	private void iris$renderOpaqueParticles(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-		minecraft.getProfiler().popPush("opaque_particles");
+    @Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=entities"))
+    private void iris$renderOpaqueParticles(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+        minecraft.getProfiler().popPush("opaque_particles");
+        ParticleRenderingSettings settings = getRenderingSettings();
 
-		ParticleRenderingSettings settings = getRenderingSettings();
+        switch (settings) {
+            case BEFORE -> renderParticles(poseStack, renderBuffers.bufferSource(), lightTexture, camera, f);
+            case MIXED -> renderParticlesWithPhase(poseStack, renderBuffers.bufferSource(), lightTexture, camera, f, ParticleRenderingPhase.OPAQUE);
+        }
+    }
 
-		if (settings == ParticleRenderingSettings.BEFORE) {
-			minecraft.particleEngine.render(poseStack, renderBuffers.bufferSource(), lightTexture, camera, f);
-		} else if (settings == ParticleRenderingSettings.MIXED) {
-			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
-			minecraft.particleEngine.render(poseStack, renderBuffers.bufferSource(), lightTexture, camera, f);
-		}
-	}
+    @Redirect(
+        method = "renderLevel",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"
+        )
+    )
+    private void iris$renderTranslucentAfterDeferred(ParticleEngine instance, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
+        ParticleRenderingSettings settings = getRenderingSettings();
 
-	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))
-	private void iris$renderTranslucentAfterDeferred(ParticleEngine instance, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
-		ParticleRenderingSettings settings = getRenderingSettings();
+        switch (settings) {
+            case AFTER -> renderParticles(poseStack, bufferSource, lightTexture, camera, f);
+            case MIXED -> renderParticlesWithPhase(poseStack, bufferSource, lightTexture, camera, f, ParticleRenderingPhase.TRANSLUCENT);
+        }
+    }
 
-		if (settings == ParticleRenderingSettings.AFTER) {
-			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
-		} else if (settings == ParticleRenderingSettings.MIXED) {
-			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
-			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
-		}
-	}
+    private ParticleRenderingSettings getRenderingSettings() {
+        return Iris.getPipelineManager().getPipeline()
+            .map(WorldRenderingPipeline::getParticleRenderingSettings)
+            .orElse(ParticleRenderingSettings.MIXED);
+    }
 
-	private ParticleRenderingSettings getRenderingSettings() {
-		return Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::getParticleRenderingSettings).orElse(ParticleRenderingSettings.MIXED);
-	}
+    private PhasedParticleEngine getPhasedParticleEngine() {
+        return (PhasedParticleEngine) minecraft.particleEngine;
+    }
+
+    private void renderParticles(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
+        minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
+    }
+
+    private void renderParticlesWithPhase(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f, ParticleRenderingPhase phase) {
+        getPhasedParticleEngine().setParticleRenderingPhase(phase);
+        renderParticles(poseStack, bufferSource, lightTexture, camera, f);
+    }
 }
