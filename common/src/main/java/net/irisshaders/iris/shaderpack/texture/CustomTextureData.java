@@ -5,7 +5,9 @@ import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 
 public abstract class CustomTextureData {
-	private CustomTextureData() {} // 私有化构造器，避免实例化
+	private CustomTextureData() {
+
+	}
 
 	public static final class PngData extends CustomTextureData {
 		private final TextureFilteringData filteringData;
@@ -28,12 +30,12 @@ public abstract class CustomTextureData {
 	public static final class LightmapMarker extends CustomTextureData {
 		@Override
 		public boolean equals(Object obj) {
-			return obj instanceof LightmapMarker; // 使用instanceof更安全
+			return obj.getClass() == this.getClass();
 		}
 
 		@Override
 		public int hashCode() {
-			return 33; // 固定哈希值，避免哈希冲突
+			return 33;
 		}
 	}
 
@@ -46,25 +48,32 @@ public abstract class CustomTextureData {
 			this.location = location;
 		}
 
+		/**
+		 * @return The namespace of the texture. The caller is responsible for checking whether this is actually
+		 * a valid namespace.
+		 */
 		public String getNamespace() {
 			return namespace;
 		}
 
+		/**
+		 * @return The path / location of the texture. The caller is responsible for checking whether this is actually
+		 * a valid path.
+		 */
 		public String getLocation() {
 			return location;
 		}
 	}
 
 	public abstract static class RawData extends CustomTextureData {
-		protected final byte[] content;
-		protected final InternalTextureFormat internalFormat;
-		protected final PixelFormat pixelFormat;
-		protected final PixelType pixelType;
-		protected final TextureFilteringData filteringData;
+		private final byte[] content;
+		private final InternalTextureFormat internalFormat;
+		private final PixelFormat pixelFormat;
+		private final PixelType pixelType;
+		private final TextureFilteringData filteringData;
 
-		protected RawData(byte[] content, TextureFilteringData filteringData,
-						  InternalTextureFormat internalFormat, PixelFormat pixelFormat,
-						  PixelType pixelType) {
+		private RawData(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
+						PixelFormat pixelFormat, PixelType pixelType) {
 			this.content = content;
 			this.filteringData = filteringData;
 			this.internalFormat = internalFormat;
@@ -96,10 +105,10 @@ public abstract class CustomTextureData {
 	public static final class RawData1D extends RawData {
 		private final int sizeX;
 
-		public RawData1D(byte[] content, TextureFilteringData filteringData,
-						 InternalTextureFormat internalFormat, PixelFormat pixelFormat,
-						 PixelType pixelType, int sizeX) {
+		public RawData1D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
+						 PixelFormat pixelFormat, PixelType pixelType, int sizeX) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+
 			this.sizeX = sizeX;
 		}
 
@@ -109,13 +118,13 @@ public abstract class CustomTextureData {
 	}
 
 	public static class RawData2D extends RawData {
-		private final int sizeX;
-		private final int sizeY;
+		int sizeX;
+		int sizeY;
 
-		public RawData2D(byte[] content, TextureFilteringData filteringData,
-						 InternalTextureFormat internalFormat, PixelFormat pixelFormat,
-						 PixelType pixelType, int sizeX, int sizeY) {
+		public RawData2D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
+						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+
 			this.sizeX = sizeX;
 			this.sizeY = sizeY;
 		}
@@ -130,14 +139,14 @@ public abstract class CustomTextureData {
 	}
 
 	public static final class RawData3D extends RawData {
-		private final int sizeX;
-		private final int sizeY;
-		private final int sizeZ;
+		int sizeX;
+		int sizeY;
+		int sizeZ;
 
-		public RawData3D(byte[] content, TextureFilteringData filteringData,
-						 InternalTextureFormat internalFormat, PixelFormat pixelFormat,
-						 PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
+		public RawData3D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
+						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+
 			this.sizeX = sizeX;
 			this.sizeY = sizeY;
 			this.sizeZ = sizeZ;
@@ -157,9 +166,7 @@ public abstract class CustomTextureData {
 	}
 
 	public static class RawDataRect extends RawData2D {
-		public RawDataRect(byte[] content, TextureFilteringData filteringData,
-						   InternalTextureFormat internalFormat, PixelFormat pixelFormat,
-						   PixelType pixelType, int sizeX, int sizeY) {
+		public RawDataRect(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType, sizeX, sizeY);
 		}
 	}

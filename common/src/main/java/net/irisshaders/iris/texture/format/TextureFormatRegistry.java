@@ -1,4 +1,3 @@
-// TextureFormatRegistry.java
 package net.irisshaders.iris.texture.format;
 
 import org.jetbrains.annotations.Nullable;

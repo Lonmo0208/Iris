@@ -41,27 +41,38 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
-		if (shouldReplaceBufferSource()) {
-			cir.setReturnValue(buffered);
+		if (begins == 0) {
+			return;
 		}
+
+		cir.setReturnValue(buffered);
 	}
 
 	@Inject(method = "crumblingBufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceCrumblingBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
-		if (shouldReplaceBufferSource()) {
-			cir.setReturnValue(buffered.getUnflushableWrapper());
+		if (begins == 0) {
+			return;
 		}
+
+		// NB: We can return the same MultiBufferSource here as long as the block entity and its breaking animation
+		// use different render layers. This seems like a sound assumption to make. This only works with our fully
+		// buffered vertex consumer provider - vanilla's bufferSource cannot be used here since it would try to return the
+		// same buffer for the block entity and its breaking animation in many cases.
+		//
+		// If anything goes wrong here, Vanilla *will* catch the "duplicate delegates" error, so
+		// this shouldn't cause silent bugs.
+
+		// Prevent vanilla from explicitly flushing the wrapper at the wrong time.
+		cir.setReturnValue(buffered.getUnflushableWrapper());
 	}
 
 	@Inject(method = "outlineBufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceOutlineBufferSource(CallbackInfoReturnable<OutlineBufferSource> provider) {
-		if (shouldReplaceBufferSource()) {
-			provider.setReturnValue(outlineBufferSource);
+		if (begins == 0) {
+			return;
 		}
-	}
 
-	private boolean shouldReplaceBufferSource() {
-		return begins != 0;
+		provider.setReturnValue(outlineBufferSource);
 	}
 
 	@Override
@@ -69,13 +80,16 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 		if (begins == 0) {
 			buffered.assertWrapStackEmpty();
 		}
-		begins++;
-		maxBegins = Math.max(maxBegins, begins);
+
+		begins += 1;
+
+		maxBegins = Math.max(begins, maxBegins);
 	}
 
 	@Override
 	public void endLevelRendering() {
-		begins--;
+		begins -= 1;
+
 		if (begins == 0) {
 			buffered.assertWrapStackEmpty();
 		}
@@ -98,24 +112,10 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Override
 	public void freeAndDeleteBuffers() {
-		freeBuffer(buffered);
-		freeFixedBuffers();
-		freeOutlineBuffer();
-	}
-
-	private void freeBuffer(MemoryTrackingBuffer buffer) {
-		buffer.freeAndDeleteBuffer();
-	}
-
-	private void freeFixedBuffers() {
-		((ChunkBufferBuilderPackAccessor) fixedBufferPack).getBuilders().values().forEach(bufferBuilder -> {
-			if (bufferBuilder instanceof MemoryTrackingBuffer) {
-				freeBuffer((MemoryTrackingBuffer) bufferBuilder);
-			}
-		});
-	}
-
-	private void freeOutlineBuffer() {
+		buffered.freeAndDeleteBuffer();
+		((ChunkBufferBuilderPackAccessor) this.fixedBufferPack).getBuilders().values().forEach(bufferBuilder -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
+		((BufferSourceAccessor) bufferSource).getFixedBuffers().forEach((renderType, bufferBuilder) -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
+		((BufferSourceAccessor) bufferSource).getFixedBuffers().clear();
 		((MemoryTrackingBuffer) ((OutlineBufferSourceAccessor) outlineBufferSource).getOutlineBufferSource()).freeAndDeleteBuffer();
 	}
 

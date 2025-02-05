@@ -1,6 +1,5 @@
 package net.irisshaders.iris.shaderpack.texture;
 
-import java.util.Map;
 import java.util.Optional;
 
 public enum TextureStage {
@@ -41,23 +40,16 @@ public enum TextureStage {
 	 */
 	COMPOSITE_AND_FINAL;
 
-	private static final Map<String, TextureStage> NAME_TO_STAGE_MAP = Map.of(
-		"setup", SETUP,
-		"begin", BEGIN,
-		"shadowcomp", SHADOWCOMP,
-		"prepare", PREPARE,
-		"gbuffers", GBUFFERS_AND_SHADOW,
-		"deferred", DEFERRED,
-		"composite", COMPOSITE_AND_FINAL
-	);
-
-	/**
-	 * Parses a string to find the corresponding TextureStage.
-	 *
-	 * @param name The name of the stage to parse.
-	 * @return An Optional containing the TextureStage if found, otherwise an empty Optional.
-	 */
 	public static Optional<TextureStage> parse(String name) {
-		return Optional.ofNullable(NAME_TO_STAGE_MAP.get(name));
+		return switch (name) {
+			case "setup" -> Optional.of(SETUP);
+			case "begin" -> Optional.of(BEGIN);
+			case "shadowcomp" -> Optional.of(SHADOWCOMP);
+			case "prepare" -> Optional.of(PREPARE);
+			case "gbuffers" -> Optional.of(GBUFFERS_AND_SHADOW);
+			case "deferred" -> Optional.of(DEFERRED);
+			case "composite" -> Optional.of(COMPOSITE_AND_FINAL);
+			default -> Optional.empty();
+		};
 	}
 }

@@ -1,4 +1,3 @@
-// IrisForgeHelpers.java
 package net.irisshaders.iris.platform;
 
 import net.irisshaders.iris.Iris;
@@ -11,7 +10,7 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.nio.file.Path;
 
-public class IrisForgeHelpers implements IrisPlatformHelpers {
+public class IrisForgeHelpers implements IrisPlatformHelpers{
 	@Override
 	public boolean isModLoaded(String modId) {
 		return LoadingModList.get().getModFileById(modId) != null;
@@ -44,7 +43,7 @@ public class IrisForgeHelpers implements IrisPlatformHelpers {
 
 	@Override
 	public KeyMapping registerKeyBinding(KeyMapping keyMapping) {
-		IrisForgeMod.registerKeyBinding(keyMapping);
+		IrisForgeMod.KEYLIST.add(keyMapping);
 		return keyMapping;
 	}
 }

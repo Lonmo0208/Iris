@@ -1,4 +1,3 @@
-// IrisForgeMod.java
 package net.irisshaders.iris.platform;
 
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -12,22 +11,19 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 
 @Mod("iris")
 public class IrisForgeMod {
-	private static final CopyOnWriteArrayList<KeyMapping> KEYLIST = new CopyOnWriteArrayList<>();
+	public static List<KeyMapping> KEYLIST = new ArrayList<>();
 
 	public IrisForgeMod() {
 		ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> {
 			return new ShaderPackScreen(screen);
 		}));
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::registerKeys);
-	}
-
-	public static void registerKeyBinding(KeyMapping keyMapping) {
-		KEYLIST.add(keyMapping);
 	}
 
 	public void registerKeys(RegisterKeyMappingsEvent event) {

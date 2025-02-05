@@ -10,16 +10,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public record LabPBRTextureFormat(String name, @Nullable String version) implements TextureFormat {
-	private static final DiscreteBlendFunction SPECULAR_BLEND = new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229);
-	private static final DiscreteBlendFunction ALPHA_BLEND = new DiscreteBlendFunction(v -> v < 65 ? 0 : 1);
-	private static final DiscreteBlendFunction DEPTH_BLEND = new DiscreteBlendFunction(v -> v < 255 ? 0 : 1);
-
 	public static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
 		LinearBlendFunction.INSTANCE,
-		SPECULAR_BLEND,
-		ALPHA_BLEND,
-		DEPTH_BLEND
+		new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229),
+		new DiscreteBlendFunction(v -> v < 65 ? 0 : 1),
+		new DiscreteBlendFunction(v -> v < 255 ? 0 : 1)
 	);
+
 
 	@Override
 	public boolean canInterpolateValues(PBRType pbrType) {
@@ -28,6 +25,21 @@ public record LabPBRTextureFormat(String name, @Nullable String version) impleme
 
 	@Override
 	public @Nullable CustomMipmapGenerator getMipmapGenerator(PBRType pbrType) {
-		return pbrType == PBRType.SPECULAR ? SPECULAR_MIPMAP_GENERATOR : null;
+		if (pbrType == PBRType.SPECULAR) {
+			return SPECULAR_MIPMAP_GENERATOR;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		LabPBRTextureFormat other = (LabPBRTextureFormat) obj;
+		return Objects.equals(name, other.name) && Objects.equals(version, other.version);
 	}
 }
