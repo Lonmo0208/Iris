@@ -18,62 +18,65 @@ import java.nio.ByteBuffer;
 
 @Mixin(value = BufferBuilder.class, priority = 1010)
 public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
-	@Shadow
-	private ByteBuffer buffer;
+    @Shadow
+    private ByteBuffer buffer;
 
-	@Shadow
-	private VertexFormat format;
+    @Shadow
+    private VertexFormat format;
 
-	@Shadow
-	private int vertices;
-	@Shadow
-	private int nextElementByte;
-	@Unique
-	private boolean dupeNextVertex;
+    @Shadow
+    private int vertices;
+    @Shadow
+    private int nextElementByte;
+    @Unique
+    private boolean shouldDuplicateNextVertex;
 
-	@Shadow
-	private void ensureVertexCapacity() {
-		throw new AssertionError("not shadowed");
-	}
+    @Shadow
+    private void ensureVertexCapacity() {
+        throw new AssertionError("not shadowed");
+    }
 
-	@Override
-	public void splitStrip() {
-		if (vertices == 0) {
-			// no strip to split, not building.
-			return;
-		}
+    @Override
+    public void splitStrip() {
+        if (vertices == 0) {
+            return;
+        }
 
-		duplicateLastVertex();
-		dupeNextVertex = true;
-	}
+        duplicateLastVertex();
+        shouldDuplicateNextVertex = true;
+    }
 
-	private void duplicateLastVertex() {
-		int i = this.format.getVertexSize();
-		MemoryIntrinsics.copyMemory(MemoryUtil.memAddress(this.buffer, this.nextElementByte - i), MemoryUtil.memAddress(this.buffer, this.nextElementByte), i);
-		this.nextElementByte += i;
-		++this.vertices;
-		this.ensureVertexCapacity();
-	}
+    private void duplicateLastVertex() {
+        int vertexSize = format.getVertexSize();
+        MemoryIntrinsics.copyMemory(
+            MemoryUtil.memAddress(buffer, nextElementByte - vertexSize),
+            MemoryUtil.memAddress(buffer, nextElementByte),
+            vertexSize
+        );
+        nextElementByte += vertexSize;
+        vertices++;
+        ensureVertexCapacity();
+    }
 
-	@Inject(method = "end", at = @At("RETURN"))
-	private void batchedentityrendering$onEnd(CallbackInfoReturnable<BufferBuilder.RenderedBuffer> cir) {
-		dupeNextVertex = false;
-	}
+    @Inject(method = "end", at = @At("RETURN"))
+    private void handleEnd(CallbackInfoReturnable<BufferBuilder.RenderedBuffer> cir) {
+        shouldDuplicateNextVertex = false;
+    }
 
-	@Inject(method = "endVertex", at = @At("RETURN"))
-	private void batchedentityrendering$onNext(CallbackInfo ci) {
-		if (dupeNextVertex) {
-			dupeNextVertex = false;
-			duplicateLastVertex();
-		}
-	}
+    @Inject(method = "endVertex", at = @At("RETURN"))
+    private void handleVertexEnd(CallbackInfo ci) {
+        if (shouldDuplicateNextVertex) {
+            shouldDuplicateNextVertex = false;
+            duplicateLastVertex();
+        }
+    }
 
-	@Dynamic
-	@Inject(method = "sodium$moveToNextVertex", at = @At("RETURN"), require = 0)
-	private void batchedentityrendering$onNextSodium(CallbackInfo ci) {
-		if (dupeNextVertex) {
-			dupeNextVertex = false;
-			duplicateLastVertex();
-		}
-	}
+    @Dynamic
+    @Inject(method = "sodium$moveToNextVertex", at = @At("RETURN"), require = 0)
+    private void handleSodiumVertexEnd(CallbackInfo ci) {
+        if (shouldDuplicateNextVertex) {
+            shouldDuplicateNextVertex = false;
+            duplicateLastVertex();
+        }
+    }
 }

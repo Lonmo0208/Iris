@@ -15,10 +15,7 @@ import java.util.function.Function;
 @Pseudo
 @Mixin(targets = "mekanism.client.render.entity.RenderFlame", remap = false)
 public abstract class MixinRenderFlame {
-    /**
-     * 通过Mixin的Shadow机制安全访问目标类字段
-     * @see <a href="https://github.com/mekanism/Mekanism/blob/1.18.x/src/main/java/mekanism/client/render/MekanismRenderType.java">Mekanism源码参考</a>
-     */
+
     @Shadow(remap = false)
     private static Function<ResourceLocation, RenderType> FLAME;
 
@@ -36,9 +33,7 @@ public abstract class MixinRenderFlame {
             : getOriginalFlame();
     }
 
-    /**
-     * 安全获取原始火焰渲染函数
-     */
+
     private static Function<ResourceLocation, RenderType> getOriginalFlame() {
         if (FLAME == null) {
             throw new IllegalStateException("Mekanism FLAME render type not initialized");

@@ -13,10 +13,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Pseudo
 @Mixin(targets = "mekanism.client.render.armor.MekaSuitArmor", remap = false)
 public abstract class MixinRenderMekasuit {
-    /**
-     * Shadow注入Mekanism原始渲染类型
-     * @see <a href="https://github.com/mekanism/Mekanism/blob/1.18.x/src/main/java/mekanism/client/render/MekanismRenderType.java">Mekanism源码参考</a>
-     */
+
     @Shadow(remap = false)
     public static RenderType MEKASUIT;
 
@@ -43,10 +40,7 @@ public abstract class MixinRenderMekasuit {
             && ImmediateState.isRenderingLevel;
     }
 
-    /**
-     * 安全获取原始MEKASUIT渲染类型
-     * @throws IllegalStateException 当Mekanism未正确加载时
-     */
+
     private static RenderType getOriginalMekasuit() {
         if (MEKASUIT == null) {
             throw new IllegalStateException("Mekasuit render type not initialized");

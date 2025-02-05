@@ -10,6 +10,6 @@ import java.util.Map;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public interface BufferSourceAccessor {
-	@Accessor
-	Map<RenderType, BufferBuilder> getFixedBuffers();
+    @Accessor
+    Map<RenderType, BufferBuilder> getFixedBuffers();
 }
