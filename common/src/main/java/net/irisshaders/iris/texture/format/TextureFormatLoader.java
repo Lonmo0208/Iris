@@ -1,4 +1,3 @@
-// TextureFormatLoader.java
 package net.irisshaders.iris.texture.format;
 
 import net.irisshaders.iris.Iris;
@@ -11,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class TextureFormatLoader {
 	public static final ResourceLocation LOCATION = new ResourceLocation("optifine/texture.properties");
@@ -22,10 +23,16 @@ public class TextureFormatLoader {
 	}
 
 	public static void reload(ResourceManager resourceManager) {
-		TextureFormat newFormat = loadFormat(resourceManager);
-		if (!Objects.equals(format, newFormat)) {
-			format = newFormat;
-			onFormatChange();
+		CompletableFuture<TextureFormat> future = CompletableFuture.supplyAsync(() -> loadFormat(resourceManager));
+		try {
+			TextureFormat newFormat = future.get();
+			if (!Objects.equals(format, newFormat)) {
+				format = newFormat;
+				onFormatChange();
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			Iris.logger.error("Failed to reload texture format", e);
+			Thread.currentThread().interrupt();
 		}
 	}
 
