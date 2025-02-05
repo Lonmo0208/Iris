@@ -11,7 +11,6 @@ public class MixinRenderType implements BlendingStateHolder {
 	@Unique
 	private TransparencyType transparencyType = TransparencyType.GENERAL_TRANSPARENT;
 
-	// Fallback
 	@Override
 	public TransparencyType getTransparencyType() {
 		return transparencyType;

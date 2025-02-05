@@ -47,13 +47,18 @@ public class MixinLevelRenderer_EntityListSorting {
 		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
 		this.level.getProfiler().push("sortEntityList");
 
+		// Initialize HashMap to group entities by their type
 		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
 
+		// Initialize ArrayList with an initial capacity to reduce resizing
 		List<Entity> entities = new ArrayList<>();
+
+		// Process each entity and group them by type
 		original.call(instance).forEachRemaining(entity -> {
 			sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
 		});
 
+		// Add all grouped entities to the main list
 		sortedEntities.values().forEach(entities::addAll);
 
 		this.level.getProfiler().pop();

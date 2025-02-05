@@ -18,40 +18,29 @@ public interface TextureFormat {
 	String version();
 
 	default List<String> getDefines() {
-		List<String> defines = new ArrayList<>();
-
-		String defineName = name().toUpperCase(Locale.ROOT).replaceAll("-", "_");
+		String defineName = name().toUpperCase(Locale.ROOT).replace('-', '_');
 		String define = "MC_TEXTURE_FORMAT_" + defineName;
+		List<String> defines = new ArrayList<>();
 		defines.add(define);
 
-		String version = version();
-		if (version != null) {
-			String defineVersion = version.replaceAll("[.-]", "_");
-			String versionDefine = define + "_" + defineVersion;
-			defines.add(versionDefine);
+		if (version() != null) {
+			String defineVersion = version().replace('.', '_');
+			defines.add(define + "_" + defineVersion);
 		}
 
 		return defines;
 	}
 
-	/**
-	 * Dictates whether textures of the given PBR type can have their color values interpolated or not.
-	 * Usually, this controls the texture minification and magification filters -
-	 * a return value of false would signify that the linear filters cannot be used.
-	 *
-	 * @param pbrType The type of PBR texture
-	 * @return If texture values can be interpolated or not
-	 */
 	boolean canInterpolateValues(PBRType pbrType);
 
 	default void setupTextureParameters(PBRType pbrType, AbstractTexture texture) {
 		if (!canInterpolateValues(pbrType)) {
-			int minFilter = IrisRenderSystem.getTexParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER);
-			// Non-mipped filters begin at 0x2600 whereas mipped filters begin at 0x2700,
-			// so this bit mask can be used to check if the filter is mipped or not
-			boolean mipmap = (minFilter & 1 << 8) == 1;
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+			final int textureId = texture.getId();
+			final int minFilter = IrisRenderSystem.getTexParameteri(textureId, GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER);
+			final boolean mipmap = (minFilter & (1 << 8)) != 0;
+
+			IrisRenderSystem.texParameteri(textureId, GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
+			IrisRenderSystem.texParameteri(textureId, GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		}
 	}
 
