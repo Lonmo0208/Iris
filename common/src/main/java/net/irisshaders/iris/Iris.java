@@ -54,13 +54,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
 public class Iris {
-	public static final String MODID = "iris";
+	private static final ExecutorService ASYNC_TEXTURE_EXECUTOR =
+		Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
+	public static ExecutorService getAsyncTextureExecutor() {
+		return ASYNC_TEXTURE_EXECUTOR;
+	}
+	public static final String MODID = "iris";
 	/**
 	 * The user-facing name of the mod. Moved into a constant to facilitate
 	 * easy branding changes (for forks). You'll still need to change this
@@ -693,7 +700,6 @@ public class Iris {
 	public static boolean loadedIncompatiblePack() {
 		return DHCompat.lastPackIncompatible();
 	}
-
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.

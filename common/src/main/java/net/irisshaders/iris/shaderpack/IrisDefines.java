@@ -5,37 +5,35 @@ import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.parsing.BiomeCategories;
 import net.irisshaders.iris.uniforms.BiomeUniforms;
-
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class IrisDefines {
-	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
-
-	private static void define(List<StringPair> defines, String key) {
-		defines.add(new StringPair(key, ""));
-	}
-
-	private static void define(List<StringPair> defines, String key, String value) {
-		defines.add(new StringPair(key, value));
-	}
-
+	private static final AtomicReference<ImmutableList<StringPair>> CACHE = new AtomicReference<>();
 	public static ImmutableList<StringPair> createIrisReplacements() {
-		ArrayList<StringPair> s = new ArrayList<>(StandardMacros.createStandardEnvironmentDefines());
-
-		BiomeUniforms.getBiomeMap().forEach((biome, id) -> define(s, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)));
-
-		BiomeCategories[] categories = BiomeCategories.values();
-		for (int i = 0; i < categories.length; i++) {
-			define(s, "CAT_" + categories[i].name().toUpperCase(Locale.ROOT), String.valueOf(i));
+		ImmutableList<StringPair> cached = CACHE.get();
+		if (cached == null) {
+			synchronized (IrisDefines.class) {
+				cached = CACHE.get();
+				if (cached == null) {
+					ArrayList<StringPair> s = new ArrayList<>(512);
+					StandardMacros.createStandardEnvironmentDefines().forEach(s::add);
+					BiomeUniforms.getBiomeMap().forEach((biome, id) ->
+						s.add(new StringPair("BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)))
+					);
+					BiomeCategories[] categories = BiomeCategories.values();
+					for (int i = 0; i < categories.length; i++) {
+						s.add(new StringPair("CAT_" + categories[i].name(), String.valueOf(i)));
+					}
+					s.add(new StringPair("PPT_NONE", "0"));
+					s.add(new StringPair("PPT_RAIN", "1"));
+					s.add(new StringPair("PPT_SNOW", "2"));
+					cached = ImmutableList.copyOf(s);
+					CACHE.set(cached);
+				}
+			}
 		}
-
-		define(s, "PPT_NONE", "0");
-		define(s, "PPT_RAIN", "1");
-		define(s, "PPT_SNOW", "2");
-
-		return ImmutableList.copyOf(s);
+		return cached;
 	}
 }

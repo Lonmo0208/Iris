@@ -4,6 +4,8 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+
 public class IrisLogging {
 	public static boolean ENABLE_SPAM = false; // IrisPlatformHelpers.getInstance().isDevelopmentEnvironment();
 
@@ -64,4 +66,5 @@ public class IrisLogging {
 	public void debug(String debug, Throwable t) {
 		this.logger.debug(debug, t);
 	}
+
 }
