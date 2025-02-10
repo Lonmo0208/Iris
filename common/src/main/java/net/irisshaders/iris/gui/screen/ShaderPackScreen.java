@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class ShaderPackScreen extends Screen implements HudHideable {
 	/**

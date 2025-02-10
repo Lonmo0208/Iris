@@ -2,7 +2,6 @@ package net.irisshaders.iris.shadows.frustum.advanced;
 
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.world.phys.AABB;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 

@@ -3,7 +3,6 @@ package net.irisshaders.iris.platform;
 import net.minecraft.client.KeyMapping;
 
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.ServiceLoader;
 
 public interface IrisPlatformHelpers {

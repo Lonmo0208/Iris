@@ -17,7 +17,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @Mixin(ParticleEngine.class)
@@ -42,8 +45,8 @@ public class MixinParticleEngine implements PhasedParticleEngine {
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShader(Ljava/util/function/Supplier;)V")
     )
     private void iris$changeParticleShader(Supplier<ShaderInstance> shaderSupplier) {
-        RenderSystem.setShader(phase == ParticleRenderingPhase.TRANSLUCENT 
-            ? ShaderAccess::getParticleTranslucentShader 
+        RenderSystem.setShader(phase == ParticleRenderingPhase.TRANSLUCENT
+            ? ShaderAccess::getParticleTranslucentShader
             : shaderSupplier);
     }
 

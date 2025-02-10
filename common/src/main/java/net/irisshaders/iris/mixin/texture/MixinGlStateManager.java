@@ -1,4 +1,5 @@
 package net.irisshaders.iris.mixin.texture;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.irisshaders.iris.texture.TextureInfoCache;
 import net.irisshaders.iris.texture.TextureTracker;
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import java.nio.IntBuffer;
 
 @Mixin(GlStateManager.class)

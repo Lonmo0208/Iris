@@ -2,13 +2,11 @@ package net.irisshaders.iris.platform;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.minecraft.client.KeyMapping;
 
 import java.nio.file.Path;
-import java.text.ParseException;
 
 public class IrisFabricHelpers implements IrisPlatformHelpers {
 	@Override

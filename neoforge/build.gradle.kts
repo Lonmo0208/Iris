@@ -1,5 +1,3 @@
-import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier
-
 plugins {
     id("idea")
     id("maven-publish")

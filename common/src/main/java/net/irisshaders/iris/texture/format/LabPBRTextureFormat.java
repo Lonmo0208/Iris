@@ -7,8 +7,6 @@ import net.irisshaders.iris.texture.mipmap.LinearBlendFunction;
 import net.irisshaders.iris.texture.pbr.PBRType;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
 public record LabPBRTextureFormat(String name, @Nullable String version) implements TextureFormat {
 	private static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
 		LinearBlendFunction.INSTANCE,

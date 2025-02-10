@@ -2,7 +2,6 @@ package net.irisshaders.iris.texture.format;
 
 import net.irisshaders.iris.Iris;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 

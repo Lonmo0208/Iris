@@ -1,7 +1,6 @@
 package net.irisshaders.iris.gui.element.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.minecraft.client.Minecraft;

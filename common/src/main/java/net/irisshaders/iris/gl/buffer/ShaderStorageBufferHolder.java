@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL43C;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ShaderStorageBufferHolder {
 	private int cachedWidth;

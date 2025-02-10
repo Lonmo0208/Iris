@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin.forge;
 
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
@@ -46,7 +45,7 @@ public class MixinItemBlockRenderTypes {
 
         final Block block = state.getBlock();
         final BlockRenderType renderType = blockTypeMap.get(block);
-        
+
         if (renderType != null) {
             cir.setReturnValue(RENDER_TYPE_CACHE.get(renderType));
         }

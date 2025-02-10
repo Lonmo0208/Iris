@@ -1,19 +1,14 @@
 package net.irisshaders.iris.platform;
 
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiFunction;
 
 @Mod("iris")
 public class IrisForgeMod {

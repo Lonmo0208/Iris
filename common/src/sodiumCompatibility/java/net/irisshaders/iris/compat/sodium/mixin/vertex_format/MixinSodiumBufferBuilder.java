@@ -2,11 +2,11 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.ExtendedBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.SodiumBufferBuilder;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.NormalAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.ExtendedBufferBuilder;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.SodiumBufferBuilder;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisCommonVertexAttributes;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.SodiumBufferBuilderPolygonView;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;

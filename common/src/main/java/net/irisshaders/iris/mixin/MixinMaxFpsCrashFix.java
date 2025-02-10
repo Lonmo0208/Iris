@@ -3,9 +3,6 @@ package net.irisshaders.iris.mixin;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
 
 /**
  * A workaround for when OptiFine has set the maxFps to zero in options.txt

@@ -2,11 +2,8 @@ package net.irisshaders.iris.mixin;
 
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.quickplay.QuickPlay;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
