@@ -340,8 +340,8 @@ public class ShaderPack {
 	private CustomTextureData readTexture(Path root, TextureDefinition definition) throws IOException {
 		try {
 			return textureCache.computeIfAbsent(definition,
-				def -> loadTextureAsync(root, def)
-			).get(50, TimeUnit.MILLISECONDS);
+					def -> loadTextureAsync(root, def)
+			).get(500, TimeUnit.MILLISECONDS); // 增加超时时间
 		} catch (TimeoutException e) {
 			return createPlaceholderTexture(); // 返回占位纹理
 		} catch (Exception e) {
@@ -369,6 +369,7 @@ public class ShaderPack {
 				}
 				Path resolvedPath = root.resolve(path);
 				if (!Files.exists(resolvedPath)) {
+					Iris.logger.error("Texture file not found: {}", path);
 					throw new IOException("Texture file not found: " + path);
 				}
 
@@ -376,7 +377,8 @@ public class ShaderPack {
 				boolean clamp = definition instanceof TextureDefinition.RawDefinition;
 				Path mcMetaPath = root.resolve(path + ".mcmeta");
 
-				if (Files.exists(mcMetaPath)) {
+
+                if (Files.exists(mcMetaPath)) {
 					try (BufferedReader reader = Files.newBufferedReader(mcMetaPath, StandardCharsets.UTF_8)) {
 						JsonObject meta = GSON.fromJson(reader, JsonObject.class);
 						if (meta.has("texture")) {
@@ -384,8 +386,9 @@ public class ShaderPack {
 							if (textureMeta.has("blur")) blur = textureMeta.get("blur").getAsBoolean();
 							if (textureMeta.has("clamp")) clamp = textureMeta.get("clamp").getAsBoolean();
 						}
-					} catch (JsonParseException | IOException e) {
-						Iris.logger.error("Failed to parse texture metadata: {}", mcMetaPath, e);
+					} catch (Exception e) {
+						Iris.logger.error("Failed to load texture: {}", definition.getName(), e);
+						throw new CompletionException(e);
 					}
 				}
 
