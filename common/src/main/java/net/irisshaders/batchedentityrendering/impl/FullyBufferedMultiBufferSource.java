@@ -142,6 +142,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		profiler.push("draw buffers");
 
 		for (RenderType type : renderOrder) {
+			if (!typeToSegment.containsKey(type)) continue;
+
 			type.setupRenderState();
 
 			renderTypes += 1;
@@ -196,6 +198,22 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		renderOrder.removeAll(types);
 
 		profiler.pop();
+	}
+
+	private static long toMib(long x) {
+		return x / 1024L / 1024L;
+	}
+
+	private int getTargetClearTime() {
+		long sizeInMiB = toMib(getAllocatedSize());
+
+		if (sizeInMiB > 5000) { // Over 5GB of RAM used.
+			return 1000; // Be extremely aggressive; 1 second per buffer.
+		} else if (sizeInMiB > 1000) { // Over 1GB of RAM used.
+			return 5000; // Wait 5 seconds.
+		} else {
+			return 10000; // we chillin; 10 seconds.
+		}
 	}
 
 	public int getDrawCalls() {

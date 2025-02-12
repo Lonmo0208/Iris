@@ -1,9 +1,12 @@
 package net.irisshaders.iris.shaderpack.materialmap;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.renderer.RenderType;
@@ -16,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +48,7 @@ public class BlockMaterialMapping {
 			t.location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
 
 		if (compatibleTags.isEmpty()) {
-			if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment())
-				Iris.logger.warn("Failed to find the tag " + tagEntry.id());
+			Iris.logger.warn("Failed to find the tag " + tagEntry.id());
 		} else if (compatibleTags.size() > 1) {
 			Iris.logger.fatal("You've broke the system; congrats. More than one tag matched " + tagEntry.id());
 		} else {
@@ -99,7 +102,7 @@ public class BlockMaterialMapping {
 	}
 
 	public static Map<Block, BlockRenderType> createBlockTypeMap(Map<NamespacedId, BlockRenderType> blockPropertiesMap) {
-		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceLinkedOpenHashMap<>();
+		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceOpenHashMap<>();
 
 		blockPropertiesMap.forEach((id, blockType) -> {
 			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
