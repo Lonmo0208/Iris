@@ -13,6 +13,7 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -21,14 +22,16 @@ import org.lwjgl.opengl.GL20C;
 
 import java.io.IOException;
 
-public class DHCompatInternal {
+public class DHCompatInternal<IDhApiGenericObjectShaderProgram> {
 	public static final DHCompatInternal SHADERLESS = new DHCompatInternal(null, false);
 	static boolean dhEnabled;
 	private static int guiScale = -1;
 	private final IrisRenderingPipeline pipeline;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
+	private GlFramebuffer dhGenericFramebuffer;
 	private IrisLodRenderProgram solidProgram;
+	private IrisLodRenderProgram genericShader;
 	private IrisLodRenderProgram translucentProgram;
 	private IrisLodRenderProgram shadowProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
@@ -54,6 +57,7 @@ public class DHCompatInternal {
 			incompatible = true;
 			return;
 		}
+
 		cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
 
 		createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
@@ -61,6 +65,11 @@ public class DHCompatInternal {
 
 		ProgramSource terrain = pipeline.getDHTerrainShader().get();
 		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), false, false, terrain, pipeline.getCustomUniforms(), pipeline);
+
+		ProgramSource generic = pipeline.getDHGenericShader().get();
+		IrisLodRenderProgram IrisGenericRenderProgram = null;
+		genericShader = IrisLodRenderProgram.createProgram(generic.getName() + "_g", false, false, generic, pipeline.getCustomUniforms(), pipeline);
+		dhGenericFramebuffer = pipeline.createDHFramebuffer(generic, false);
 
 		if (pipeline.getDHWaterShader().isPresent()) {
 			ProgramSource water = pipeline.getDHWaterShader().get();
@@ -159,6 +168,9 @@ public class DHCompatInternal {
 			dhTerrainFramebuffer.addDepthAttachment(depthTex);
 			if (dhWaterFramebuffer != null) {
 				dhWaterFramebuffer.addDepthAttachment(depthTex);
+			}
+			if (dhGenericFramebuffer != null) {
+				dhGenericFramebuffer.addDepthAttachment(depthTex);
 			}
 		}
 	}
@@ -259,9 +271,21 @@ public class DHCompatInternal {
 		return dhWaterFramebuffer;
 	}
 
+	public GlFramebuffer getGenericFB() {
+		return dhGenericFramebuffer;
+	}
+
 	public int getDepthTexNoTranslucent() {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
+	}
+
+	public boolean avoidRenderingClouds() {
+		return pipeline != null && (pipeline.getDHCloudSetting() == CloudSetting.OFF || (pipeline.getDHCloudSetting() == CloudSetting.DEFAULT && pipeline.getCloudSetting() == CloudSetting.OFF));
+	}
+
+	public IrisLodRenderProgram getGenericShader() {
+		return genericShader;
 	}
 }

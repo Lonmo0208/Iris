@@ -312,4 +312,8 @@ public class PackDirectives {
 
 		return scale;
 	}
+
+	public CloudSetting getDHCloudSetting() {
+		return null;
+	}
 }
