@@ -18,6 +18,7 @@ A modern shaders mod for Minecraft intended to be compatible with existing OptiF
 
 [[mods]]
 modId = "oculus"
+version = "1.8.0"
 displayName = "Iris-OculusStub"
 description = '''
 Stub for Oculus
