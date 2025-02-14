@@ -1,42 +1,48 @@
 plugins {
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
-	id 'dev.architectury.loom' version '1.4-SNAPSHOT'
 	id 'maven-publish'
+	id 'java-library'
+	id 'net.neoforged.moddev' version '2.0.78'
+	id 'idea'
 }
 
-loom {
-	silentMojangMappingsLicense()
-	accessWidenerPath = file("src/main/resources/iris.accesswidener")
+//loom {
+//	silentMojangMappingsLicense()
+//	accessWidenerPath = file("src/main/resources/iris.accesswidener")
+//
+//	forge {
+//		convertAccessWideners = true
+//		mixinConfigs = [
+//				"mixins.oculus.json",
+//				"mixins.oculus.fantastic.json",
+//				"mixins.oculus.vertexformat.json",
+//				"mixins.oculus.bettermipmaps.json",
+//				"mixins.oculus.fixes.maxfpscrash.json",
+//				"oculus-batched-entity-rendering.mixins.json",
+//				"mixins.oculus.compat.sodium.json",
+//				"mixins.oculus.compat.indigo.json",
+//				"mixins.oculus.compat.indium.json",
+//				"mixins.oculus.compat.dh.json",
+//				"mixins.oculus.compat.pixelmon.json"
+//		]
+//	}
+//	mixin.defaultRefmapName = "oculus-mixins-refmap.json"
+//}
 
-	forge {
-		convertAccessWideners = true
-		mixinConfigs = [
-				"mixins.oculus.json",
-				"mixins.oculus.fantastic.json",
-				"mixins.oculus.vertexformat.json",
-				"mixins.oculus.bettermipmaps.json",
-				"mixins.oculus.fixes.maxfpscrash.json",
-				"oculus-batched-entity-rendering.mixins.json",
-				"mixins.oculus.compat.sodium.json",
-				"mixins.oculus.compat.indigo.json",
-				"mixins.oculus.compat.indium.json",
-				"mixins.oculus.compat.dh.json",
-				"mixins.oculus.compat.pixelmon.json"
-		]
-	}
-	mixin.defaultRefmapName = "oculus-mixins-refmap.json"
+//configurations {
+//	shadow {
+//		transitive = false
+//	}
+//}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+//sourceCompatibility = JavaVersion.VERSION_17
+//targetCompatibility = JavaVersion.VERSION_17
+
+base {
+	archivesName = "${project.archives_base_name}-mc${project.minecraft_version}"
 }
 
-configurations {
-	shadow {
-		transitive = false
-	}
-}
-
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
-
-archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
 version = project.mod_version
 group = project.maven_group
 
@@ -64,19 +70,67 @@ sourceSets {
 		}
 	}
 }
+//
+//loom {
+//	runs {
+//		client {
+//			mods {
+//				oculus {
+//					sourceSet sourceSets.desktop
+//					sourceSet sourceSets.main
+//					sourceSet sourceSets.vendored
+//					sourceSet sourceSets.sodiumCompatibility
+//				}
+//			}
+//		}
+//	}
+//}
 
-loom {
+neoForge {
+	version = project.neo_version
+
+	parchment {
+		mappingsVersion = project.parchment_mappings_version
+		minecraftVersion = project.parchment_minecraft_version
+	}
+
 	runs {
 		client {
-			mods {
-				oculus {
+			client()
+
+			systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+		}
+
+		server {
+			server()
+			programArgument '--nogui'
+			systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+		}
+
+		gameTestServer {
+			type = "gameTestServer"
+			systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+		}
+
+		data {
+			data()
+			programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+		}
+
+		configureEach {
+			systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+			logLevel = org.slf4j.event.Level.DEBUG
+		}
+	}
+
+	mods {
+		oculus {
 					sourceSet sourceSets.desktop
 					sourceSet sourceSets.main
 					sourceSet sourceSets.vendored
 					sourceSet sourceSets.sodiumCompatibility
 				}
-			}
-		}
 	}
 }
 
@@ -105,25 +159,40 @@ repositories {
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${minecraft_version}"
-	mappings loom.officialMojangMappings()
-	forge "net.neoforged:forge:${minecraft_version}-${forge_version}"
 
-	modImplementation "org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}"
-	modCompileOnly("maven.modrinth:distanthorizonsapi:3.0.0")
+	//implementation "org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}"
+	implementation "maven.modrinth:embeddium:${embeddium_version}"
+	compileOnly("maven.modrinth:distanthorizonsapi:3.0.0")
 
-	forgeRuntimeLibrary(implementation(shadow(project(path: ":glsl-relocated", configuration: "bundledJar")))) {
+	runtimeOnly(implementation(shadow(project(path: ":glsl-relocated", configuration: "bundledJar")))) {
 		transitive = false
 	}
-	forgeRuntimeLibrary(implementation(include("org.anarres:jcpp:1.4.14")))
+	runtimeOnly(implementation(jarJar("org.anarres:jcpp:1.4.14")))
 }
 
-processResources {
-	inputs.property "version", project.version
+//processResources {
+//	inputs.property "version", project.version
+//
+//	filesMatching("META-INF/mods.toml") {
+//		expand "version": project.version
+//	}
+//}
 
-	filesMatching("META-INF/mods.toml") {
-		expand "version": project.version
-	}
+// Include resources generated by data generators.
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+	var replaceProperties = [
+			neo_version            : neo_version,
+			neo_version_range      : neo_version_range,
+			loader_version_range   : loader_version_range,
+			mod_version            : mod_version
+	]
+	inputs.properties replaceProperties
+	expand replaceProperties
+	from "src/main/templates"
+	into "build/generated/sources/modMetadata"
 }
 
 shadowJar {
@@ -141,11 +210,11 @@ shadowJar {
 		)
 	}
 }
-
-remapJar {
-	inputFile.set shadowJar.archiveFile
-	dependsOn shadowJar
-}
+//
+//remapJar {
+//	inputFile.set shadowJar.archiveFile
+//	dependsOn shadowJar
+//}
 
 jar {
 	from sourceSets.sodiumCompatibility.output
@@ -171,5 +240,17 @@ publishing {
 	}
 
 	repositories {
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+	module {
+		downloadSources = true
+		downloadJavadoc = true
 	}
 }

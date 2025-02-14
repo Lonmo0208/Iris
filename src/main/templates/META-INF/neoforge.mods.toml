@@ -1,0 +1,72 @@
+
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="LGPL-3.0-only"
+issueTrackerURL="https://github.com/Asek3/Oculus/issues"
+
+[[mods]]
+modId="oculus"
+version="${mod_version}"
+displayURL = "https://curseforge.com/minecraft/mc-mods/oculus"
+displayName="Oculus"
+logoFile="oculus-logo.png"
+authors="NanoLive, dima_dencep, coderbot, IMS212, Justsnoopy30, FoundationGames"
+description='''
+Unofficial Fork of "Iris", made to work with FML
+'''
+# A URL to query for updates for this mod. See the JSON update specification https://docs.neoforged.net/docs/misc/updatechecker/
+#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
+
+# A text field displayed in the mod UI
+#credits="" #optional
+
+
+[[mixins]]
+config="mixins.oculus.json"
+[[mixins]]
+config="mixins.oculus.fantastic.json"
+[[mixins]]
+config="mixins.oculus.vertexformat.json"
+[[mixins]]
+config="mixins.oculus.bettermipmaps.json"
+[[mixins]]
+config="mixins.oculus.fixes.maxfpscrash.json"
+[[mixins]]
+config="oculus-batched-entity-rendering.mixins.json"
+[[mixins]]
+config="mixins.oculus.compat.sodium.json"
+[[mixins]]
+config="mixins.oculus.compat.indigo.json"
+[[mixins]]
+config="mixins.oculus.compat.indium.json"
+[[mixins]]
+config="mixins.oculus.compat.dh.json"
+[[mixins]]
+config="mixins.oculus.compat.pixelmon.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+# The coremods config file path is not configurable and is always loaded from META-INF/coremods.json
+
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
+[[dependencies.oculus]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.oculus]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1]"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.oculus]]
+    modId = "embeddium"
+    type="optional"
+    versionRange = "[1.0.0,)"
+    ordering = "NONE"
+    side = "CLIENT"
