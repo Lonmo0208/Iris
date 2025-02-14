@@ -6,6 +6,8 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3i;
@@ -454,6 +456,18 @@ public class IrisRenderSystem {
 		return dsaState.createBuffers();
 	}
 
+	private static boolean cullingState;
+
+	public static void backupAndDisableCullingState(boolean b) {
+		cullingState = Minecraft.getInstance().smartCull;
+		Minecraft.getInstance().smartCull = Minecraft.getInstance().smartCull && !b;
+	}
+
+	public static void restoreCullingState() {
+		Minecraft.getInstance().smartCull = cullingState;
+		cullingState = true;
+	}
+
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
@@ -675,12 +689,11 @@ public class IrisRenderSystem {
 
 		@Override
 		public int createBuffers() {
-			int value = GlStateManager._glGenBuffers();
-			return value;
+			return GlStateManager._glGenBuffers();
 		}
 	}
 
-	/*
+		/*
 	public static void bindTextures(int startingTexture, int[] bindings) {
 		if (hasMultibind) {
 			ARBMultiBind.glBindTextures(startingTexture, bindings);

@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraftforge.fml.loading.FMLPaths;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -32,6 +31,7 @@ import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -55,6 +55,7 @@ import java.util.function.Consumer;
  * values in here & the values parsed from shader source code.
  */
 public class ShaderProperties {
+	final CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
@@ -73,10 +74,11 @@ public class ShaderProperties {
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
-	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private CloudSetting dhCloudSetting = CloudSetting.DEFAULT;
+	private OptionalBoolean weather = OptionalBoolean.DEFAULT;
+	private OptionalBoolean weatherParticles = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean supportsColorCorrection = OptionalBoolean.DEFAULT;
@@ -90,6 +92,8 @@ public class ShaderProperties {
 	private OptionalBoolean underwaterOverlay = OptionalBoolean.DEFAULT;
 	private OptionalBoolean sun = OptionalBoolean.DEFAULT;
 	private OptionalBoolean moon = OptionalBoolean.DEFAULT;
+	private OptionalBoolean stars = OptionalBoolean.DEFAULT;
+	private OptionalBoolean sky = OptionalBoolean.DEFAULT;
 	private OptionalBoolean vignette = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceSolid = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceCutout = OptionalBoolean.DEFAULT;
@@ -101,16 +105,18 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
+	private OptionalBoolean skipAllRendering = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean occlusionCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
-	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
+	private ParticleRenderingSettings particleRenderingSettings = ParticleRenderingSettings.UNSET;
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private List<String> mainScreenOptions = null;
 	private Integer mainScreenColumnCount = null;
+	private int fallbackTex = 0;
 	private String noiseTexturePath = null;
 	private List<String> requiredFeatureFlags = new ArrayList<>();
 	private List<String> optionalFeatureFlags = new ArrayList<>();
@@ -151,18 +157,11 @@ public class ShaderProperties {
 			}
 
 			if ("clouds".equals(key)) {
-				if ("off".equals(value)) {
-					cloudSetting = CloudSetting.OFF;
-				} else if ("fast".equals(value)) {
-					cloudSetting = CloudSetting.FAST;
-				} else if ("fancy".equals(value)) {
-					cloudSetting = CloudSetting.FANCY;
-				} else {
-					Iris.logger.error("Unrecognized clouds setting: " + value);
-				}
-
-				if (dhCloudSetting == CloudSetting.DEFAULT) {
-					dhCloudSetting = cloudSetting;
+				switch (value) {
+					case "off" -> cloudSetting = CloudSetting.OFF;
+					case "fast" -> cloudSetting = CloudSetting.FAST;
+					case "fancy" -> cloudSetting = CloudSetting.FANCY;
+					case null, default -> Iris.logger.error("Unrecognized clouds setting: " + value);
 				}
 			}
 
@@ -177,14 +176,11 @@ public class ShaderProperties {
 			}
 
 			if ("shadow.culling".equals(key)) {
-				if ("false".equals(value)) {
-					shadowCulling = ShadowCullState.DISTANCE;
-				} else if ("true".equals(value)) {
-					shadowCulling = ShadowCullState.ADVANCED;
-				} else if ("reversed".equals(value)) {
-					shadowCulling = ShadowCullState.REVERSED;
-				} else {
-					Iris.logger.error("Unrecognized shadow culling setting: " + value);
+				switch (value) {
+					case "false" -> shadowCulling = ShadowCullState.DISTANCE;
+					case "true" -> shadowCulling = ShadowCullState.ADVANCED;
+					case "reversed" -> shadowCulling = ShadowCullState.REVERSED;
+					case null, default -> Iris.logger.error("Unrecognized shadow culling setting: " + value);
 				}
 			}
 
@@ -200,6 +196,8 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "underwaterOverlay", bool -> underwaterOverlay = bool);
 			handleBooleanDirective(key, value, "sun", bool -> sun = bool);
 			handleBooleanDirective(key, value, "moon", bool -> moon = bool);
+			handleBooleanDirective(key, value, "stars", bool -> stars = bool);
+			handleBooleanDirective(key, value, "sky", bool -> sky = bool);
 			handleBooleanDirective(key, value, "vignette", bool -> vignette = bool);
 			handleBooleanDirective(key, value, "backFace.solid", bool -> backFaceSolid = bool);
 			handleBooleanDirective(key, value, "backFace.cutout", bool -> backFaceCutout = bool);
@@ -210,26 +208,26 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
-			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
+			handleBooleanDirective(key, value, "separateEntityDraws", bool -> {
+				separateEntityDraws = bool;
+				particleRenderingSettings = ParticleRenderingSettings.MIXED;
+			});
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
+			handleBooleanDirective(key, value, "skipAllRendering", bool -> skipAllRendering = bool);
 			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
-				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
-					particleRenderingSettings = Optional.of(ParticleRenderingSettings.BEFORE);
+				if (bool.orElse(false) && particleRenderingSettings == ParticleRenderingSettings.UNSET) {
+					particleRenderingSettings = ParticleRenderingSettings.BEFORE;
 				}
 			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
 			handleBooleanDirective(key, value, "supportsColorCorrection", bool -> supportsColorCorrection = bool);
+			handleIntDirective(key, value, "fallbackTex", bool -> fallbackTex = bool);
 
 			if (key.startsWith("particles.ordering")) {
-				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
-				if (settings.isPresent()) {
-					particleRenderingSettings = settings;
-				} else {
-					throw new RuntimeException("Failed to parse particle rendering order! " + value);
-				}
+				particleRenderingSettings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
 			}
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
@@ -253,6 +251,16 @@ public class ShaderProperties {
 
 				viewportScaleOverrides.put(pass, new ViewportData(scale, offsetX, offsetY));
 			});
+
+			if ("weather".equals(key)) {
+				String[] parts = value.split(" ");
+
+				weather = parts[0].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+
+				if (parts.length > 1) {
+					weatherParticles = parts[1].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+				}
+			}
 
 			handlePassDirective("size.buffer.", key, value, pass -> {
 				String[] parts = value.split(" ");
@@ -282,7 +290,7 @@ public class ShaderProperties {
 
 				Optional<AlphaTestFunction> function = AlphaTestFunction.fromString(parts[0]);
 
-				if (!function.isPresent()) {
+				if (function.isEmpty()) {
 					Iris.logger.error("Unable to parse alpha test directive for " + pass + ", unknown alpha test function " + parts[0] + ": " + value);
 					return;
 				}
@@ -369,23 +377,27 @@ public class ShaderProperties {
 				}
 			});
 
-			handleProgramEnabledDirective("program.", key, value, program -> {
-				conditionallyEnabledPrograms.put(program, value);
-			});
+			handleProgramEnabledDirective("program.", key, value, program -> conditionallyEnabledPrograms.put(program, value));
 
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
-				int trueSize;
+				long trueSize;
 				boolean isRelative;
 				float scaleX, scaleY;
 				String[] parts = value.split(" ");
-				if (parts.length == 1) {
+				if (parts.length <= 2) {
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(value);
+						trueSize = Long.parseLong(parts[0]);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 						return;
+					}
+
+					String name = null;
+
+					if (parts.length > 1) {
+						name = parts[1];
 					}
 
 					if (trueIndex > 8) {
@@ -398,12 +410,12 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0, name));
 				} else {
 					// Assume it's a long one
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(parts[0]);
+						trueSize = Long.parseLong(parts[0]);
 						isRelative = Boolean.parseBoolean(parts[1]);
 						scaleX = Float.parseFloat(parts[2]);
 						scaleY = Float.parseFloat(parts[3]);
@@ -422,7 +434,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY, null));
 				}
 			});
 
@@ -433,7 +445,7 @@ public class ShaderProperties {
 
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 
-				if (!optionalTextureStage.isPresent()) {
+				if (optionalTextureStage.isEmpty()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
 					return;
 				}
@@ -467,7 +479,7 @@ public class ShaderProperties {
 				}
 
 				customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
-					.put(samplerName, new TextureDefinition.PNGDefinition(value));
+						.put(samplerName, new TextureDefinition.PNGDefinition(value));
 			});
 
 			handlePassDirective("customTexture.", key, value, (samplerName) -> {
@@ -554,12 +566,8 @@ public class ShaderProperties {
 				irisCustomImages.add(image);
 			});
 
-			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
-				handleBooleanValue(key, value, shouldFlip -> {
-					explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
-						.put(buffer, shouldFlip);
-				});
-			});
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value, shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+					.put(buffer, shouldFlip)));
 
 			handlePassDirective("variable.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
@@ -612,9 +620,9 @@ public class ShaderProperties {
 	}
 
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
-		if ("true".equals(value)) {
+		if ("true".equals(value) || "1".equals(value)) {
 			handler.accept(true);
-		} else if ("false".equals(value)) {
+		} else if ("false".equals(value) || "0".equals(value)) {
 			handler.accept(false);
 		} else {
 			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
@@ -626,9 +634,9 @@ public class ShaderProperties {
 			return;
 		}
 
-		if ("true".equals(value)) {
+		if ("true".equals(value) || "1".equals(value)) {
 			handler.accept(OptionalBoolean.TRUE);
-		} else if ("false".equals(value)) {
+		} else if ("false".equals(value) || "0".equals(value)) {
 			handler.accept(OptionalBoolean.FALSE);
 		} else {
 			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
@@ -733,6 +741,10 @@ public class ShaderProperties {
 		return cloudSetting;
 	}
 
+	public CloudSetting getDHCloudSetting() {
+		return dhCloudSetting;
+	}
+
 	public OptionalBoolean getOldHandLight() {
 		return oldHandLight;
 	}
@@ -777,8 +789,24 @@ public class ShaderProperties {
 		return sun;
 	}
 
+	public OptionalBoolean getWeather() {
+		return weather;
+	}
+
+	public OptionalBoolean getWeatherParticles() {
+		return weatherParticles;
+	}
+
 	public OptionalBoolean getMoon() {
 		return moon;
+	}
+
+	public OptionalBoolean getStars() {
+		return stars;
+	}
+
+	public OptionalBoolean getSky() {
+		return sky;
 	}
 
 	public OptionalBoolean getVignette() {
@@ -821,6 +849,10 @@ public class ShaderProperties {
 		return separateEntityDraws;
 	}
 
+	public OptionalBoolean skipAllRendering() {
+		return skipAllRendering;
+	}
+
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
 	}
@@ -833,6 +865,10 @@ public class ShaderProperties {
 		return shadowCulling;
 	}
 
+	public int getFallbackTex() {
+		return fallbackTex;
+	}
+
 	public Object2ObjectMap<String, AlphaTest> getAlphaTestOverrides() {
 		return alphaTestOverrides;
 	}
@@ -841,9 +877,8 @@ public class ShaderProperties {
 		return shadowEnabled;
 	}
 
-	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
-		// Before is implied if separateEntityDraws is true.
-		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.MIXED);
+	public ParticleRenderingSettings getParticleRenderingSettings() {
+		// Mixed is implied if separateEntityDraws is true.
 		return particleRenderingSettings;
 	}
 
@@ -947,8 +982,4 @@ public class ShaderProperties {
 	public CustomUniforms.Builder getCustomUniforms() {
 		return customUniforms;
 	}
-
-    public CloudSetting getDHCloudSetting() {
-        return dhCloudSetting;
-    }
 }

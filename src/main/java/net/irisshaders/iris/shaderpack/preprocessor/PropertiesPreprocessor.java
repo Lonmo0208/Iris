@@ -17,9 +17,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PropertiesPreprocessor {
+
+	public static final Pattern BACKSLASH_MATCHER = Pattern.compile("(?<!\\\\\\n)^(?![ \\t]*(#|block\\.\\d*|layer\\.\\d*|item\\.\\d*|entity\\.\\d*|dimension\\.\\d*)).+", Pattern.MULTILINE);
+
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER) || source.contains("IRIS_PASSTHROUGHBACKSLASH")) {
@@ -35,7 +39,11 @@ public class PropertiesPreprocessor {
 			}
 
 			for (StringPair envDefine : environmentDefines) {
-				pp.addMacro(envDefine.key(), envDefine.value());
+				if (envDefine.value().isEmpty()) {
+					pp.addMacro(envDefine.key());
+				} else {
+					pp.addMacro(envDefine.key(), envDefine.value());
+				}
 			}
 
 			stringValues.forEach((name, value) -> {
@@ -81,20 +89,20 @@ public class PropertiesPreprocessor {
 		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
 		// Required for Voyager Shader
 		source = Arrays.stream(source.split("\\R")).map(String::trim).filter(s -> !s.isBlank())
-			.map(line -> {
-				if (line.startsWith("#")) {
-					for (PreprocessorCommand command : PreprocessorCommand.values()) {
-						if (line.startsWith("#" + (command.name().replace("PP_", "").toLowerCase(Locale.ROOT)))) {
-							return line;
+				.map(line -> {
+					if (line.startsWith("#")) {
+						for (PreprocessorCommand command : PreprocessorCommand.values()) {
+							if (line.startsWith("#" + (command.name().replace("PP_", "").toLowerCase(Locale.ROOT)))) {
+								return line;
+							}
 						}
+						return "";
 					}
-					return "";
-				}
-				// In PropertyCollectingListener we suppress "unknown preprocessor directive errors" and
-				// assume the line to be a comment, since in .properties files `#` also functions as a comment
-				// marker.
-				return line.replace("#", "");
-			}).collect(Collectors.joining("\n")) + "\n";
+					// In PropertyCollectingListener we suppress "unknown preprocessor directive errors" and
+					// assume the line to be a comment, since in .properties files `#` also functions as a comment
+					// marker.
+					return line.replace("#", "");
+				}).collect(Collectors.joining("\n")) + "\n";
 		// TODO: This is a horrible fix to trick the preprocessor into not seeing the backslashes during processing. We need a better way to do this.
 		source = source.replace("\\", "IRIS_PASSTHROUGHBACKSLASH");
 
@@ -137,7 +145,7 @@ public class PropertiesPreprocessor {
 		Map<String, String> stringValues = new HashMap<>();
 
 		shaderPackOptions.getOptionSet().getStringOptions().forEach(
-			(optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValueOrDefault(optionName)));
+				(optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValueOrDefault(optionName)));
 
 		return stringValues;
 	}

@@ -7,4 +7,6 @@ public class ImmediateState {
 	public static boolean isRenderingLevel = false;
 	public static boolean usingTessellation = false;
 	public static boolean renderWithExtendedVertexFormat = true;
+	public static final ThreadLocal<Boolean> skipExtension = ThreadLocal.withInitial(() -> false);
+	public static boolean bypass;
 }

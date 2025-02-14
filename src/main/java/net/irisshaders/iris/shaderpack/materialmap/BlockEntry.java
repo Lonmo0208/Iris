@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BlockEntry(NamespacedId id, Map<String, String> propertyPredicates) {
+public record BlockEntry(NamespacedId id, Map<String, String> propertyPredicates) implements Entry{
 
 	/**
 	 * Parses a block ID entry.

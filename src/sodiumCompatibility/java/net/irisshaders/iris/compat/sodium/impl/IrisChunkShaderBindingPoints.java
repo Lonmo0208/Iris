@@ -3,7 +3,7 @@ package net.irisshaders.iris.compat.sodium.impl;
 /**
  * Defines Iris-specific chunk shader binding points.
  * <p>
- * NB: Make sure this doesn't collide with anything in {@link me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints}
+ * NB: Make sure this doesn't collide with anything in {@link org.embeddedt.embeddium.client.render.chunk.shader.ChunkShaderBindingPoints}
  */
 public class IrisChunkShaderBindingPoints {
 	public static final int ATTRIBUTE_POSITION_ID = 1;

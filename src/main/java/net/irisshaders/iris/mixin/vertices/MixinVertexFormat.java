@@ -2,7 +2,7 @@ package net.irisshaders.iris.mixin.vertices;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinVertexFormat {
 	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onSetupBufferState(CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+		if (Iris.isPackInUseQuick() && ImmediateState.renderWithExtendedVertexFormat) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.setupBufferState();
 
@@ -36,7 +36,7 @@ public class MixinVertexFormat {
 
 	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onClearBufferState(CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+		if (Iris.isPackInUseQuick() && ImmediateState.renderWithExtendedVertexFormat) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.clearBufferState();
 

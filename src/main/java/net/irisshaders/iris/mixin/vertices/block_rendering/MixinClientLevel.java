@@ -20,13 +20,13 @@ public class MixinClientLevel {
 			return shaded;
 		}
 	}
-
-	@ModifyVariable(method = "getShade(FFFZ)F", at = @At("HEAD"), argsOnly = true, remap = false)
-	private boolean iris$maybeDisableDirectionalShadingForge(boolean shaded) {
-		if (WorldRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
-			return false;
-		} else {
-			return shaded;
-		}
-	}
+//
+//	@ModifyVariable(method = "getShade(FFFZ)F", at = @At("HEAD"), argsOnly = true, remap = false)
+//	private boolean iris$maybeDisableDirectionalShadingForge(boolean shaded) {
+//		if (WorldRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
+//			return false;
+//		} else {
+//			return shaded;
+//		}
+//	}
 }

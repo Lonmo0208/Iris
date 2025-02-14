@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
-import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
+import org.embeddedt.embeddium.api.vertex.attributes.CommonVertexAttribute;
 
 /**
  * Initialized by {@link net.irisshaders.iris.compat.sodium.mixin.vertex_format.MixinChunkMeshAttribute}

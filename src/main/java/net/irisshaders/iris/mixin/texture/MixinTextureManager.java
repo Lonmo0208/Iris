@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.texture;
 
-import net.irisshaders.iris.texture.format.TextureFormatLoader;
-import net.irisshaders.iris.texture.pbr.PBRTextureManager;
+import net.irisshaders.iris.pbr.format.TextureFormatLoader;
+import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +15,11 @@ import java.util.concurrent.Executor;
 
 @Mixin(TextureManager.class)
 public class MixinTextureManager {
-	@Inject(method = { "method_18167", "m_244739_", "lambda$reload$5" }, at = @At("TAIL"), remap = false)
+	@SuppressWarnings("UnresolvedMixinReference")
+	@Inject(method = {
+			"method_18167",
+			"lambda$reload$5"
+	}, at = @At("TAIL"), require = 1)
 	private void iris$onTailReloadLambda(ResourceManager resourceManager, Executor applyExecutor, CompletableFuture<?> future, Void void1, CallbackInfo ci) {
 		TextureFormatLoader.reload(resourceManager);
 		PBRTextureManager.INSTANCE.clear();

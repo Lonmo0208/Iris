@@ -1,8 +1,9 @@
 package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat4v;
+import org.embeddedt.embeddium.impl.gl.shader.uniform.GlUniformFloat;
+import org.embeddedt.embeddium.impl.gl.shader.uniform.GlUniformFloat4v;
+
 
 public class IrisShaderFogComponent {
 	private final GlUniformFloat4v uFogColor;

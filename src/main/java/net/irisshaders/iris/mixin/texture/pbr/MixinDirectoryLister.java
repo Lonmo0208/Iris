@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.texture.pbr;
 
-import net.irisshaders.iris.texture.pbr.PBRType;
+import net.irisshaders.iris.pbr.texture.PBRType;
 import net.minecraft.client.renderer.texture.atlas.SpriteSource;
 import net.minecraft.client.renderer.texture.atlas.sources.DirectoryLister;
 import net.minecraft.resources.FileToIdConverter;

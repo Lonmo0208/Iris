@@ -1,7 +1,8 @@
 package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
-import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+
+import org.embeddedt.embeddium.impl.render.chunk.terrain.DefaultTerrainRenderPasses;
+import org.embeddedt.embeddium.impl.render.chunk.terrain.TerrainRenderPass;
 
 public enum IrisTerrainPass {
 	SHADOW("shadow"),

@@ -5,35 +5,38 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.GlTexture;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.texture.TextureWrapper;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LightTextureAccessor;
+import net.irisshaders.iris.pbr.format.TextureFormat;
+import net.irisshaders.iris.pbr.format.TextureFormatLoader;
+import net.irisshaders.iris.pbr.texture.PBRAtlasTexture;
+import net.irisshaders.iris.pbr.texture.PBRTextureHolder;
+import net.irisshaders.iris.pbr.texture.PBRTextureManager;
+import net.irisshaders.iris.pbr.texture.PBRType;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.targets.backed.NativeImageBackedCustomTexture;
 import net.irisshaders.iris.targets.backed.NativeImageBackedNoiseTexture;
-import net.irisshaders.iris.texture.format.TextureFormat;
-import net.irisshaders.iris.texture.format.TextureFormatLoader;
-import net.irisshaders.iris.texture.pbr.PBRTextureHolder;
-import net.irisshaders.iris.texture.pbr.PBRTextureManager;
-import net.irisshaders.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Optional;
 
 public class CustomTextureManager {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureAccess>> customTextureIdMap = new EnumMap<>(TextureStage.class);
@@ -50,7 +53,7 @@ public class CustomTextureManager {
 
 	public CustomTextureManager(PackDirectives packDirectives,
 								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
-								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
+								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, CustomTextureData customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
 			Object2ObjectMap<String, TextureAccess> customTextureIds = new Object2ObjectOpenHashMap<>();
 
@@ -59,7 +62,7 @@ public class CustomTextureManager {
 					customTextureIds.put(samplerName, createCustomTexture(textureData));
 				} catch (IOException | ResourceLocationException e) {
 					Iris.logger.error("Unable to parse the image data for the custom texture on stage "
-						+ textureStage + ", sampler " + samplerName, e);
+							+ textureStage + ", sampler " + samplerName, e);
 				}
 			});
 
@@ -74,22 +77,20 @@ public class CustomTextureManager {
 			}
 		});
 
-		noise = customNoiseTextureData.flatMap(textureData -> {
-			try {
-				return Optional.of(createCustomTexture(textureData));
-			} catch (IOException | ResourceLocationException e) {
-				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-
-				return Optional.empty();
-			}
-		}).orElseGet(() -> {
+		if (customNoiseTextureData == null) {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
 			NativeImageBackedNoiseTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 			ownedTextures.add(texture);
 
-			return texture;
-		});
+			noise = texture;
+		} else {
+			try {
+				noise = createCustomTexture(customNoiseTextureData);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	private TextureAccess createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -102,7 +103,7 @@ public class CustomTextureManager {
 			// Special code path for the light texture. While shader packs hardcode the primary light texture, it's
 			// possible that a mod will create a different light texture, so this code path is robust to that.
 			return new TextureWrapper(((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
-				.getLightTexture()::getId, TextureType.TEXTURE_2D);
+					.getLightTexture()::getId, TextureType.TEXTURE_2D);
 		} else if (textureData instanceof CustomTextureData.RawData1D rawData1D) {
 			GlTexture texture = new GlTexture(TextureType.TEXTURE_1D, rawData1D.getSizeX(), 0, 0, rawData1D.getInternalFormat().getGlFormat(), rawData1D.getPixelFormat().getGlFormat(), rawData1D.getPixelType().getGlFormat(), rawData1D.getContent(), rawData1D.getFilteringData());
 			ownedRawTextures.add(texture);
@@ -139,7 +140,7 @@ public class CustomTextureManager {
 			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
 			if (pbrType == null) {
-				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+				ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(namespace, location);
 
 				// NB: We have to re-query the TextureManager for the texture object every time. This is because the
 				//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
@@ -148,22 +149,35 @@ public class CustomTextureManager {
 				//     now.
 				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
+					if (texture instanceof TextureAtlas || texture instanceof PBRAtlasTexture) {
+						int tex = GlStateManagerAccessor.getActiveTexture();
+						int binding = GlStateManagerAccessor.getTEXTURES()[tex].binding;
+						texture.setFilter(false, Minecraft.getInstance().options.mipmapLevels().get() > 0);
+						GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + tex);
+						GlStateManager._bindTexture(binding);
+					}
 					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
 				}, TextureType.TEXTURE_2D);
 			} else {
 				location = location.substring(0, extensionIndex - pbrType.getSuffix().length()) + location.substring(extensionIndex);
-				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+				ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(namespace, location);
 
 				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
 
 					if (texture != null) {
+						if (texture instanceof TextureAtlas || texture instanceof PBRAtlasTexture) {
+							int tex = GlStateManagerAccessor.getActiveTexture();
+							int binding = GlStateManagerAccessor.getTEXTURES()[tex].binding;
+							texture.setFilter(false, Minecraft.getInstance().options.mipmapLevels().get() > 0);
+							GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + tex);
+							GlStateManager._bindTexture(binding);
+						}
 						int id = texture.getId();
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 						AbstractTexture pbrTexture = switch (pbrType) {
 							case NORMAL -> pbrHolder.normalTexture();
 							case SPECULAR -> pbrHolder.specularTexture();
-							default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
 						};
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();

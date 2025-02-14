@@ -1,14 +1,14 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import me.jellysquid.mods.sodium.client.render.immediate.model.BakedModelEncoder;
-import me.jellysquid.mods.sodium.client.util.ModelQuadUtil;
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.caffeinemc.mods.sodium.api.util.ColorU8;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
+import org.embeddedt.embeddium.impl.model.quad.ModelQuadView;
+import org.embeddedt.embeddium.impl.render.immediate.model.BakedModelEncoder;
+import org.embeddedt.embeddium.impl.util.ModelQuadUtil;
+import org.embeddedt.embeddium.api.math.MatrixHelper;
+import org.embeddedt.embeddium.api.util.ColorABGR;
+import org.embeddedt.embeddium.api.util.ColorU8;
+import org.embeddedt.embeddium.api.vertex.buffer.VertexBufferWriter;
+import org.embeddedt.embeddium.api.vertex.format.common.ModelVertex;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.irisshaders.iris.vertices.ImmediateState;
@@ -50,7 +50,7 @@ public class MixinModelVertex {
 		try {
 			long buffer = stack.nmalloc(144);
 			long ptr = buffer;
-			int normal = MatrixHelper.transformNormal(matNormal, quad.getLightFace());
+			int normal = MatrixHelper.transformNormal(matNormal, quad.getLightFace().getNormal().getX(), quad.getLightFace().getNormal().getY(), quad.getLightFace().getNormal().getZ());
 
 			for (int i = 0; i < 4; ++i) {
 				float x = quad.getX(i);

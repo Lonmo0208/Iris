@@ -1,14 +1,14 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeBinding;
-import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
-import me.jellysquid.mods.sodium.client.gl.buffer.GlBuffer;
-import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.gl.tessellation.TessellationBinding;
-import me.jellysquid.mods.sodium.client.render.chunk.DefaultChunkRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.ShaderChunkRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshAttribute;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import org.embeddedt.embeddium.impl.gl.attribute.GlVertexAttributeBinding;
+import org.embeddedt.embeddium.impl.gl.attribute.GlVertexFormat;
+import org.embeddedt.embeddium.impl.gl.buffer.GlBuffer;
+import org.embeddedt.embeddium.impl.gl.device.RenderDevice;
+import org.embeddedt.embeddium.impl.gl.tessellation.TessellationBinding;
+import org.embeddedt.embeddium.impl.render.chunk.DefaultChunkRenderer;
+import org.embeddedt.embeddium.impl.render.chunk.ShaderChunkRenderer;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshAttribute;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
@@ -22,10 +22,10 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer {
 		super(device, vertexType);
 	}
 
-	@Redirect(remap = false, method = "createRegionTessellation", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/gl/tessellation/TessellationBinding;forVertexBuffer(Lme/jellysquid/mods/sodium/client/gl/buffer/GlBuffer;[Lme/jellysquid/mods/sodium/client/gl/attribute/GlVertexAttributeBinding;)Lme/jellysquid/mods/sodium/client/gl/tessellation/TessellationBinding;"))
+	@Redirect(remap = false, method = "createRegionTessellation", at = @At(value = "INVOKE", target = "Lorg/embeddedt/embeddium/impl/gl/tessellation/TessellationBinding;forVertexBuffer(Lorg/embeddedt/embeddium/impl/gl/buffer/GlBuffer;[Lorg/embeddedt/embeddium/impl/gl/attribute/GlVertexAttributeBinding;)Lorg/embeddedt/embeddium/impl/gl/tessellation/TessellationBinding;"))
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private TessellationBinding iris$onInit(GlBuffer buffer, GlVertexAttributeBinding[] attributes) {
-		if (!WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
+		if (!WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			return TessellationBinding.forVertexBuffer(buffer, attributes);
 		}
 

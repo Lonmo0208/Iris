@@ -5,17 +5,22 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
+import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
+import net.irisshaders.iris.shaderpack.error.RusticError;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
@@ -27,6 +32,7 @@ import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.parsing.BooleanParser;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
@@ -83,10 +89,11 @@ public class ShaderPack {
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
+	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines);
+	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+		this(root, Collections.emptyMap(), environmentDefines, isZip);
 	}
 
 	/**
@@ -97,7 +104,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -108,9 +115,10 @@ public class ShaderPack {
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
 		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
-			potentialFileNames);
+				potentialFileNames);
 
 		dimensionIds = new ArrayList<>();
+		bufferObjects = new Int2ObjectArrayMap<>();
 
 		final boolean[] hasDimensionIds = {false}; // Thanks Java
 
@@ -141,20 +149,16 @@ public class ShaderPack {
 
 		for (String id : dimensionIdCreator) {
 			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
-				potentialFileNames)) {
+					potentialFileNames)) {
 				dimensionIds.add(id);
 			}
 		}
 
 		// Read all files and included files recursively
-		IncludeGraph graph = new IncludeGraph(root, starts.build());
+		IncludeGraph graph = new IncludeGraph(root, starts.build(), isZip);
 
 		if (!graph.getFailures().isEmpty()) {
-			graph.getFailures().forEach((path, error) -> {
-				Iris.logger.error("{}", error.toString());
-			});
-
-			throw new IOException("Failed to resolve some #include directives, see previous messages for details");
+			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
 		}
 
 		this.languageMap = new LanguageMap(root.resolve("lang"));
@@ -166,15 +170,40 @@ public class ShaderPack {
 		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
 		for (FeatureFlags flag : FeatureFlags.values()) {
 			if (flag.isUsable()) {
-				if (flag == FeatureFlags.TESSELLATION_SHADERS) {
-					finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_TESSELATION_SHADERS", ""));
-				}
 				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
 			}
 		}
 		this.shaderProperties = loadProperties(root, "shaders.properties")
-			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
-			.orElseGet(ShaderProperties::empty);
+				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
+				.orElseGet(ShaderProperties::empty);
+
+		for (Int2ObjectMap.Entry<ShaderStorageInfo> shaderStorageInfoEntry : shaderProperties.getBufferObjects().int2ObjectEntrySet()) {
+			ShaderStorageInfo info = shaderStorageInfoEntry.getValue();
+
+			if (info.name() == null) {
+				bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
+			} else {
+				String path = info.name();
+
+				try {
+					if (path.startsWith("/")) {
+						// NB: This does not guarantee the resulting path is in the shaderpack as a double slash could be used,
+						// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
+						path = path.substring(1);
+					}
+
+					byte[] data = Files.readAllBytes(root.resolve(path));
+
+					if (data.length > info.size()) {
+						throw new IllegalStateException("Tried to load a shader storage file with no space in the buffer! Increase the buffer size.");
+					}
+
+					bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
+				} catch (IOException e) {
+					Iris.logger.error("Shader storage buffer with index " + shaderStorageInfoEntry.getIntKey() + " and path " + path + " could not be read.", e);
+				}
+			}
+		}
 
 		activeFeatures = new HashSet<>();
 		for (int i = 0; i < shaderProperties.getRequiredFeatureFlags().size(); i++) {
@@ -198,7 +227,7 @@ public class ShaderPack {
 		if (!invalidFeatureFlags.isEmpty()) {
 			if (Minecraft.getInstance().screen instanceof ShaderPackScreen) {
 				MutableComponent component = Component.translatable("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
-					.collect(Collectors.joining(", ", ": ", ".")));
+						.collect(Collectors.joining(", ", ": ", ".")));
 				if (SystemUtils.IS_OS_MAC) {
 					component = component.append(Component.translatable("iris.unsupported.pack.macos"));
 				}
@@ -217,7 +246,6 @@ public class ShaderPack {
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).toList();
 
 		if (!optionalFeatureFlags.isEmpty()) {
-			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 		}
 
@@ -231,9 +259,7 @@ public class ShaderPack {
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 		// Add programs that are disabled by shader options
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
-			if ("true".equals(shaderOption)) return;
-
-			if ("false".equals(shaderOption) || !this.shaderPackOptions.getOptionValues().getBooleanValueOrDefault(shaderOption)) {
+			if (!BooleanParser.parse(shaderOption, this.shaderPackOptions.getOptionValues())) {
 				disabledPrograms.add(program);
 			}
 		});
@@ -243,7 +269,7 @@ public class ShaderPack {
 		{
 			String profileName = getCurrentProfileName();
 			OptionValues profileOptions = new MutableOptionValues(
-				this.shaderPackOptions.getOptionSet(), this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>()));
+					this.shaderPackOptions.getOptionSet(), this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>()));
 
 			int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 
@@ -505,14 +531,13 @@ public class ShaderPack {
 			} else if (definition instanceof TextureDefinition.RawDefinition rawDefinition) {
 				customTextureData = switch (rawDefinition.getTarget()) {
 					case TEXTURE_1D ->
-						new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+							new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
 					case TEXTURE_2D ->
-						new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+							new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
 					case TEXTURE_3D ->
-						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+							new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 					case TEXTURE_RECTANGLE ->
-						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-					default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
+							new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
 				};
 			} else {
 				customTextureData = null;
@@ -576,8 +601,8 @@ public class ShaderPack {
 		return irisCustomTextureDataMap;
 	}
 
-	public Optional<CustomTextureData> getCustomNoiseTexture() {
-		return Optional.ofNullable(customNoiseTexture);
+	public CustomTextureData getCustomNoiseTexture() {
+		return customNoiseTexture;
 	}
 
 	public LanguageMap getLanguageMap() {
@@ -594,5 +619,9 @@ public class ShaderPack {
 
 	public boolean hasFeature(FeatureFlags feature) {
 		return activeFeatures.contains(feature);
+	}
+
+	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
+		return bufferObjects;
 	}
 }

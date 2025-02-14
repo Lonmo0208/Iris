@@ -2,10 +2,10 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
-import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializerRegistryImpl;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
-import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
+import org.embeddedt.embeddium.impl.render.vertex.serializers.VertexSerializerRegistryImpl;
+import org.embeddedt.embeddium.api.vertex.format.VertexFormatDescription;
+import org.embeddedt.embeddium.api.vertex.format.VertexFormatRegistry;
+import org.embeddedt.embeddium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.EntityToTerrainVertexSerializer;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.GlyphExtVertexSerializer;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisEntityToTerrainVertexSerializer;

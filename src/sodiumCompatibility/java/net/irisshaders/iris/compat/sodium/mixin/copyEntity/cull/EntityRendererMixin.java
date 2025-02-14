@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin.copyEntity.cull;
 
-import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import org.embeddedt.embeddium.impl.render.EmbeddiumWorldRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityRendererMixin<T extends Entity> {
 	@Inject(method = "shouldRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/culling/Frustum;isVisible(Lnet/minecraft/world/phys/AABB;)Z", shift = At.Shift.AFTER), cancellable = true)
 	private void preShouldRender(T entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
-		var renderer = SodiumWorldRenderer.instanceNullable();
+		var renderer = EmbeddiumWorldRenderer.instanceNullable();
 
 		if (renderer == null) {
 			return;

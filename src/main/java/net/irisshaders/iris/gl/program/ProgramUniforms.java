@@ -170,26 +170,26 @@ public class ProgramUniforms {
 
 	private static boolean isSampler(int type) {
 		return type == GL20C.GL_SAMPLER_1D
-			|| type == GL20C.GL_SAMPLER_2D
-			|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D
-			|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D
-			|| type == GL20C.GL_SAMPLER_3D
-			|| type == GL20C.GL_SAMPLER_1D_SHADOW
-			|| type == GL20C.GL_SAMPLER_2D_SHADOW;
+				|| type == GL20C.GL_SAMPLER_2D
+				|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D
+				|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D
+				|| type == GL20C.GL_SAMPLER_3D
+				|| type == GL20C.GL_SAMPLER_1D_SHADOW
+				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
 	}
 
 	private static boolean isImage(int type) {
 		return type == ARBShaderImageLoadStore.GL_IMAGE_1D
-			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D
-			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_1D
-			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_2D
-			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_3D
-			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_1D
-			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_2D
-			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_3D
-			|| type == ARBShaderImageLoadStore.GL_IMAGE_3D
-			|| type == ARBShaderImageLoadStore.GL_IMAGE_1D_ARRAY
-			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D_ARRAY;
+				|| type == ARBShaderImageLoadStore.GL_IMAGE_2D
+				|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_1D
+				|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_2D
+				|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_3D
+				|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_1D
+				|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_2D
+				|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_3D
+				|| type == ARBShaderImageLoadStore.GL_IMAGE_3D
+				|| type == ARBShaderImageLoadStore.GL_IMAGE_1D_ARRAY
+				|| type == ARBShaderImageLoadStore.GL_IMAGE_2D_ARRAY;
 	}
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
@@ -349,7 +349,7 @@ public class ProgramUniforms {
 			}
 
 			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()),
-				ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset));
+					ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset));
 		}
 
 		@Override

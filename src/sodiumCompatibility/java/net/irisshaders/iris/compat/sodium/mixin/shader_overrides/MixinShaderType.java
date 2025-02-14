@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
+import org.embeddedt.embeddium.impl.gl.shader.ShaderType;
 import net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisShaderTypes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.opengl.GL32C;

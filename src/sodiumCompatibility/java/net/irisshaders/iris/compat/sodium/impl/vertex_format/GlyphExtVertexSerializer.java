@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
+import org.embeddedt.embeddium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;

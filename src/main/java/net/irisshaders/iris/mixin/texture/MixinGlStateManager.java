@@ -1,9 +1,9 @@
 package net.irisshaders.iris.mixin.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.texture.TextureInfoCache;
 import net.irisshaders.iris.texture.TextureTracker;
-import net.irisshaders.iris.texture.pbr.PBRTextureManager;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

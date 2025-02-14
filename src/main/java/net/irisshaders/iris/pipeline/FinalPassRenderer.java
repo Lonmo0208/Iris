@@ -7,6 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
@@ -29,6 +30,7 @@ import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
+import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
@@ -66,7 +68,6 @@ public class FinalPassRenderer {
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private final Set<GlImage> customImages;
 	private final TextureAccess noiseTexture;
-	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final CustomUniforms customUniforms;
@@ -81,9 +82,8 @@ public class FinalPassRenderer {
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
 							 Object2ObjectMap<String, TextureAccess> customTextureIds,
 							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableSet<Integer> flippedAtLeastOnce
-		, CustomUniforms customUniforms) {
+			, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
-		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
 		this.irisCustomTextures = irisCustomTextures;
@@ -91,12 +91,12 @@ public class FinalPassRenderer {
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
-			renderTargetDirectives.getRenderTargetSettings();
+				renderTargetDirectives.getRenderTargetSettings();
 
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
 		this.customUniforms = customUniforms;
-		this.finalPass = pack.getCompositeFinal().map(source -> {
+		this.finalPass = pack.get(ProgramId.Final).map(source -> {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
@@ -219,6 +219,7 @@ public class FinalPassRenderer {
 		}
 
 		if (this.finalPass != null) {
+			GLDebug.pushGroup(990, "final");
 			// If there is a final pass, we use the shader-based full screen quad rendering pathway instead
 			// of just copying the color buffer.
 
@@ -252,6 +253,7 @@ public class FinalPassRenderer {
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 
 			FullScreenQuadRenderer.INSTANCE.end();
+			GLDebug.popGroup();
 		} else {
 			// If there are no passes, we somehow need to transfer the content of the Iris color render targets into
 			// the main Minecraft framebuffer.
@@ -325,10 +327,10 @@ public class FinalPassRenderer {
 								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		// TODO: Properly handle empty shaders
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
-			source.getName(),
-			source.getVertexSource().orElseThrow(NullPointerException::new),
-			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap());
+				source.getName(),
+				source.getVertexSource().orElseThrow(NullPointerException::new),
+				source.getGeometrySource().orElse(null),
+				source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap());
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
@@ -341,7 +343,7 @@ public class FinalPassRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
-				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (ShaderCompileException e) {
 			throw e;
 		} catch (RuntimeException e) {
@@ -384,8 +386,7 @@ public class FinalPassRenderer {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-			if (source == null || !source.getSource().isPresent()) {
-				continue;
+			if (source == null || source.getSource().isEmpty()) {
 			} else {
 				// TODO: Properly handle empty shaders
 				Objects.requireNonNull(flipped);

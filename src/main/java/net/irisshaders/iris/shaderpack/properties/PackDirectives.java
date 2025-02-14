@@ -1,13 +1,11 @@
 package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
@@ -15,13 +13,13 @@ import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.joml.Vector2i;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
 	private final float drynessHalfLife;
+	private int fallbackTex;
 	private boolean supportsColorCorrection;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
@@ -34,11 +32,16 @@ public class PackDirectives {
 	private boolean underwaterOverlay;
 	private boolean vignette;
 	private boolean sun;
+	private boolean weather;
+	private boolean weatherParticles;
 	private boolean moon;
+	private boolean stars;
+	private boolean sky;
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
+	private boolean skipAllRendering;
 	private boolean frustumCulling;
 	private boolean occlusionCulling;
 	private boolean oldLighting;
@@ -48,8 +51,7 @@ public class PackDirectives {
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
-	private Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects;
-	private Optional<ParticleRenderingSettings> particleRenderingSettings;
+	private ParticleRenderingSettings particleRenderingSettings;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
@@ -60,7 +62,6 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
-		bufferObjects = new Int2ObjectArrayMap<>();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -72,14 +73,20 @@ public class PackDirectives {
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
 		sun = properties.getSun().orElse(true);
+		weather = properties.getWeather().orElse(true);
+		weatherParticles = properties.getWeatherParticles().orElse(true);
 		moon = properties.getMoon().orElse(true);
+		stars = properties.getStars().orElse(true);
+		sky = properties.getSky().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
+		skipAllRendering = properties.skipAllRendering().orElse(false);
 		frustumCulling = properties.getFrustumCulling().orElse(true);
 		occlusionCulling = properties.getOcclusionCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
+		fallbackTex = properties.getFallbackTex();
 		supportsColorCorrection = properties.supportsColorCorrection().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
@@ -88,12 +95,12 @@ public class PackDirectives {
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 		particleRenderingSettings = properties.getParticleRenderingSettings();
 		textureMap = properties.getCustomTexturePatching();
-		bufferObjects = properties.getBufferObjects();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
 		cloudSetting = directives.cloudSetting;
+		dhCloudSetting = directives.dhCloudSetting;
 		separateAo = directives.separateAo;
 		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
@@ -103,9 +110,9 @@ public class PackDirectives {
 		explicitFlips = directives.explicitFlips;
 		scaleOverrides = directives.scaleOverrides;
 		prepareBeforeShadow = directives.prepareBeforeShadow;
+		fallbackTex = directives.fallbackTex;
 		particleRenderingSettings = directives.particleRenderingSettings;
 		textureMap = directives.textureMap;
-		bufferObjects = directives.bufferObjects;
 	}
 
 	private static float clamp(float val, float lo, float hi) {
@@ -160,11 +167,27 @@ public class PackDirectives {
 		return sun;
 	}
 
+	public boolean shouldRenderWeather() {
+		return weather;
+	}
+
+	public boolean shouldRenderWeatherParticles() {
+		return weatherParticles;
+	}
+
 	public boolean shouldRenderMoon() {
 		return moon;
 	}
 
-	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+	public boolean shouldRenderStars() {
+		return stars;
+	}
+
+	public boolean shouldRenderSkyDisc() {
+		return sky;
+	}
+
+	public ParticleRenderingSettings getParticleRenderingSettings() {
 		return particleRenderingSettings;
 	}
 
@@ -208,6 +231,10 @@ public class PackDirectives {
 		return prepareBeforeShadow;
 	}
 
+	public boolean skipAllRendering() {
+		return skipAllRendering;
+	}
+
 	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
 		return textureMap;
 	}
@@ -220,12 +247,12 @@ public class PackDirectives {
 		return shadowDirectives;
 	}
 
-	public Int2ObjectArrayMap<ShaderStorageInfo> getBufferObjects() {
-		return bufferObjects;
-	}
-
 	public boolean supportsColorCorrection() {
 		return supportsColorCorrection;
+	}
+
+	public int getFallbackTex() {
+		return fallbackTex;
 	}
 
 	public void acceptDirectivesFrom(DirectiveHolder directives) {
@@ -233,25 +260,25 @@ public class PackDirectives {
 		shadowDirectives.acceptDirectives(directives);
 
 		directives.acceptConstIntDirective("noiseTextureResolution",
-			noiseTextureResolution -> this.noiseTextureResolution = noiseTextureResolution);
+				noiseTextureResolution -> this.noiseTextureResolution = noiseTextureResolution);
 
 		directives.acceptConstFloatDirective("sunPathRotation",
-			sunPathRotation -> this.sunPathRotation = sunPathRotation);
+				sunPathRotation -> this.sunPathRotation = sunPathRotation);
 
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
-			ambientOcclusionLevel -> this.ambientOcclusionLevel = clamp(ambientOcclusionLevel, 0.0f, 1.0f));
+				ambientOcclusionLevel -> this.ambientOcclusionLevel = clamp(ambientOcclusionLevel, 0.0f, 1.0f));
 
 		directives.acceptConstFloatDirective("wetnessHalflife",
-			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+				wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
 
 		directives.acceptConstFloatDirective("drynessHalflife",
-			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+				wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
 
 		directives.acceptConstFloatDirective("eyeBrightnessHalflife",
-			eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
+				eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
 
 		directives.acceptConstFloatDirective("centerDepthHalflife",
-			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
+				centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {
@@ -280,7 +307,7 @@ public class PackDirectives {
 				explicitFlips.put(index, shouldFlip);
 			} else {
 				Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass "
-					+ pass);
+						+ pass);
 			}
 		});
 

@@ -15,6 +15,9 @@ public abstract class Parameters implements JobParameters {
 	public PatchShaderType type; // may only be set by TransformPatcher
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
+	// name of the shader, this should not be part of hash/equals
+	public String name; // set by TransformPatcher
+
 	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		this.patch = patch;
 		this.textureMap = textureMap;
@@ -35,7 +38,6 @@ public abstract class Parameters implements JobParameters {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((patch == null) ? 0 : patch.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		return result;
 	}
@@ -50,8 +52,6 @@ public abstract class Parameters implements JobParameters {
 			return false;
 		Parameters other = (Parameters) obj;
 		if (patch != other.patch)
-			return false;
-		if (type != other.type)
 			return false;
 		if (textureMap == null) {
 			return other.textureMap == null;

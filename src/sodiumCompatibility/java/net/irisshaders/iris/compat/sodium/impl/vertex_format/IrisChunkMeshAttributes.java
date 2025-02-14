@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshAttribute;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshAttribute;
 
 /**
  * Initialized by {@link net.irisshaders.iris.compat.sodium.mixin.vertex_format.MixinChunkMeshAttribute}

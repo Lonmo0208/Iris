@@ -2,11 +2,10 @@ package net.irisshaders.iris.shaderpack.materialmap;
 
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.Holder;
+import net.irisshaders.iris.compat.embeddium.ChunkMeshFormats;
+import net.irisshaders.iris.compat.embeddium.ChunkVertexType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.ChunkRenderTypeSet;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -16,16 +15,16 @@ public class WorldRenderingSettings {
 
 	private boolean reloadRequired;
 	private Object2IntMap<BlockState> blockStateIds;
-	private Map<Holder.Reference<Block>, ChunkRenderTypeSet> blockTypeIds;
+	private Map<Block, BlockRenderType> blockTypeIds;
 	private Object2IntFunction<NamespacedId> entityIds;
 	private Object2IntFunction<NamespacedId> itemIds;
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean hasVillagerConversionId;
 	private boolean useSeparateAo;
-	private boolean useExtendedVertexFormat;
 	private boolean separateEntityDraws;
 	private boolean voxelizeLightBlocks;
+	private ChunkVertexType chunkVertexFormat;
 
 	public WorldRenderingSettings() {
 		reloadRequired = false;
@@ -34,7 +33,7 @@ public class WorldRenderingSettings {
 		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
-		useExtendedVertexFormat = false;
+		chunkVertexFormat = ChunkMeshFormats.COMPACT;
 		separateEntityDraws = false;
 		voxelizeLightBlocks = false;
 		hasVillagerConversionId = false;
@@ -62,12 +61,11 @@ public class WorldRenderingSettings {
 		this.blockStateIds = blockStateIds;
 	}
 
-	@Nullable
-	public Map<Holder.Reference<Block>, ChunkRenderTypeSet> getBlockTypeIds() {
+	public Map<Block, BlockRenderType> getBlockTypeIds() {
 		return blockTypeIds;
 	}
 
-	public void setBlockTypeIds(Map<Holder.Reference<Block>, ChunkRenderTypeSet> blockTypeIds) {
+	public void setBlockTypeIds(Map<Block, BlockRenderType> blockTypeIds) {
 		if (this.blockTypeIds != null && this.blockTypeIds.equals(blockTypeIds)) {
 			return;
 		}
@@ -136,17 +134,17 @@ public class WorldRenderingSettings {
 		this.useSeparateAo = useSeparateAo;
 	}
 
-	public boolean shouldUseExtendedVertexFormat() {
-		return useExtendedVertexFormat;
+	public ChunkVertexType getVertexFormat() {
+		return chunkVertexFormat;
 	}
 
-	public void setUseExtendedVertexFormat(boolean useExtendedVertexFormat) {
-		if (useExtendedVertexFormat == this.useExtendedVertexFormat) {
+	public void setVertexFormat(ChunkVertexType chunkVertexFormat) {
+		if (chunkVertexFormat == this.chunkVertexFormat) {
 			return;
 		}
 
 		this.reloadRequired = true;
-		this.useExtendedVertexFormat = useExtendedVertexFormat;
+		this.chunkVertexFormat = chunkVertexFormat;
 	}
 
 	public boolean shouldVoxelizeLightBlocks() {

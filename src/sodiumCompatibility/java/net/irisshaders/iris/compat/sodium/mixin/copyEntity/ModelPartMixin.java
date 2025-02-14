@@ -2,14 +2,14 @@ package net.irisshaders.iris.compat.sodium.mixin.copyEntity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
-import me.jellysquid.mods.sodium.client.render.immediate.model.EntityRenderer;
-import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
-import me.jellysquid.mods.sodium.client.render.immediate.model.ModelPartData;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import org.embeddedt.embeddium.impl.model.ModelCuboidAccessor;
+import org.embeddedt.embeddium.impl.render.immediate.model.EntityRenderer;
+import org.embeddedt.embeddium.impl.render.immediate.model.ModelCuboid;
+import org.embeddedt.embeddium.impl.render.immediate.model.ModelPartData;
+import org.embeddedt.embeddium.impl.render.vertex.VertexConsumerUtils;
+import org.embeddedt.embeddium.api.math.MatrixHelper;
+import org.embeddedt.embeddium.api.util.ColorABGR;
+import org.embeddedt.embeddium.api.vertex.buffer.VertexBufferWriter;
 import net.minecraft.client.model.geom.ModelPart;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -87,9 +87,9 @@ public class ModelPartMixin implements ModelPartData {
 		this.children = Collections.unmodifiableMap(this.children);
 	}
 
-	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V", at = @At("HEAD"), cancellable = true)
-	private void onRender(PoseStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
-		VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(vertices);
+	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;III)V", at = @At("HEAD"), cancellable = true)
+	private void onRender(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color, CallbackInfo ci) {
+		VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(buffer);
 
 		if (writer == null) {
 			return;
@@ -97,7 +97,7 @@ public class ModelPartMixin implements ModelPartData {
 
 		ci.cancel();
 
-		EntityRenderer.render(matrices, writer, (ModelPart) (Object) this, light, overlay, ColorABGR.pack(red, green, blue, alpha));
+		EntityRenderer.render(poseStack, writer, (ModelPart) (Object) this, packedLight, packedOverlay, color);
 	}
 
 	/**

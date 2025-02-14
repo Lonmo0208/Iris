@@ -64,7 +64,7 @@ public class IncludeGraph {
 		this.failures = failures;
 	}
 
-	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths) {
+	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths, boolean isZip) {
 		Map<AbsolutePackPath, AbsolutePackPath> cameFrom = new HashMap<>();
 		Map<AbsolutePackPath, Integer> lineNumberInclude = new HashMap<>();
 
@@ -75,12 +75,23 @@ public class IncludeGraph {
 		Set<AbsolutePackPath> seen = new HashSet<>(startingPaths);
 
 		while (!queue.isEmpty()) {
-			AbsolutePackPath next = queue.remove(queue.size() - 1);
+			AbsolutePackPath next = queue.removeLast();
 
 			String source;
 
 			try {
-				source = readFile(next.resolved(root));
+				Path p = next.resolved(root);
+				if (Iris.getIrisConfig().areDebugOptionsEnabled() && !isZip) {
+					String absolute = p.toAbsolutePath().toString().replace("\\", "/");
+					absolute = absolute.substring(absolute.lastIndexOf("shaders/") + 8);
+
+					String canonical = p.toFile().getCanonicalPath().replace("\\", "/");
+					canonical = canonical.substring(canonical.lastIndexOf("shaders/") + 8);
+					if (!absolute.equals(canonical)) {
+						throw new FileIncludeException("'" + next.getPathString() + "' doesn't exist, did you mean '" + canonical + "'?");
+					}
+				}
+				source = readFile(p);
 			} catch (IOException e) {
 				AbsolutePackPath src = cameFrom.get(next);
 
@@ -90,8 +101,10 @@ public class IncludeGraph {
 
 				String topLevelMessage;
 				String detailMessage;
-
-				if (e instanceof NoSuchFileException) {
+				if (e instanceof FileIncludeException) {
+					topLevelMessage = "failed to resolve #include directive\n" + e.getMessage();
+					detailMessage = "file not found";
+				} else if (e instanceof NoSuchFileException) {
 					topLevelMessage = "failed to resolve #include directive";
 					detailMessage = "file not found";
 				} else {
@@ -102,7 +115,7 @@ public class IncludeGraph {
 				String badLine = nodes.get(src).getLines().get(lineNumberInclude.get(next)).trim();
 
 				RusticError topLevelError = new RusticError("error", topLevelMessage, detailMessage, src.getPathString(),
-					lineNumberInclude.get(next) + 1, badLine);
+						lineNumberInclude.get(next) + 1, badLine);
 
 				failures.put(next, topLevelError);
 
@@ -121,7 +134,7 @@ public class IncludeGraph {
 				if (next.equals(included)) {
 					selfInclude = true;
 					failures.put(next, new RusticError("error", "trivial #include cycle detected",
-						"file includes itself", next.getPathString(), line + 1, lines.get(line)));
+							"file includes itself", next.getPathString(), line + 1, lines.get(line)));
 
 					break;
 				} else if (!seen.contains(included)) {
@@ -179,21 +192,21 @@ public class IncludeGraph {
 					if (lastFilePath.equals(start)) {
 						// first node in cycle
 						error.append(new RusticError("error", "#include cycle detected",
-							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+								detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
 					} else {
 						error.append("\n  = ").append(new RusticError("note", "cycle involves another file",
-							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+								detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
 					}
 
 					lastFilePath = node;
 				}
 
 				error.append(
-					"""
-						  note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work
-
-						  note: other cycles may still exist, only the first detected non-trivial cycle will be reported
-						""");
+						"""
+                              note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work
+    
+                              note: other cycles may still exist, only the first detected non-trivial cycle will be reported
+                            """);
 
 				// TODO: Expose this to the caller (more semantic error handling)
 				Iris.logger.error(error.toString());
@@ -223,7 +236,7 @@ public class IncludeGraph {
 			}
 		}
 
-		path.remove(path.size() - 1);
+		path.removeLast();
 		visited.remove(frontier);
 
 		return false;

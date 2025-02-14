@@ -8,10 +8,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 public enum ProgramId {
-	Shadow(ProgramGroup.Shadow, ""),
-	ShadowSolid(ProgramGroup.Shadow, "solid", Shadow),
-	ShadowCutout(ProgramGroup.Shadow, "cutout", Shadow),
+	Shadow(ProgramGroup.Shadow, "", BlendModeOverride.OFF),
+	ShadowSolid(ProgramGroup.Shadow, "solid", Shadow, BlendModeOverride.OFF),
+	ShadowCutout(ProgramGroup.Shadow, "cutout", Shadow, BlendModeOverride.OFF),
+	ShadowWater(ProgramGroup.Shadow, "water", Shadow, BlendModeOverride.OFF),
 	ShadowEntities(ProgramGroup.Shadow, "entities", Shadow, BlendModeOverride.OFF),
+	ShadowLightning(ProgramGroup.Shadow, "lightning", ShadowEntities, BlendModeOverride.OFF),
+	ShadowBlock(ProgramGroup.Shadow, "block", Shadow, BlendModeOverride.OFF),
 
 	Basic(ProgramGroup.Gbuffers, "basic"),
 	Line(ProgramGroup.Gbuffers, "line", Basic),
@@ -34,20 +37,21 @@ public enum ProgramId {
 
 	Entities(ProgramGroup.Gbuffers, "entities", TexturedLit),
 	EntitiesTrans(ProgramGroup.Gbuffers, "entities_translucent", Entities),
+	Lightning(ProgramGroup.Gbuffers, "lightning", Entities),
 	Particles(ProgramGroup.Gbuffers, "particles", TexturedLit),
 	ParticlesTrans(ProgramGroup.Gbuffers, "particles_translucent", Particles),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
 	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,
-		new BlendModeOverride(new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(), BlendModeFunction.ZERO.getGlId(), BlendModeFunction.ONE.getGlId()))),
+			new BlendModeOverride(new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(), BlendModeFunction.ZERO.getGlId(), BlendModeFunction.ONE.getGlId()))),
 
 	Hand(ProgramGroup.Gbuffers, "hand", TexturedLit),
 	Weather(ProgramGroup.Gbuffers, "weather", TexturedLit),
 	Water(ProgramGroup.Gbuffers, "water", Terrain),
 	HandWater(ProgramGroup.Gbuffers, "hand_water", Hand),
 	DhTerrain(ProgramGroup.Dh, "terrain"),
-	DhGeneric(ProgramGroup.Dh, "generic", DhTerrain),
 	DhWater(ProgramGroup.Dh, "water", DhTerrain),
+	DhGeneric(ProgramGroup.Dh, "generic", DhTerrain),
 	DhShadow(ProgramGroup.Dh, "shadow"),
 
 	Final(ProgramGroup.Final, ""),
@@ -63,6 +67,13 @@ public enum ProgramId {
 		this.sourceName = name.isEmpty() ? group.getBaseName() : group.getBaseName() + "_" + name;
 		this.fallback = null;
 		this.defaultBlendOverride = null;
+	}
+
+	ProgramId(ProgramGroup group, String name, BlendModeOverride defaultBlendOverride) {
+		this.group = group;
+		this.sourceName = name.isEmpty() ? group.getBaseName() : group.getBaseName() + "_" + name;
+		this.fallback = null;
+		this.defaultBlendOverride = defaultBlendOverride;
 	}
 
 	ProgramId(ProgramGroup group, String name, ProgramId fallback) {

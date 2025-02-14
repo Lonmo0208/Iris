@@ -5,7 +5,8 @@ import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSourc
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
-import net.minecraft.client.renderer.ChunkBufferBuilderPack;
+import net.minecraft.client.renderer.SectionBufferBuilderPack;
+import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
@@ -37,7 +38,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Shadow
 	@Final
-	private ChunkBufferBuilderPack fixedBufferPack;
+	private SectionBufferBuilderPack fixedBufferPack;
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
@@ -96,12 +97,12 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	}
 
 	@Override
-	public int getEntityBufferAllocatedSize() {
+	public long getEntityBufferAllocatedSize() {
 		return ((MemoryTrackingBuffer) buffered).getAllocatedSize();
 	}
 
 	@Override
-	public int getMiscBufferAllocatedSize() {
+	public long getMiscBufferAllocatedSize() {
 		return ((MemoryTrackingBuffer) bufferSource).getAllocatedSize();
 	}
 
@@ -113,7 +114,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	@Override
 	public void freeAndDeleteBuffers() {
 		buffered.freeAndDeleteBuffer();
-		((ChunkBufferBuilderPackAccessor) this.fixedBufferPack).getBuilders().values().forEach(bufferBuilder -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
+		((SectionBufferBuilderPackAccessor) this.fixedBufferPack).getBuffers().values().forEach(bufferBuilder -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
 		((BufferSourceAccessor) bufferSource).getFixedBuffers().forEach((renderType, bufferBuilder) -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
 		((BufferSourceAccessor) bufferSource).getFixedBuffers().clear();
 		((MemoryTrackingBuffer) ((OutlineBufferSourceAccessor) outlineBufferSource).getOutlineBufferSource()).freeAndDeleteBuffer();

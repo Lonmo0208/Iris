@@ -12,11 +12,12 @@ import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
+import net.irisshaders.iris.mixinterface.LocalPlayerInterface;
+import net.irisshaders.iris.pbr.TextureInfoCache;
+import net.irisshaders.iris.pbr.TextureInfoCache.TextureInfo;
+import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
-import net.irisshaders.iris.texture.TextureInfoCache;
-import net.irisshaders.iris.texture.TextureInfoCache.TextureInfo;
-import net.irisshaders.iris.texture.TextureTracker;
 import net.irisshaders.iris.uniforms.transforms.SmoothedFloat;
 import net.irisshaders.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.Minecraft;
@@ -132,40 +133,41 @@ public final class CommonUniforms {
 		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(), CommonUniforms::getEyeBrightness, updateNotifier);
 
 		uniforms
-			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
-			.uniform1b(PER_FRAME, "isRightHanded", () -> client.options.mainHand().get() == HumanoidArm.RIGHT)
-			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
-			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
-			.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
-			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
-			.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
-			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
-			.uniform1b(PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
-			.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
-			.uniform1b(PER_FRAME, "is_on_ground", CommonUniforms::isOnGround)
-			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
-			//       that the player is trying to turn on fullbright?
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
-			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
-			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
-			.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
-			.uniform1i(ONCE, "blockEntityId", () -> -1)
-			.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
-			.uniform1f(ONCE, "pi", () -> Math.PI)
-			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
-			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
-				Vector2f smoothed = eyeBrightnessSmooth.get();
-				return new Vector2i((int) smoothed.x(), (int) smoothed.y());
-			})
-			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
-			.uniform1f(PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
-			.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
+				.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
+				.uniform1b(PER_FRAME, "isRightHanded", () -> client.options.mainHand().get() == HumanoidArm.RIGHT)
+				.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
+				.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+				.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
+				.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
+				.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+				.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
+				.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
+				.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
+				.uniform1b(PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
+				.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
+				.uniform1b(PER_FRAME, "is_on_ground", CommonUniforms::isOnGround)
+				// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
+				//       that the player is trying to turn on fullbright?
+				.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
+				// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
+				// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
+				.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
+				.uniform1i(ONCE, "blockEntityId", () -> -1)
+				.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
+				.uniform1f(ONCE, "pi", () -> Math.PI)
+				.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+				.uniform1f(PER_TICK, "constantMood", CommonUniforms::getConstantMood)
+				.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+				.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
+					Vector2f smoothed = eyeBrightnessSmooth.get();
+					return new Vector2i((int) smoothed.x(), (int) smoothed.y());
+				})
+				.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+				.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
+				.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+				.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
+				.uniform1f(PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
+				.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
 	}
 
 	private static boolean isOnGround() {
@@ -218,7 +220,7 @@ public final class CommonUniforms {
 		}
 
 		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.position(),
-			CapturedRenderingState.INSTANCE.getTickDelta()));
+				CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	static float getBlindness() {
@@ -247,8 +249,8 @@ public final class CommonUniforms {
 		if (cameraEntity instanceof LivingEntity) {
 			MobEffectInstance darkness = ((LivingEntity) cameraEntity).getEffect(MobEffects.DARKNESS);
 
-			if (darkness != null && darkness.getFactorData().isPresent()) {
-				return darkness.getFactorData().get().getFactor((LivingEntity) cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			if (darkness != null) {
+				return darkness.getBlendFactor((LivingEntity) cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 			}
 		}
 
@@ -264,6 +266,15 @@ public final class CommonUniforms {
 		return Math.clamp(0.0F, 1.0F, ((LocalPlayer) client.cameraEntity).getCurrentMood());
 	}
 
+	private static float getConstantMood() {
+		if (!(client.cameraEntity instanceof LocalPlayer)) {
+			return 0.0F;
+		}
+
+		// This should always be 0 to 1 anyways but just making sure
+		return Math.clamp(0.0F, 1.0F, ((LocalPlayerInterface) client.cameraEntity).getCurrentConstantMood());
+	}
+
 	static float getRainStrength() {
 		if (client.level == null) {
 			return 0f;
@@ -271,7 +282,7 @@ public final class CommonUniforms {
 
 		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
 		return Math.clamp(0.0F, 1.0F,
-			client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
+				client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static Vector2i getEyeBrightness() {
@@ -303,7 +314,7 @@ public final class CommonUniforms {
 				//
 				// See: https://github.com/apace100/apoli/blob/320b0ef547fbbf703de7154f60909d30366f6500/src/main/java/io/github/apace100/apoli/mixin/GameRendererMixin.java#L153
 				float nightVisionStrength =
-					GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+						GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 
 				if (nightVisionStrength > 0) {
 					// Just protecting against potential weird mod behavior

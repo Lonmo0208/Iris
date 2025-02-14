@@ -7,9 +7,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.render.immediate.CloudRenderer;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
+import org.embeddedt.embeddium.impl.render.immediate.CloudRenderer;
+import org.embeddedt.embeddium.api.vertex.format.VertexFormatDescription;
+import org.embeddedt.embeddium.api.vertex.format.common.ColorVertex;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
@@ -63,10 +63,10 @@ public abstract class MixinCloudRenderer {
 	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
 
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true, remap = false)
-	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack stack, Matrix4f modelViewMatrix, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
-			renderIris(world, player, matrices, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
+			renderIris(world, player, stack, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
 		}
 	}
 
@@ -95,8 +95,7 @@ public abstract class MixinCloudRenderer {
 		int centerCellZ = (int) (Math.floor(cloudCenterZ / 12));
 
 		if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance) {
-			BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-			bufferBuilder.begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
+			BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
 
 			// Give some space for shaders
 			this.rebuildGeometry(bufferBuilder, cloudDistance + 4, centerCellX, centerCellZ);
@@ -106,7 +105,7 @@ public abstract class MixinCloudRenderer {
 			}
 
 			this.vertexBufferWithNormals.bind();
-			this.vertexBufferWithNormals.upload(bufferBuilder.end());
+			this.vertexBufferWithNormals.upload(bufferBuilder.buildOrThrow());
 
 			VertexBuffer.unbind();
 
@@ -185,7 +184,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
 	}
 
-	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILnet/caffeinemc/mods/sodium/api/vertex/format/VertexFormatDescription;)V"), index = 3, remap = false)
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lorg/embeddedt/embeddium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILorg/embeddedt/embeddium/api/vertex/format/VertexFormatDescription;)V"), index = 3, remap = false)
 	private VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return CloudVertex.FORMAT;

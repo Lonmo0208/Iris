@@ -1,9 +1,9 @@
 package net.irisshaders.iris.compat.sodium.mixin.options;
 
-import me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages;
-import me.jellysquid.mods.sodium.client.gui.options.Option;
-import me.jellysquid.mods.sodium.client.gui.options.OptionGroup;
-import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
+import org.embeddedt.embeddium.api.options.storage.MinecraftOptionsStorage;
+import org.embeddedt.embeddium.api.options.structure.Option;
+import org.embeddedt.embeddium.api.options.structure.OptionGroup;
+import org.embeddedt.embeddium.impl.gui.EmbeddiumGameOptionPages;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.impl.options.IrisSodiumOptions;
 import org.spongepowered.asm.mixin.Final;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 /**
  * Adds the Iris-specific options / option changes to the Sodium game options pages.
  */
-@Mixin(SodiumGameOptionPages.class)
+@Mixin(EmbeddiumGameOptionPages.class)
 public class MixinSodiumGameOptionPages {
 	@Shadow(remap = false)
 	@Final
@@ -29,9 +29,7 @@ public class MixinSodiumGameOptionPages {
 			to = @At(value = "CONSTANT", args = "stringValue=options.simulationDistance")
 		),
 		at = @At(value = "INVOKE", remap = false,
-			target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
-				"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
-				")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			target = "Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;add(Lorg/embeddedt/embeddium/api/options/structure/Option;)Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;"),
 		allow = 1)
 	private static OptionGroup.Builder iris$addMaxShadowDistanceOption(OptionGroup.Builder builder,
 																	   Option<?> candidate) {
@@ -47,9 +45,7 @@ public class MixinSodiumGameOptionPages {
 			to = @At(value = "CONSTANT", args = "stringValue=options.renderClouds")
 		),
 		at = @At(value = "INVOKE", remap = false,
-			target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
-				"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
-				")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			target = "Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;add(Lorg/embeddedt/embeddium/api/options/structure/Option;)Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;"),
 		allow = 1)
 	private static OptionGroup.Builder iris$addColorSpaceOption(OptionGroup.Builder builder,
 																Option<?> candidate) {
@@ -65,9 +61,7 @@ public class MixinSodiumGameOptionPages {
 			to = @At(value = "CONSTANT", args = "stringValue=options.renderClouds")
 		),
 		at = @At(value = "INVOKE", remap = false,
-			target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
-				"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
-				")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			target = "Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;add(Lorg/embeddedt/embeddium/api/options/structure/Option;)Lorg/embeddedt/embeddium/api/options/structure/OptionGroup$Builder;"),
 		allow = 1)
 	private static Option<?> iris$replaceGraphicsQualityButton(Option<?> candidate) {
 		if (!Iris.getIrisConfig().areShadersEnabled()) {

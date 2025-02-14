@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
-import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
+import org.embeddedt.embeddium.api.vertex.attributes.CommonVertexAttribute;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisCommonVertexAttributes;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.apache.commons.lang3.ArrayUtils;

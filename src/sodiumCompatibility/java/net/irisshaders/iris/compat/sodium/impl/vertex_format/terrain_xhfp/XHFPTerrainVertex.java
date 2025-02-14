@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.Material;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import org.embeddedt.embeddium.impl.render.chunk.terrain.material.Material;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;

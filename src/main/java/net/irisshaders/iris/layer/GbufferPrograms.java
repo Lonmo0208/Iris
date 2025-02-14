@@ -20,7 +20,7 @@ public class GbufferPrograms {
 	private static void checkReentrancy() {
 		if (entities || blockEntities || outline) {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call begin function when entities = "
-				+ entities + ", blockEntities = " + blockEntities + ", outline = " + outline);
+					+ entities + ", blockEntities = " + blockEntities + ", outline = " + outline);
 		}
 	}
 

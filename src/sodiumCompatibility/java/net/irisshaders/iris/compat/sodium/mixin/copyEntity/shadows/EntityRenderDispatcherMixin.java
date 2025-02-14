@@ -2,11 +2,11 @@ package net.irisshaders.iris.compat.sodium.mixin.copyEntity.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
+import org.embeddedt.embeddium.impl.render.vertex.VertexConsumerUtils;
+import org.embeddedt.embeddium.api.math.MatrixHelper;
+import org.embeddedt.embeddium.api.util.ColorABGR;
+import org.embeddedt.embeddium.api.vertex.buffer.VertexBufferWriter;
+import org.embeddedt.embeddium.api.vertex.format.common.ModelVertex;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -100,7 +100,7 @@ public class EntityRenderDispatcherMixin {
 		var matPosition = matrices.pose();
 
 		var color = ColorABGR.withAlpha(SHADOW_COLOR, alpha);
-		var normal = MatrixHelper.transformNormal(matNormal, Direction.UP);
+		var normal = MatrixHelper.transformNormal(matNormal, Direction.UP.getNormal().getX(), Direction.UP.getNormal().getY(), Direction.UP.getNormal().getZ());
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			long buffer = stack.nmalloc(4 * ModelVertex.STRIDE);

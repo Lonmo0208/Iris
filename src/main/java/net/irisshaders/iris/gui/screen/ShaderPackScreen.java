@@ -8,9 +8,13 @@ import net.irisshaders.iris.gui.NavigationController;
 import net.irisshaders.iris.gui.OldImageButton;
 import net.irisshaders.iris.gui.element.ShaderPackOptionList;
 import net.irisshaders.iris.gui.element.ShaderPackSelectionList;
+import net.irisshaders.iris.gui.element.screen.IrisButton;
 import net.irisshaders.iris.gui.element.widget.AbstractElementWidget;
 import net.irisshaders.iris.gui.element.widget.CommentedElementWidget;
+import net.irisshaders.iris.mixin.GameRendererAccessor;
 import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
+import net.irisshaders.iris.uniforms.transforms.SmoothedFloat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -19,11 +23,12 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -32,6 +37,7 @@ import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,7 +46,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class ShaderPackScreen extends Screen implements HudHideable {
 	/**
@@ -54,6 +59,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private static final String development = "Development Environment";
 	private final Screen parent;
 	private final MutableComponent irisTextComponent;
+	private final FrameUpdateNotifier notifier = new FrameUpdateNotifier();
 	private ShaderPackSelectionList shaderPackList;
 	private @Nullable ShaderPackOptionList shaderOptionList = null;
 	private @Nullable NavigationController navigation = null;
@@ -68,10 +74,35 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private boolean dropChanges = false;
 	private MutableComponent developmentComponent;
 	private MutableComponent updateComponent;
-
 	private boolean guiHidden = false;
+	public final SmoothedFloat blurTransition = new SmoothedFloat(2, 2, () -> {
+		if (guiHidden) {
+			return 0.0f;
+		} else if (this.optionMenuOpen) {
+			return 0.1f;
+		} else {
+			return (float) this.minecraft.options.getMenuBackgroundBlurriness();
+		}
+	}, notifier);
 	private float guiButtonHoverTimer = 0.0f;
 	private Button openFolderButton;
+	private float backgroundInit = 0.0f;
+	public final SmoothedFloat listTransition = new SmoothedFloat(1, 1, () -> {
+		if (guiHidden || this.optionMenuOpen) {
+			return 0.0f;
+		} else {
+			return backgroundInit;
+		}
+	}, notifier);
+
+	public final SmoothedFloat buttonTransition = new SmoothedFloat(1, 1, () -> {
+		if (guiHidden) {
+			return 0.0f;
+		} else {
+			return backgroundInit;
+		}
+	}, notifier);
+	private OldImageButton showHideButton;
 
 	public ShaderPackScreen(Screen parent) {
 		super(Component.translatable("options.iris.shaderPackSelection.title"));
@@ -86,37 +117,57 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.irisTextComponent = Component.literal(irisName).withStyle(ChatFormatting.GRAY);
 
+//		if (Iris.getUpdateChecker().getUpdateMessage().isPresent()) {
+//			this.updateComponent = Component.literal("New update available!").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.UNDERLINE);
+//			irisTextComponent.append(Component.literal(" (outdated)").withStyle(ChatFormatting.RED));
+//		}
+
 		refreshForChangedPack();
 	}
 
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-		if (this.minecraft.level == null) {
-			this.renderBackground(guiGraphics);
-		} else if (!this.guiHidden) {
-			guiGraphics.fillGradient(0, 0, width, height, 0x4F232323, 0x4F232323);
-		}
+		notifier.onNewFrame();
+		backgroundInit = 1.0f;
 
 		if (Screen.hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_D)) {
 			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
 				Iris.setDebug(option);
 				Minecraft.getInstance().setScreen(this);
 			}, Component.literal("Shader debug mode toggle"),
-				Component.literal("Debug mode helps investigate problems and shows shader errors. Would you like to enable it?"),
-				Component.literal("Yes"),
-				Component.literal("No")));
+					Component.literal("Debug mode helps investigate problems and shows shader errors. Would you like to enable it?"),
+					Component.literal("Yes"),
+					Component.literal("No")));
+		}
+
+		if (Screen.hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_G)) {
+			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
+//				try {
+//					Iris.getIrisConfig().setUnknown(option);
+//				} catch (IOException e) {
+//					throw new RuntimeException(e);
+//				}
+				Minecraft.getInstance().setScreen(this);
+			}, Component.literal("Unknown shader toggle"),
+					Component.literal("This allows unknown shaders to load in."),
+					Component.literal("Enable"),
+					Component.literal("Disable")));
 		}
 
 		if (!this.guiHidden) {
+			super.render(guiGraphics, mouseX, mouseY, delta);
+
 			if (optionMenuOpen && this.shaderOptionList != null) {
 				this.shaderOptionList.render(guiGraphics, mouseX, mouseY, delta);
 			} else {
 				this.shaderPackList.render(guiGraphics, mouseX, mouseY, delta);
 			}
+		} else {
+			this.renderBlurredBackground(delta);
+			this.showHideButton.render(guiGraphics, mouseX, mouseY, delta);
 		}
 
 		float previousHoverTimer = this.guiButtonHoverTimer;
-		super.render(guiGraphics, mouseX, mouseY, delta);
 		if (previousHoverTimer == this.guiButtonHoverTimer) {
 			this.guiButtonHoverTimer = 0.0f;
 		}
@@ -168,6 +219,20 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
+	public boolean mouseClicked(double d, double e, int i) {
+//		int widthValue = this.font.width("New update available!");
+//		if (this.updateComponent != null && d < widthValue && e > (this.height - 10) && e < this.height) {
+//			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
+//				if (bl) {
+//					Iris.getUpdateChecker().getUpdateLink().ifPresent(Util.getPlatform()::openUri);
+//				}
+//				this.minecraft.setScreen(this);
+//			}, Iris.getUpdateChecker().getUpdateLink().orElse(""), true));
+//		}
+		return super.mouseClicked(d, e, i);
+	}
+
+	@Override
 	protected void init() {
 		super.init();
 		int bottomCenter = this.width / 2 - 50;
@@ -177,25 +242,18 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.removeWidget(this.shaderPackList);
 		this.removeWidget(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
+			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
 			this.navigation.setActiveOptionList(this.shaderOptionList);
 
 			this.shaderOptionList.rebuild();
 		} else {
 			optionMenuOpen = false;
 			this.shaderOptionList = null;
-		}
-
-		if (inWorld) {
-			this.shaderPackList.setRenderBackground(false);
-			if (shaderOptionList != null) {
-				this.shaderOptionList.setRenderBackground(false);
-			}
 		}
 
 		this.clearWidgets();
@@ -207,32 +265,32 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.addRenderableWidget(shaderPackList);
 			}
 
-			this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose()).bounds(bottomCenter + 104, this.height - 27, 100, 20
+			this.addRenderableWidget(IrisButton.iris$builder(CommonComponents.GUI_DONE, button -> onClose(), buttonTransition).bounds(bottomCenter + 104, this.height - 27, 100, 20
 			).build());
 
-			this.addRenderableWidget(Button.builder(Component.translatable("options.iris.apply"), button -> this.applyChanges()).bounds(bottomCenter, this.height - 27, 100, 20
+			this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("options.iris.apply"), button -> this.applyChanges(), buttonTransition).bounds(bottomCenter, this.height - 27, 100, 20
 			).build());
 
-			this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()).bounds(bottomCenter - 104, this.height - 27, 100, 20
+			this.addRenderableWidget(IrisButton.iris$builder(CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose(), buttonTransition).bounds(bottomCenter - 104, this.height - 27, 100, 20
 			).build());
 
-			this.openFolderButton = Button.builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()).bounds(topCenter - 78, this.height - 51, 152, 20
+			this.openFolderButton = IrisButton.iris$builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder(), buttonTransition).bounds(topCenter - 78, this.height - 51, 152, 20
 			).build();
 			this.addRenderableWidget(openFolderButton);
 
-			this.screenSwitchButton = this.addRenderableWidget(Button.builder(Component.translatable("options.iris.shaderPackList"), button -> {
-					this.optionMenuOpen = !this.optionMenuOpen;
+			this.screenSwitchButton = this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("options.iris.shaderPackList"), button -> {
+						this.optionMenuOpen = !this.optionMenuOpen;
 
-					// UX: Apply changes before switching screens to avoid unintuitive behavior
-					//
-					// Not doing this leads to unintuitive behavior, since selecting a pack in the
-					// list (but not applying) would open the settings for the previous pack, rather
-					// than opening the settings for the selected (but not applied) pack.
-					this.applyChanges();
-					setFocused(shaderPackList.getFocused());
-					this.init();
-				}
-			).bounds(topCenter + 78, this.height - 51, 152, 20
+						// UX: Apply changes before switching screens to avoid unintuitive behavior
+						//
+						// Not doing this leads to unintuitive behavior, since selecting a pack in the
+						// list (but not applying) would open the settings for the previous pack, rather
+						// than opening the settings for the selected (but not applied) pack.
+						this.applyChanges();
+						setFocused(shaderPackList.getFocused());
+						this.init();
+					}
+					, buttonTransition).bounds(topCenter + 78, this.height - 51, 152, 20
 			).build());
 
 			refreshScreenSwitchButton();
@@ -240,8 +298,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (inWorld) {
 			Component showOrHide = this.guiHidden
-				? Component.translatable("options.iris.gui.show")
-				: Component.translatable("options.iris.gui.hide");
+					? Component.translatable("options.iris.gui.show")
+					: Component.translatable("options.iris.gui.hide");
 
 			float endOfLastButton = this.width / 2.0f + 154.0f;
 			float freeSpace = this.width - endOfLastButton;
@@ -254,21 +312,21 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				x = (int) (endOfLastButton + (freeSpace / 2.0f)) - 10;
 			}
 
-			OldImageButton showHideButton = new OldImageButton(
-				x, this.height - 39,
-				20, 20,
-				this.guiHidden ? 20 : 0, 146, 20,
-				GuiUtil.IRIS_WIDGETS_TEX,
-				256, 256,
-				(button) -> {
-					this.guiHidden = !this.guiHidden;
-					this.init();
-				},
-				showOrHide
+			this.showHideButton = new OldImageButton(
+					x, this.height - 39,
+					20, 20,
+					this.guiHidden ? 20 : 0, 146, 20,
+					GuiUtil.IRIS_WIDGETS_TEX,
+					256, 256,
+					(button) -> {
+						this.guiHidden = !this.guiHidden;
+						this.init();
+					},
+					showOrHide
 			);
 
 			showHideButton.setTooltip(Tooltip.create(showOrHide));
-			showHideButton.setTooltipDelay(10);
+			showHideButton.setTooltipDelay(Duration.ofSeconds(10));
 
 			this.addRenderableWidget(showHideButton);
 		}
@@ -299,12 +357,27 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	public void refreshScreenSwitchButton() {
 		if (this.screenSwitchButton != null) {
 			this.screenSwitchButton.setMessage(
-				optionMenuOpen ?
-					Component.translatable("options.iris.shaderPackList")
-					: Component.translatable("options.iris.shaderPackSettings")
+					optionMenuOpen ?
+							Component.translatable("options.iris.shaderPackList")
+							: Component.translatable("options.iris.shaderPackSettings")
 			);
 			this.screenSwitchButton.active = optionMenuOpen || shaderPackList.getTopButtonRow().shadersEnabled;
 		}
+	}
+
+	private void processFixedBlur(float tick) {
+		PostChain blurEffect = ((GameRendererAccessor) this.minecraft.gameRenderer).getBlurEffect();
+		float g = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
+		if (blurEffect != null && g >= 1.0F) {
+			blurEffect.setUniform("Radius", g);
+			blurEffect.process(tick);
+		}
+	}
+
+	@Override
+	protected void renderBlurredBackground(float pScreen0) {
+		processFixedBlur(pScreen0);
+		this.minecraft.getMainRenderTarget().bindWrite(false);
 	}
 
 	@Override
@@ -357,6 +430,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.init();
 
 			this.setFocused(null);
+		} else if (key == GLFW.GLFW_KEY_F1 && this.showHideButton != null) {
+			this.guiHidden = !guiHidden;
+			this.init();
 		}
 
 		return this.guiHidden || super.keyPressed(key, j, k);
@@ -381,8 +457,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				Iris.getShaderpacksDirectoryManager().copyPackIntoDirectory(fileName, pack);
 			} catch (FileAlreadyExistsException e) {
 				this.notificationDialog = Component.translatable(
-					"options.iris.shaderPackSelection.copyErrorAlreadyExists",
-					fileName
+						"options.iris.shaderPackSelection.copyErrorAlreadyExists",
+						fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 
 				this.notificationDialogTimer = 100;
@@ -393,8 +469,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				Iris.logger.warn("Error copying dragged shader pack", e);
 
 				this.notificationDialog = Component.translatable(
-					"options.iris.shaderPackSelection.copyError",
-					fileName
+						"options.iris.shaderPackSelection.copyError",
+						fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 
 				this.notificationDialogTimer = 100;
@@ -413,27 +489,27 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 			if (paths.size() == 1) {
 				// If a single pack could not be added, provide a message with that pack in the file name
-				String fileName = paths.get(0).getFileName().toString();
+				String fileName = paths.getFirst().getFileName().toString();
 
 				this.notificationDialog = Component.translatable(
-					"options.iris.shaderPackSelection.failedAddSingle",
-					fileName
+						"options.iris.shaderPackSelection.failedAddSingle",
+						fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			} else {
 				// Otherwise, show a generic message.
 
 				this.notificationDialog = Component.translatable(
-					"options.iris.shaderPackSelection.failedAdd"
+						"options.iris.shaderPackSelection.failedAdd"
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			}
 
 		} else if (packs.size() == 1) {
 			// In most cases, users will drag a single pack into the selection menu. So, let's special case it.
-			String packName = packs.get(0).getFileName().toString();
+			String packName = packs.getFirst().getFileName().toString();
 
 			this.notificationDialog = Component.translatable(
-				"options.iris.shaderPackSelection.addedPack",
-				packName
+					"options.iris.shaderPackSelection.addedPack",
+					packName
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
 
 			// Select the pack that the user just added, since if a user just dragged a pack in, they'll probably want
@@ -443,8 +519,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			// We also support multiple packs being dragged and dropped at a time. Just show a generic success message
 			// in that case.
 			this.notificationDialog = Component.translatable(
-				"options.iris.shaderPackSelection.addedPacks",
-				packs.size()
+					"options.iris.shaderPackSelection.addedPacks",
+					packs.size()
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
 		}
 
@@ -462,14 +538,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		// as only one option file should be imported at a time
 		if (paths.size() != 1) {
 			this.notificationDialog = Component.translatable(
-				"options.iris.shaderPackOptions.tooManyFiles"
+					"options.iris.shaderPackOptions.tooManyFiles"
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
 
 			return;
 		}
 
-		this.importPackOptions(paths.get(0));
+		this.importPackOptions(paths.getFirst());
 	}
 
 	public void importPackOptions(Path settingFile) {
@@ -480,8 +556,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			Iris.queueShaderPackOptionsFromProperties(properties);
 
 			this.notificationDialog = Component.translatable(
-				"options.iris.shaderPackOptions.importedSettings",
-				settingFile.getFileName().toString()
+					"options.iris.shaderPackOptions.importedSettings",
+					settingFile.getFileName().toString()
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
 			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
 
@@ -494,8 +570,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			Iris.logger.error("Error importing shader settings file \"" + settingFile.toString() + "\"", e);
 
 			this.notificationDialog = Component.translatable(
-				"options.iris.shaderPackOptions.failedImport",
-				settingFile.getFileName().toString()
+					"options.iris.shaderPackOptions.failedImport",
+					settingFile.getFileName().toString()
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
 		}
@@ -562,9 +638,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		CompletableFuture.runAsync(() -> {
-			Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri());
-		});
+		CompletableFuture.runAsync(() -> Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri()));
 	}
 
 	// Let the screen know if an element is hovered or not, allowing for accurately updating which element is hovered
@@ -576,7 +650,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.hoveredElementCommentTitle = ((CommentedElementWidget<?>) widget).getCommentTitle();
 
 				Optional<Component> commentBody = ((CommentedElementWidget<?>) widget).getCommentBody();
-				if (!commentBody.isPresent()) {
+				if (commentBody.isEmpty()) {
 					this.hoveredElementCommentBody.clear();
 				} else {
 					String rawCommentBody = commentBody.get().getString();
@@ -609,8 +683,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	public boolean isDisplayingComment() {
 		return this.hoveredElementCommentTimer > 20 &&
-			this.hoveredElementCommentTitle.isPresent() &&
-			!this.hoveredElementCommentBody.isEmpty();
+				this.hoveredElementCommentTitle.isPresent() &&
+				!this.hoveredElementCommentBody.isEmpty();
 	}
 
 	public Button getBottomRowOption() {

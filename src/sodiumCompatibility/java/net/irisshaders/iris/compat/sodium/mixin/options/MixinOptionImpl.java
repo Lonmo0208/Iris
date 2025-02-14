@@ -1,7 +1,8 @@
 package net.irisshaders.iris.compat.sodium.mixin.options;
 
-import me.jellysquid.mods.sodium.client.gui.options.OptionImpl;
+
 import net.irisshaders.iris.compat.sodium.impl.options.OptionImplExtended;
+import org.embeddedt.embeddium.api.options.structure.OptionImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
