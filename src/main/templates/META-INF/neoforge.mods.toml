@@ -2,23 +2,24 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="LGPL-3.0-only"
-issueTrackerURL="https://github.com/Asek3/Oculus/issues"
+issueTrackerURL="https://github.com/Yuqi154/NeOculus/issues"
 
 [[mods]]
 modId="oculus"
 version="${mod_version}"
-displayURL = "https://curseforge.com/minecraft/mc-mods/oculus"
-displayName="Oculus"
+displayURL = "https://curseforge.com/minecraft/mc-mods/neoculus"
+displayName="NeOculus"
 logoFile="oculus-logo.png"
-authors="NanoLive, dima_dencep, coderbot, IMS212, Justsnoopy30, FoundationGames"
+authors="NanoLive, dima_dencep, coderbot, IMS212, Justsnoopy30, FoundationGames, Yuqi154"
 description='''
+Unofficial Fork of "Oculus", made to work with neoforge 1.21+
 Unofficial Fork of "Iris", made to work with FML
 '''
 # A URL to query for updates for this mod. See the JSON update specification https://docs.neoforged.net/docs/misc/updatechecker/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 
 # A text field displayed in the mod UI
-#credits="" #optional
+#credits=""
 
 
 [[mixins]]
@@ -66,7 +67,7 @@ file="META-INF/accesstransformer.cfg"
 
 [[dependencies.oculus]]
     modId = "embeddium"
-    type="optional"
+    type="required"
     versionRange = "[1.0.0,)"
     ordering = "AFTER"
     side = "CLIENT"
