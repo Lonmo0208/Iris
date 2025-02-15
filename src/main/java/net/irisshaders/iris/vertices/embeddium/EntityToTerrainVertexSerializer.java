@@ -1,6 +1,6 @@
 package net.irisshaders.iris.vertices.embeddium;
 
-import net.irisshaders.iris.compat.embeddium.vertex.EntityVertex;
+import net.irisshaders.iris.compat.embeddium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.NormalHelper;

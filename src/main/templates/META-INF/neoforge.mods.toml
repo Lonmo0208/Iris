@@ -33,8 +33,8 @@ config="mixins.oculus.bettermipmaps.json"
 config="mixins.oculus.fixes.maxfpscrash.json"
 [[mixins]]
 config="oculus-batched-entity-rendering.mixins.json"
-#[[mixins]]
-#config="mixins.oculus.compat.sodium.json"
+[[mixins]]
+config="mixins.oculus.compat.embeddium.json"
 [[mixins]]
 config="mixins.oculus.compat.indigo.json"
 [[mixins]]
@@ -68,5 +68,5 @@ file="META-INF/accesstransformer.cfg"
     modId = "embeddium"
     type="optional"
     versionRange = "[1.0.0,)"
-    ordering = "NONE"
+    ordering = "AFTER"
     side = "CLIENT"
