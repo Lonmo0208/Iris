@@ -80,7 +80,7 @@ public class Iris {
 	 * easy branding changes (for forks). You'll still need to change this
 	 * separately in mixin plugin classes & the language files.
 	 */
-	public static final String MODNAME = "Oculus";
+	public static final String MODNAME = "NeOculus";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!

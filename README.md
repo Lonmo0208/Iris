@@ -3,8 +3,8 @@
 </p>
 
 # NeOculus
-[![](http://cf.way2muchnoise.eu/short_oculus_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus)
-[![](http://cf.way2muchnoise.eu/versions/Available%20for_oculus_full.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus/files)
+[![](http://cf.way2muchnoise.eu/short_neoculus_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/neoculus)
+[![](http://cf.way2muchnoise.eu/versions/Available%20for_neoculus_full.svg)](https://www.curseforge.com/minecraft/mc-mods/neoculus/files)
 
 NeOculus is an Unofficial Fork of ["Oculus"](https://www.curseforge.com/minecraft/mc-mods/oculus)
 

@@ -22,13 +22,6 @@ sourceSets {
 //	}
 
 
-//	sodiumCompatibility {
-//		java {
-//			compileClasspath += main.compileClasspath
-//			compileClasspath += main.output
-//		}
-//	}
-
 }
 
 neoForge {
@@ -160,11 +153,6 @@ shadowJar {
 		)
 	}
 }
-//
-//remapJar {
-//	inputFile.set shadowJar.archiveFile
-//	dependsOn shadowJar
-//}
 configurations {
 	runtimeClasspath.extendsFrom localRuntime
 }
