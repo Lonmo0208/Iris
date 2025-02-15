@@ -2,8 +2,7 @@ package net.irisshaders.iris.compat.embeddium;
 
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
-import net.irisshaders.iris.compat.embeddium.impl.vertex_format.IrisChunkMeshAttributes;
-import net.irisshaders.iris.compat.embeddium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType;
+import net.irisshaders.iris.compat.embeddium.impl.oculus.vertices.terrain.IrisChunkMeshAttributes;
 import org.embeddedt.embeddium.impl.gl.attribute.GlVertexAttributeFormat;
 import org.embeddedt.embeddium.impl.gl.attribute.GlVertexFormat;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshAttribute;
@@ -96,7 +95,8 @@ public class FormatAnalyzer {
 			//addElement(VERTEX_FORMAT,IrisChunkMeshAttributes.MID_BLOCK, 14, midBlockOffset);
 		}
 
-		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
+//		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
+		return null;
 	}
 //
 //	private static void addElement(GlVertexFormat.Builder<ChunkMeshAttribute> VERTEX_FORMAT, VertexFormatAttribute attribute, int binding, int pointer){

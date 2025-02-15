@@ -6,5 +6,6 @@ public enum Patch {
 	DH_GENERIC,
 	SODIUM,
 	COMPOSITE,
-	COMPUTE
+	COMPUTE,
+	EMBEDDIUM
 }
