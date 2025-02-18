@@ -1,7 +1,6 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.IrisLogging;
 import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;

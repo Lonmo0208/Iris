@@ -84,7 +84,7 @@ public class Iris {
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
-	private static final String backupVersionNumber = "1.20.3";
+	private static final String backupVersionNumber = "1.21";
 	public static NamespacedId lastDimension = null;
 	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
@@ -117,9 +117,10 @@ public class Iris {
 			NeoForge.EVENT_BUS.addListener(this::onKeyInput);
 
 			IRIS_VERSION = ModList.get().getModContainerById(MODID).get().getModInfo().getVersion().toString();
+// TODO: 改动内容
 
-			if(FMLLoader.getDist().isClient())
-				modContainer.registerExtensionPoint(IConfigScreenFactory.class, (mc, screen) -> new ShaderPackScreen(screen));
+//			if(FMLLoader.getDist().isClient())
+//				modContainer.registerExtensionPoint(IConfigScreenFactory.class, (mc, screen) -> new ShaderPackScreen(screen));
 			//ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
 		}catch (Exception ignored) {
 		}
@@ -213,7 +214,9 @@ public class Iris {
 				fallback = true;
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
-			minecraft.setScreen(new ShaderPackScreen(null));
+			// TODO: 改动内容
+
+			//minecraft.setScreen(new ShaderPackScreen(null));
 		} else if (wireframeKeybind.consumeClick()) {
 			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
 				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
