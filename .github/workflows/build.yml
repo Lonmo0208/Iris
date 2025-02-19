@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: Initialize caches
         uses: actions/cache@v3
         with:
@@ -29,5 +29,5 @@ jobs:
         run: ./gradlew --no-daemon build
       - uses: actions/upload-artifact@v4
         with:
-          name: Oculus-Artifacts
+          name: NeOculus-Artifacts
           path: build/libs

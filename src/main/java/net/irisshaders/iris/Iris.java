@@ -3,13 +3,12 @@ package net.irisshaders.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.sun.jna.platform.unix.LibC;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
-import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
+import net.irisshaders.iris.gui.screen.ScreenHandler;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
@@ -25,10 +24,8 @@ import net.irisshaders.iris.shaderpack.option.Profile;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
-import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -39,25 +36,20 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -112,10 +104,8 @@ public class Iris {
 			NeoForge.EVENT_BUS.addListener(this::onKeyInput);
 
 			IRIS_VERSION = ModList.get().getModContainerById(MODID).get().getModInfo().getVersion().toString();
-// TODO: 改动内容
-
-//			if(FMLLoader.getDist().isClient())
-//				modContainer.registerExtensionPoint(IConfigScreenFactory.class, (mc, screen) -> new ShaderPackScreen(screen));
+			if(FMLLoader.getDist().isClient())
+				modContainer.registerExtensionPoint(IConfigScreenFactory.class, ScreenHandler::registerConfigScreen);
 			//ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
 		}catch (Exception ignored) {
 		}
@@ -209,9 +199,7 @@ public class Iris {
 				fallback = true;
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
-			// TODO: 改动内容
-
-			//minecraft.setScreen(new ShaderPackScreen(null));
+			ScreenHandler.openShaderPackScreen();
 		} else if (wireframeKeybind.consumeClick()) {
 			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
 				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
@@ -628,7 +616,7 @@ public class Iris {
 			return new IrisRenderingPipeline(programs);
 		} catch (Exception e) {
 			if (irisConfig.areDebugOptionsEnabled()) {
-				//Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Minecraft.getInstance().screen, Component.literal(e instanceof ShaderCompileException ? "Failed to compile shaders" : "Exception"), e));
+				ScreenHandler.openDebugLoadFailedGridScreen(Component.literal(e instanceof ShaderCompileException ? "Failed to compile shaders" : "Exception"), e);
 			} else {
 				if (Minecraft.getInstance().player != null) {
 					Minecraft.getInstance().player.displayClientMessage(Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, e.getMessage())))), false);
