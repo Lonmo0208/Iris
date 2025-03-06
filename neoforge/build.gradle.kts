@@ -1,3 +1,7 @@
+object configuration {
+
+}
+
 plugins {
     id("idea")
     id("maven-publish")
@@ -147,6 +151,10 @@ dependencies {
     implementation(fg.deobf("me.jellysquid:sodium-forge:0.6.0"))
     compileOnly(files(rootDir.resolve("DHApi.jar")))
     compileOnly(files(rootDir.resolve("Mekanism.jar")))
+    //implementation(files(rootDir.resolve("GLSL.jar")))
+    //compileOnly(files(rootDir.resolve("GLSL.jar")))
+    //minecraftLibrary(files(rootDir.resolve("GLSL.jar")))
+    //jarJar(files(rootDir.resolve("GLSL.jar")))
 }
 
 
@@ -208,3 +216,4 @@ sourceSets.forEach {
     it.output.setResourcesDir(dir)
     it.java.destinationDirectory.set(dir)
 }
+
