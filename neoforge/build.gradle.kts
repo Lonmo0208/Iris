@@ -124,20 +124,20 @@ dependencies {
     minecraft("net.minecraftforge:forge:${MINECRAFT_VERSION}-${NEOFORGE_VERSION}")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 
-    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5"  )
+    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
     annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
         jarJar.ranged(this, "[0.3.5,)")
     }
     implementation("org.antlr:antlr4-runtime:4.13.1")
 
-    //minecraftLibrary("io.github.douira:glsl-transformer2:2.0.1") {
-        //isTransitive = false
-    //}
-    //jarJar("io.github.douira:glsl-transformer2:[2.0.1,2.0.2)") {
-        //jarJar.pin(this, "2.0.1")
-        //isTransitive = false
-    //}
+    minecraftLibrary("io.github.douira:glsl-transformer2:2.0.1") {
+    isTransitive = false
+    }
+    jarJar("io.github.douira:glsl-transformer2:[2.0.1,2.0.2)") {
+    jarJar.pin(this, "2.0.1")
+    isTransitive = false
+    }
     minecraftLibrary("org.anarres:jcpp:1.4.14") {
         isTransitive = false
     }
@@ -151,10 +151,6 @@ dependencies {
     implementation(fg.deobf("me.jellysquid:sodium-forge:0.6.0"))
     compileOnly(files(rootDir.resolve("DHApi.jar")))
     compileOnly(files(rootDir.resolve("Mekanism.jar")))
-    implementation(files(rootDir.resolve("glsl-transformer.jar")))
-    compileOnly(files(rootDir.resolve("glsl-transformer.jar")))
-    minecraftLibrary(files(rootDir.resolve("glsl-transformer.jar")))
-    jarJar(files(rootDir.resolve("glsl-transformer.jar")))
 }
 
 
