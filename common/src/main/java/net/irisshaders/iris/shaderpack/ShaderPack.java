@@ -1,15 +1,10 @@
 package net.irisshaders.iris.shaderpack;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.*;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.irisshaders.iris.Iris;
+import it.unimi.dsi.fastutil.objects.*;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
@@ -50,9 +45,8 @@ public class ShaderPack {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShaderPack.class);
 	private static final Gson GSON = new Gson();
 	private static final ExecutorService ASYNC_TEXTURE_EXECUTOR = Executors.newWorkStealingPool(
-		Runtime.getRuntime().availableProcessors()
+			Runtime.getRuntime().availableProcessors()
 	);
-	private static final Map<String, Integer> SHADER_BINARY_CACHE = new ConcurrentHashMap<>();
 
 	static {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -148,8 +142,8 @@ public class ShaderPack {
 		}
 
 		this.shaderProperties = loadPropertiesAsString(root, "shaders.properties", environmentDefines)
-			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
-			.orElseGet(ShaderProperties::empty);
+				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
+				.orElseGet(ShaderProperties::empty);
 
 		activeFeatures = new HashSet<>();
 		for (int i = 0; i < shaderProperties.getRequiredFeatureFlags().size(); i++) {
@@ -168,25 +162,25 @@ public class ShaderPack {
 		}
 
 		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream()
-			.filter(FeatureFlags::isInvalid)
-			.map(FeatureFlags::getValue)
-			.collect(Collectors.toList());
+				.filter(FeatureFlags::isInvalid)
+				.map(FeatureFlags::getValue)
+				.collect(Collectors.toList());
 		List<String> invalidFeatureFlags = invalidFlagList.stream()
-			.map(FeatureFlags::getHumanReadableName)
-			.toList();
+				.map(FeatureFlags::getHumanReadableName)
+				.toList();
 
 		if (!invalidFeatureFlags.isEmpty() && Minecraft.getInstance().screen instanceof ShaderPackScreen) {
 			MutableComponent component = Component.translatable("iris.unsupported.pack.description",
-				FeatureFlags.getInvalidStatus(invalidFlagList),
-				invalidFeatureFlags.stream().collect(Collectors.joining(", ", ": ", "."))
+					FeatureFlags.getInvalidStatus(invalidFlagList),
+					invalidFeatureFlags.stream().collect(Collectors.joining(", ", ": ", "."))
 			);
 			if (SystemUtils.IS_OS_MAC) {
 				component = component.append(Component.translatable("iris.unsupported.pack.macos"));
 			}
 			Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(
-				Minecraft.getInstance().screen,
-				Component.translatable("iris.unsupported.pack"),
-				component
+					Minecraft.getInstance().screen,
+					Component.translatable("iris.unsupported.pack"),
+					component
 			));
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
@@ -199,8 +193,8 @@ public class ShaderPack {
 		}
 
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream()
-			.filter(flag -> !FeatureFlags.isInvalid(flag))
-			.toList();
+				.filter(flag -> !FeatureFlags.isInvalid(flag))
+				.toList();
 		if (!optionalFeatureFlags.isEmpty()) {
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 		}
@@ -221,12 +215,12 @@ public class ShaderPack {
 
 		String profileName = getCurrentProfileName();
 		OptionValues profileOptions = new MutableOptionValues(
-			this.shaderPackOptions.getOptionSet(),
-			this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>())
+				this.shaderPackOptions.getOptionSet(),
+				this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>())
 		);
 		int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 		this.profileInfo = String.format("Profile: %s (+%d %s changed)",
-			profileName, userOptionsChanged, (userOptionsChanged == 1 ? "option" : "options"));
+				profileName, userOptionsChanged, (userOptionsChanged == 1 ? "option" : "options"));
 		LOGGER.info("[Iris] {}", this.profileInfo);
 
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -245,10 +239,10 @@ public class ShaderPack {
 
 		String defaultDimensionPath = dimensionMap.getOrDefault(new NamespacedId("*", "*"), "");
 		this.base = new ProgramSet(
-			AbsolutePackPath.fromAbsolutePath("/" + defaultDimensionPath),
-			sourceProvider,
-			shaderProperties,
-			this
+				AbsolutePackPath.fromAbsolutePath("/" + defaultDimensionPath),
+				sourceProvider,
+				shaderProperties,
+				this
 		);
 
 		this.overrides = new HashMap<>();
@@ -290,8 +284,8 @@ public class ShaderPack {
 	private CustomTextureData readTexture(Path root, TextureDefinition definition) throws IOException {
 		try {
 			return textureCache.computeIfAbsent(definition,
-				def -> loadTextureAsync(root, def)
-					.exceptionally(e -> createFallbackTexture(def))
+					def -> loadTextureAsync(root, def)
+							.exceptionally(e -> createFallbackTexture(def))
 			).get(2000, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {
 			LOGGER.warn("Texture load timeout: {}", definition.getName());
@@ -331,22 +325,17 @@ public class ShaderPack {
 				if (definition instanceof TextureDefinition.PNGDefinition) {
 					return new CustomTextureData.PngData(filtering, data);
 				} else if (definition instanceof TextureDefinition.RawDefinition raw) {
-					switch (raw.getTarget()) {
-						case TEXTURE_1D:
-							return new CustomTextureData.RawData1D(data, filtering,
+					return switch (raw.getTarget()) {
+						case TEXTURE_1D -> new CustomTextureData.RawData1D(data, filtering,
 								raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX());
-						case TEXTURE_2D:
-							return new CustomTextureData.RawData2D(data, filtering,
+						case TEXTURE_2D -> new CustomTextureData.RawData2D(data, filtering,
 								raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY());
-						case TEXTURE_3D:
-							return new CustomTextureData.RawData3D(data, filtering,
+						case TEXTURE_3D -> new CustomTextureData.RawData3D(data, filtering,
 								raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY(), raw.getSizeZ());
-						case TEXTURE_RECTANGLE:
-							return new CustomTextureData.RawDataRect(data, filtering,
+						case TEXTURE_RECTANGLE -> new CustomTextureData.RawDataRect(data, filtering,
 								raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY());
-						default:
-							throw new IllegalArgumentException("Unsupported texture target: " + raw.getTarget());
-					}
+						default -> throw new IllegalArgumentException("Unsupported texture target: " + raw.getTarget());
+					};
 				}
 				throw new IOException("Unsupported texture definition type: " + definition.getClass().getSimpleName());
 			} catch (Exception e) {
@@ -382,8 +371,8 @@ public class ShaderPack {
 
 	private CustomTextureData createPlaceholderTexture() {
 		return new CustomTextureData.PngData(
-			new TextureFilteringData(false, false),
-			new byte[0]
+				new TextureFilteringData(false, false),
+				new byte[0]
 		);
 	}
 
@@ -422,24 +411,24 @@ public class ShaderPack {
 
 	private static Map<NamespacedId, String> parseDimensionMap(Properties properties) {
 		return properties.entrySet().stream()
-			.filter(entry -> ((String) entry.getKey()).startsWith("dimension."))
-			.flatMap(entry -> {
-				String key = ((String) entry.getKey()).substring("dimension.".length());
-				String value = (String) entry.getValue();
-				return Arrays.stream(value.split("\\s+"))
-					.map(part -> part.equals("*")
-						? new AbstractMap.SimpleEntry<>(new NamespacedId("*", "*"), key)
-						: new AbstractMap.SimpleEntry<>(new NamespacedId(part), key));
-			})
-			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				.filter(entry -> ((String) entry.getKey()).startsWith("dimension."))
+				.flatMap(entry -> {
+					String key = ((String) entry.getKey()).substring("dimension.".length());
+					String value = (String) entry.getValue();
+					return Arrays.stream(value.split("\\s+"))
+							.map(part -> part.equals("*")
+									? new AbstractMap.SimpleEntry<>(new NamespacedId("*", "*"), key)
+									: new AbstractMap.SimpleEntry<>(new NamespacedId(part), key));
+				})
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	private List<String> parseDimensionIds(Properties dimensionProperties) {
 		return dimensionProperties.keySet().stream()
-			.map(keyObj -> (String) keyObj)
-			.filter(key -> key.startsWith("dimension."))
-			.map(key -> key.substring("dimension.".length()))
-			.collect(Collectors.toList());
+				.map(keyObj -> (String) keyObj)
+				.filter(key -> key.startsWith("dimension."))
+				.map(key -> key.substring("dimension.".length()))
+				.collect(Collectors.toList());
 	}
 
 	private String getCurrentProfileName() {
@@ -522,10 +511,10 @@ public class ShaderPack {
 	}
 
 	private static final LoadingCache<PreprocessKey, String> PREPROCESS_CACHE = CacheBuilder.newBuilder()
-		.maximumSize(1000)
-		.build(new CacheLoader<PreprocessKey, String>() {
-			public @NotNull String load(@NotNull PreprocessKey key) {
-				return PropertiesPreprocessor.preprocessSource(key.content, key.defines);
-			}
-		});
+			.maximumSize(1000)
+			.build(new CacheLoader<PreprocessKey, String>() {
+				public @NotNull String load(@NotNull PreprocessKey key) {
+					return PropertiesPreprocessor.preprocessSource(key.content, key.defines);
+				}
+			});
 }
