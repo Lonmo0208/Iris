@@ -20,4 +20,3 @@ include(
     "fabric",
     "neoforge"
 )
-include("glsl-relocated")
