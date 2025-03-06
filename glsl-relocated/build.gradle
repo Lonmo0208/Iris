@@ -19,7 +19,7 @@ shadowJar {
 
     from jar.archiveFile
 
-    relocate 'org.antlr', 'oculus.org.antlr'
+    relocate 'org.antlr', 'iris.org.antlr'
 
     archiveClassifier.set "shadow"
 }
