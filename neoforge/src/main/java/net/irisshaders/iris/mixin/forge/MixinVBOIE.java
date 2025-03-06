@@ -26,6 +26,10 @@ public class MixinVBOIE {
 	private static ShaderInstance vboShader;
 
 
+	/**
+	 * @author //
+	 * @reason Iirs//
+	 */
 	@Overwrite
 	public static ShaderInstance getVboShader() {
 		if (!IrisApi.getInstance().isShaderPackInUse()) {
