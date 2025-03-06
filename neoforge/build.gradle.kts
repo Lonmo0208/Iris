@@ -146,6 +146,7 @@ dependencies {
     runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-block-view-api-v2:1.0.1+0767707077"))
     implementation(fg.deobf("me.jellysquid:sodium-forge:0.6.0"))
     compileOnly(files(rootDir.resolve("DHApi.jar")))
+    compileOnly(files(rootDir.resolve("Mekanism.jar")))
 }
 
 
