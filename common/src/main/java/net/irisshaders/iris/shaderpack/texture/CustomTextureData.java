@@ -4,10 +4,14 @@ import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
+
 /**
  * 自定义纹理数据的抽象基类，封装了各种纹理数据类型。
  */
 public abstract class CustomTextureData {
+	public abstract void bind(TextureStage stage, String samplerName);
+
 	private CustomTextureData() {} // 私有化构造器，避免实例化
 
 	/**
@@ -45,6 +49,13 @@ public abstract class CustomTextureData {
 		public byte[] getContent() {
 			return content;
 		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
+		}
 	}
 
 	/**
@@ -59,6 +70,13 @@ public abstract class CustomTextureData {
 		@Override
 		public int hashCode() {
 			return 33; // 固定哈希值，避免哈希冲突
+		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
 		}
 	}
 
@@ -96,6 +114,13 @@ public abstract class CustomTextureData {
 		 */
 		public String getLocation() {
 			return location;
+		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
 		}
 	}
 
@@ -205,6 +230,13 @@ public abstract class CustomTextureData {
 		public int getSizeX() {
 			return sizeX;
 		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
+		}
 	}
 
 	/**
@@ -249,6 +281,13 @@ public abstract class CustomTextureData {
 		 */
 		public int getSizeY() {
 			return sizeY;
+		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
 		}
 	}
 
@@ -306,6 +345,13 @@ public abstract class CustomTextureData {
 		 */
 		public int getSizeZ() {
 			return sizeZ;
+		}
+
+		@Override
+		public void bind(TextureStage stage, String samplerName) {
+			// 实现 PNG 纹理绑定逻辑
+			LOGGER.debug("Binding PNG texture to stage {} with sampler {}", stage, samplerName);
+			// 实际绑定代码
 		}
 	}
 

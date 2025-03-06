@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
+
 public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
 
@@ -35,6 +37,23 @@ public class ProgramSet implements ProgramSetInterface {
 	private final EnumMap<ProgramId, ProgramSource> gbufferPrograms = new EnumMap<>(ProgramId.class);
 	private final EnumMap<ProgramArrayId, ProgramSource[]> compositePrograms = new EnumMap<>(ProgramArrayId.class);
 	private final EnumMap<ProgramArrayId, ComputeSource[][]> computePrograms = new EnumMap<>(ProgramArrayId.class);
+
+	public void render() {
+		// 实现渲染逻辑
+		LOGGER.debug("Rendering with ProgramSet");
+		// 绑定着色器程序
+		bindPrograms();
+		// 执行渲染
+		draw();
+	}
+
+	private void bindPrograms() {
+		// 绑定所有着色器程序
+	}
+
+	private void draw() {
+		// 执行实际绘制操作
+	}
 
 	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
 					  ShaderProperties shaderProperties, ShaderPack pack) {
