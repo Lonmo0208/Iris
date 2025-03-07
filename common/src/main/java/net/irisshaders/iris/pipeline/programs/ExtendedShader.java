@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
@@ -58,7 +59,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final boolean hasOverrides;
 	private final Uniform modelViewInverse;
 	private final Uniform projectionInverse;
-	private final Uniform normalMatrix;
+	private final Matrix3f normalMatrix = new Matrix3f();
 	private final CustomUniforms customUniforms;
 	private final IrisRenderingPipeline parent;
 	private final ProgramUniforms uniforms;
@@ -73,6 +74,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final Matrix3f tempMatrix3f = new Matrix3f();
 	private final float[] tempFloats = new float[16];
 	private final float[] tempFloats2 = new float[9];
+	private final int normalMatLocation;
 	private Program geometry, tessControl, tessEval;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, boolean usesTessellation,
@@ -90,6 +92,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		GLDebug.nameObject(KHRDebug.GL_PROGRAM, programId, string);
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
+
+		this.normalMatLocation = GlStateManager._glGetUniformLocation(programId, "iris_NormalMat");
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		uniformCreator.accept(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
@@ -111,13 +115,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 		this.modelViewInverse = this.getUniform("ModelViewMatInverse");
 		this.projectionInverse = this.getUniform("ProjMatInverse");
-		this.normalMatrix = this.getUniform("NormalMat");
 
 		this.intensitySwizzle = isIntensity;
-	}
-
-	public boolean isIntensitySwizzle() {
-		return intensitySwizzle;
 	}
 
 	@Override
@@ -175,7 +174,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 		uploadIfNotNull(projectionInverse);
 		uploadIfNotNull(modelViewInverse);
-		uploadIfNotNull(normalMatrix);
 
 		List<Uniform> uniformList = super.uniforms;
 		for (Uniform uniform : uniformList) {
@@ -219,6 +217,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			return uniform;
 		}
 	}
+
+
 
 	private void uploadIfNotNull(Uniform uniform) {
 		if (uniform != null) {
@@ -300,5 +300,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	public boolean hasActiveImages() {
 		return images.getActiveImages() > 0;
+	}
+
+	public int getNormalMatLocation() {
+		return normalMatLocation;
 	}
 }

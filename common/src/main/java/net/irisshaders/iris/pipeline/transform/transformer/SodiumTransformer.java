@@ -38,7 +38,7 @@ public class SodiumTransformer {
 
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-					"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
+					"vec4((_vert_tex_diffuse_coord_bias * u_TexCoordShrink) + _vert_tex_diffuse_coord, 0.0, 1.0)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(0.0, 0.0, 0.0, 1.0)");
@@ -132,10 +132,11 @@ public class SodiumTransformer {
 		Root root,
 		SodiumParameters parameters) {
 		String separateAo = WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
+			"vec2 _vert_tex_diffuse_coord_bias;",
 			"vec2 _vert_tex_light_coord;",
 			"vec4 _vert_color;",
 			"const uint POSITION_BITS        = 20u;",
@@ -146,36 +147,38 @@ public class SodiumTransformer {
 			"const uint TEXTURE_MAX_COORD    = 1u << TEXTURE_BITS;",
 			"const uint TEXTURE_MAX_VALUE    = TEXTURE_MAX_COORD - 1u;",
 
-			"const float VERTEX_SCALE = 32.0 / POSITION_MAX_COORD;",
+			"const float VERTEX_SCALE = 32.0 / float(POSITION_MAX_COORD);",
 			"const float VERTEX_OFFSET = -8.0;",
 			"const float TEXTURE_FUZZ_AMOUNT = 1.0 / 64.0;",
 			"const float TEXTURE_GROW_FACTOR = (1.0 - TEXTURE_FUZZ_AMOUNT) / TEXTURE_MAX_COORD;",
 			"uint _draw_id;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"""
-				uvec3 _deinterleave_u20x3(uint packed_hi, uint packed_lo) {
-				     uvec3 hi = (uvec3(packed_hi) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
-				     uvec3 lo = (uvec3(packed_lo) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
+				uvec3 _deinterleave_u20x3(uvec2 data) {
+				    uvec3 hi = (uvec3(data.x) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
+				    uvec3 lo = (uvec3(data.y) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
 
-				     return (hi << 10u) | lo;
-				 }
-			\t""",
+				    return (hi << 10u) | lo;
+				}
+				""",
 			"""
 				vec2 _get_texcoord() {
-				     return vec2(a_TexCoord & TEXTURE_MAX_VALUE) / float(TEXTURE_MAX_COORD);
-				 }
-			""",
+				    return vec2(a_TexCoord & TEXTURE_MAX_VALUE) / float(TEXTURE_MAX_COORD);
+				}
+				""",
 			"""
-				vec2 _get_texcoord_bias() {
-				     return mix(vec2(-TEXTURE_GROW_FACTOR), vec2(TEXTURE_GROW_FACTOR), bvec2(a_TexCoord >> TEXTURE_BITS));
-				 }
+			vec2 _get_texcoord_bias() {
+				return mix(vec2(-1.0), vec2(1.0), bvec2(a_TexCoord >> TEXTURE_BITS));
+			}
 			""",
+			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
 			"void _vert_init() {" +
-				"_vert_position = ((_deinterleave_u20x3(a_PositionHi, a_PositionLo) * VERTEX_SCALE) + VERTEX_OFFSET);" +
-					"_vert_tex_diffuse_coord = _get_texcoord() + _get_texcoord_bias();" +
+				"_vert_position = (_deinterleave_u20x3(a_Position) * VERTEX_SCALE) + VERTEX_OFFSET;" +
+				"_vert_tex_diffuse_coord = _get_texcoord();" +
+				"_vert_tex_diffuse_coord_bias = _get_texcoord_bias();" +
 				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
 				"_vert_color = " + separateAo + ";" +
 				"_draw_id = a_LightAndData[3]; }",
@@ -187,11 +190,11 @@ public class SodiumTransformer {
 			"vec3 _get_draw_translation(uint pos) {\n" +
 				"    return _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
 				"}\n");
-		addIfNotExists(root, t, tree, "a_PositionHi", Type.UINT32, StorageQualifier.StorageType.IN);
-		addIfNotExists(root, t, tree, "a_PositionLo", Type.UINT32, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_Position", Type.U32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_TexCoord", Type.U32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
-		addIfNotExists(root, t, tree, "a_LightAndData", Type.U32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_LightAndData", Type.I32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "u_TexCoordShrink", Type.F32VEC2, StorageQualifier.StorageType.UNIFORM);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 

@@ -1,6 +1,9 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
@@ -27,9 +30,27 @@ public class SodiumCoreTransformer {
 			root.replaceReferenceExpressions(t, "vaPosition", "_vert_position + _get_draw_translation(_draw_id)");
 			root.replaceReferenceExpressions(t, "vaColor", "_vert_color");
 			root.rename("vaNormal", "iris_Normal");
-			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");
+			root.replaceReferenceExpressions(t, "vaUV0", "((_vert_tex_diffuse_coord_bias * u_TexCoordShrink) + _vert_tex_diffuse_coord)");
 			root.replaceReferenceExpressions(t, "vaUV1", "ivec2(0, 10)");
 			root.replaceReferenceExpressions(t, "vaUV2", "(vec4(_decode_light(a_LightAndData.xy), 0.0, 1.0) * inverse(iris_LightmapTextureMatrix)).xy");
+			for (Identifier id : root.identifierIndex.get("vaUV2")) {
+				TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(
+					2, 0, TypeAndInitDeclaration.class::isInstance);
+				if (initDeclaration == null) {
+					continue;
+				}
+				DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) initDeclaration.getAncestor(
+					1, 0, DeclarationExternalDeclaration.class::isInstance);
+				if (declaration == null) {
+					continue;
+				}
+				declaration.detachAndDelete();
+				initDeclaration.detachAndDelete();
+				id.detachAndDelete();
+
+			}
+
+			root.rename("vaUV2", "_vert_tex_light_coord");
 
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
 

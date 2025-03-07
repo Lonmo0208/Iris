@@ -14,7 +14,7 @@ import org.lwjgl.system.MemoryUtil;
 import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
 public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertexWriter {
-	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
+	private final QuadViewTerrain quad = new QuadViewTerrain();
 	private final Vector3f normal = new Vector3f();
 
 	private BlockContextHolder contextHolder;
@@ -92,6 +92,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
 				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
 		}
+
+		int normalV = NormI8.pack(normal);
+
 
 		for (int i = 0; i < 4; i++) {
 			var vertex = vertices[i];

@@ -4,6 +4,7 @@ import net.irisshaders.iris.gl.GlVersion;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL31C;
+import org.lwjgl.opengl.GL33C;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -76,6 +77,7 @@ public enum InternalTextureFormat {
 	R3_G3_B2(GL11C.GL_R3_G3_B2, GlVersion.GL_11, PixelFormat.RGB),
 	RGB5_A1(GL11C.GL_RGB5_A1, GlVersion.GL_11, PixelFormat.RGBA),
 	RGB10_A2(GL11C.GL_RGB10_A2, GlVersion.GL_11, PixelFormat.RGBA),
+	RGB10_A2UI(GL33C.GL_RGB10_A2UI, GlVersion.GL_31, PixelFormat.RGBA_INTEGER),
 	R11F_G11F_B10F(GL30C.GL_R11F_G11F_B10F, GlVersion.GL_30, PixelFormat.RGB),
 	RGB9_E5(GL30C.GL_RGB9_E5, GlVersion.GL_30, PixelFormat.RGB);
 

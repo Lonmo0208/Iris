@@ -1,6 +1,8 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.GLDebug;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.vertices.ImmediateState;
 import org.lwjgl.opengl.GL43C;
@@ -30,11 +32,18 @@ public class MixinGlStateManager_DepthColorOverride {
 
 	@Redirect(method = "_drawElements", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glDrawElements(IIIJ)V"), remap = false)
 	private static void iris$modify(int mode, int count, int type, long indices) {
+		GLDebug.pushNow();
+
 		if (mode == GL43C.GL_TRIANGLES && ImmediateState.usingTessellation) {
 			mode = GL43C.GL_PATCHES;
 		}
 
 		GL43C.glDrawElements(mode, count, type, indices);
+	}
+
+	@Inject(method = "_clear", at = @At("HEAD"))
+	private static void push2(int i, boolean bl, CallbackInfo ci) {
+		GLDebug.pushNow();
 	}
 
 	@Inject(method = "_glUseProgram", at = @At("TAIL"), remap = false)

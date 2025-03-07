@@ -100,9 +100,9 @@ public class DHCompatInternal<IDhApiGenericObjectShaderProgram> {
 	}
 
 	public static int getDhBlockRenderDistance() {
-		if (DhApi.Delayed.configs == null) {
+		if (DhApi.Delayed.configs == null || !dhEnabled) {
 			// Called before DH has finished setup
-			return 0;
+			return Minecraft.getInstance().options.getEffectiveRenderDistance();
 		}
 
 		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;
@@ -141,7 +141,7 @@ public class DHCompatInternal<IDhApiGenericObjectShaderProgram> {
 		if (DhApi.Delayed.configs == null) return dhEnabled;
 
 		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
-			&& IrisApi.getInstance().isShaderPackInUse()) {
+			&& Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline) {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
 			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
 			try {
