@@ -41,10 +41,10 @@ public class MixinGlStateManager_DepthColorOverride {
 		GL43C.glDrawElements(mode, count, type, indices);
 	}
 
-	@Inject(method = "_clear", at = @At("HEAD"))
-	private static void push2(int i, boolean bl, CallbackInfo ci) {
-		GLDebug.pushNow();
-	}
+	//@Inject(method = "_clear", at = @At("HEAD"))
+	//private static void push2(int i, boolean bl, CallbackInfo ci) {
+		//GLDebug.pushNow();
+	//}
 
 	@Inject(method = "_glUseProgram", at = @At("TAIL"), remap = false)
 	private static void iris$resetTessellation(int pInt0, CallbackInfo ci) {
