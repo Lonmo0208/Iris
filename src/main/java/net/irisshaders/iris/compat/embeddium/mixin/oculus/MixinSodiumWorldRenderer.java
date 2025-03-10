@@ -38,8 +38,8 @@ public class MixinSodiumWorldRenderer {
 		ShadowRenderingState.setBlockEntityRenderFunction((shadowRenderer, bufferSource, modelView, camera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, lightsOnly) -> {
 			renderLightsOnly = lightsOnly;
 
-			((EmbeddiumWorldRendererAssessor)EmbeddiumWorldRenderer.instance()).invokeRenderBlockEntities(modelView, Minecraft.getInstance().renderBuffers(), Long2ObjectMaps.emptyMap(), tickDelta, bufferSource.bufferSource(), cameraX, cameraY, cameraZ, Minecraft.getInstance().getBlockEntityRenderDispatcher());
-			((EmbeddiumWorldRendererAssessor)EmbeddiumWorldRenderer.instance()).invokeRenderGlobalBlockEntities(modelView, Minecraft.getInstance().renderBuffers(), Long2ObjectMaps.emptyMap(), tickDelta, bufferSource.bufferSource(), cameraX, cameraY, cameraZ, Minecraft.getInstance().getBlockEntityRenderDispatcher());
+			((EmbeddiumWorldRendererAssessor)EmbeddiumWorldRenderer.instance()).invokeRenderBlockEntities(modelView, Minecraft.getInstance().renderBuffers(), Long2ObjectMaps.emptyMap(), tickDelta, bufferSource, cameraX, cameraY, cameraZ, Minecraft.getInstance().getBlockEntityRenderDispatcher());
+			((EmbeddiumWorldRendererAssessor)EmbeddiumWorldRenderer.instance()).invokeRenderGlobalBlockEntities(modelView, Minecraft.getInstance().renderBuffers(), Long2ObjectMaps.emptyMap(), tickDelta, bufferSource, cameraX, cameraY, cameraZ, Minecraft.getInstance().getBlockEntityRenderDispatcher());
 
 			int finalBeList = beList;
 

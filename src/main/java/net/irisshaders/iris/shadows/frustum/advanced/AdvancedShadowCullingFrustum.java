@@ -1,10 +1,13 @@
 package net.irisshaders.iris.shadows.frustum.advanced;
 
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Math;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -28,7 +31,7 @@ import org.joml.Vector4f;
  * are not sensitive to the specific internal ordering of planes and corners, in order to avoid potential bugs at the
  * cost of slightly more computations.</p>
  */
-public class AdvancedShadowCullingFrustum extends Frustum {
+public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
 	private static final int MAX_CLIPPING_PLANES = 13;
 	protected final BoxCuller boxCuller;
 	/**
@@ -69,7 +72,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	private int worldMaxYDH;
 	private int planeCount = 0;
 
-	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
+	public AdvancedShadowCullingFrustum(Matrix4fc playerView, Matrix4fc playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new org.joml.Matrix4f(), new org.joml.Matrix4f());
@@ -380,5 +383,16 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		}
 
 		return true;
+	}
+
+	@Override
+	public void update(int worldMinBlockY, int worldMaxBlockY, DhApiMat4f worldViewProjection) {
+		this.worldMinYDH = worldMinBlockY;
+		this.worldMaxYDH = worldMaxBlockY;
+	}
+
+	@Override
+	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
+		return this.isVisible(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
 	}
 }

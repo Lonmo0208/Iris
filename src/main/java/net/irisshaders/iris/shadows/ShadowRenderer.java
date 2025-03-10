@@ -11,11 +11,9 @@ import net.irisshaders.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
-import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
-import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
@@ -41,7 +39,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.joml.Matrix4f;
@@ -88,7 +85,6 @@ public class ShadowRenderer {
 	private final String debugStringOverall;
 	private final boolean separateHardwareSamplers;
 	private final boolean shouldRenderLightBlockEntities;
-	private final IrisRenderingPipeline pipeline;
 	private boolean packHasVoxelization;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
@@ -96,10 +92,9 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(IrisRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
+	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms, boolean separateHardwareSamplers) {
 
-		this.pipeline = pipeline;
 		this.separateHardwareSamplers = separateHardwareSamplers;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -155,7 +150,7 @@ public class ShadowRenderer {
 		configureSamplingSettings(shadowDirectives);
 	}
 
-	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize, float nearPlane, float farPlane) {
+	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
@@ -165,7 +160,7 @@ public class ShadowRenderer {
 
 		// Set up our modelview matrix stack
 		PoseStack modelView = new PoseStack();
-		ShadowMatrices.createModelViewMatrix(modelView, getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ, nearPlane, farPlane);
+		ShadowMatrices.createModelViewMatrix(modelView, getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
 
 		return modelView;
 	}
@@ -340,13 +335,12 @@ public class ShadowRenderer {
 
 			shadowLightVectorFromOrigin.normalize();
 
-			Matrix4f projView = ((shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection())
-					.mul(CapturedRenderingState.INSTANCE.getGbufferModelView(), new Matrix4f());
-
 			if (isReversed) {
-				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
+				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
+						(shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
 			} else {
-				return holder.setInfo(new AdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+				return holder.setInfo(new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
+						(shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 			}
 		}
 
@@ -385,21 +379,8 @@ public class ShadowRenderer {
 		setupShadowViewport();
 
 		// Create our camera
-		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize, nearPlane, farPlane);
+		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = new Matrix4f(modelView.last().pose());
-
-		// Set up our orthographic projection matrix and load it into RenderSystem
-		Matrix4f shadowProjection;
-		if (this.fov != null) {
-			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
-			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
-		} else {
-			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, Mth.equal(nearPlane, -1.0f) ? -DHCompat.getRenderDistance() * 16 : nearPlane, Mth.equal(farPlane, -1.0f) ? DHCompat.getRenderDistance() * 16 : farPlane);
-		}
-
-		IrisRenderSystem.setShadowProjection(shadowProjection);
-
-		PROJECTION = shadowProjection;
 
 		levelRenderer.getLevel().getProfiler().push("terrain_setup");
 
@@ -451,6 +432,20 @@ public class ShadowRenderer {
 		client.smartCull = wasChunkCullingEnabled;
 
 		levelRenderer.getLevel().getProfiler().popPush("terrain");
+
+
+		// Set up our orthographic projection matrix and load it into RenderSystem
+		Matrix4f shadowProjection;
+		if (this.fov != null) {
+			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
+			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
+		} else {
+			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() : farPlane);
+		}
+
+		IrisRenderSystem.setShadowProjection(shadowProjection);
+
+		PROJECTION = shadowProjection;
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -515,9 +510,9 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		if (shouldRenderBlockEntities) {
-			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, buffers, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, false);
+			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, bufferSource, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, false);
 		} else if (shouldRenderLightBlockEntities) {
-			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, buffers, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, true);
+			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, bufferSource, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, true);
 		}
 
 		levelRenderer.getLevel().getProfiler().popPush("draw entities");
@@ -570,11 +565,7 @@ public class ShadowRenderer {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
 
-		pipeline.removePhaseIfNeeded();
-
-		GLDebug.pushGroup(901, "shadowcomp");
 		compositeRenderer.renderAll();
-		GLDebug.popGroup();
 
 		levelRenderer.setRenderBuffers(playerBuffers);
 
@@ -585,7 +576,7 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
 	}
 
-	public int renderBlockEntities(RenderBuffers bufferSource, PoseStack modelView, Camera camera, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum, boolean lightsOnly) {
+	public int renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, Camera camera, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum, boolean lightsOnly) {
 		getLevel().getProfiler().push("build blockentities");
 
 		int shadowBlockEntities = 0;
@@ -608,7 +599,7 @@ public class ShadowRenderer {
 			}
 			modelView.pushPose();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, buffers.bufferSource());
+			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, bufferSource);
 			modelView.popPose();
 
 			shadowBlockEntities++;
@@ -704,7 +695,6 @@ public class ShadowRenderer {
 			messages.add("[" + Iris.MODNAME + "] Shadow Maps: " + debugStringOverall);
 			messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 			messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
-			messages.add("[" + Iris.MODNAME + "] Shadow Projection: " + getProjectionInfo());
 			messages.add("[" + Iris.MODNAME + "] Shadow Terrain: " + debugStringTerrain
 					+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 			messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
@@ -720,10 +710,6 @@ public class ShadowRenderer {
 		}
 	}
 
-	private String getProjectionInfo() {
-		return "Near: " + nearPlane + " Far: " + farPlane + " distance " + halfPlaneLength;
-	}
-
 	private String getEntitiesDebugString() {
 		return (shouldRenderEntities || shouldRenderPlayer) ? (renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount()) : "disabled by pack";
 	}
@@ -733,6 +719,7 @@ public class ShadowRenderer {
 	}
 
 	public void destroy() {
+		targets.destroy();
 		((MemoryTrackingRenderBuffers) buffers).freeAndDeleteBuffers();
 	}
 

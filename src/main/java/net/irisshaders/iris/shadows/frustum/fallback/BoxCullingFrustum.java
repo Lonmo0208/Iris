@@ -1,11 +1,13 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 
-public class BoxCullingFrustum extends Frustum {
+public class BoxCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
 	private final BoxCuller boxCuller;
 	private double x, y, z;
 	private int worldMinYDH;
@@ -34,5 +36,16 @@ public class BoxCullingFrustum extends Frustum {
 
 	public boolean isVisible(AABB box) {
 		return !boxCuller.isCulled(box);
+	}
+
+	@Override
+	public void update(int worldMinBlockY, int worldMaxBlockY, DhApiMat4f worldViewProjection) {
+		this.worldMinYDH = worldMinBlockY;
+		this.worldMaxYDH = worldMaxBlockY;
+	}
+
+	@Override
+	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
+		return !boxCuller.isCulled(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth);
 	}
 }
