@@ -19,7 +19,10 @@ Unofficial Fork of "Iris", made to work with FML
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 
 # A text field displayed in the mod UI
-#credits=""
+credits='''
+AcceleratedRendering by Argon4W under MIT License
+SwayingGarden by joe-vettek , ARR
+'''
 
 
 [[mixins]]
