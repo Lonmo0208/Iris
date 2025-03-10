@@ -10,16 +10,18 @@ import org.lwjgl.opengl.GL43C;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ShaderStorageBufferHolder {
-	private static final List<ShaderStorageBuffer> ACTIVE_BUFFERS = new ArrayList<>();
 	private int cachedWidth;
 	private int cachedHeight;
 	private ShaderStorageBuffer[] buffers;
 	private boolean destroyed;
 
+	private static List<ShaderStorageBuffer> ACTIVE_BUFFERS = new ArrayList<>();
 
-	public ShaderStorageBufferHolder(Int2ObjectArrayMap<BuiltShaderStorageInfo> overrides, int width, int height) {
+
+	public ShaderStorageBufferHolder(Int2ObjectArrayMap<ShaderStorageInfo> overrides, int width, int height) {
 		destroyed = false;
 		cachedWidth = width;
 		cachedHeight = height;
@@ -40,7 +42,10 @@ public class ShaderStorageBufferHolder {
 			if (bufferInfo.relative()) {
 				buffers[index].resizeIfRelative(width, height);
 			} else {
-				buffers[index].createStatic();
+				GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffer);
+				IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, bufferInfo.size(), 0);
+				IrisRenderSystem.clearBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, 0, bufferInfo.size(), GL43C.GL_RED, GL43C.GL_BYTE, new int[]{0});
+				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, buffer);
 			}
 		});
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
@@ -48,14 +53,6 @@ public class ShaderStorageBufferHolder {
 
 	private static long toMib(long x) {
 		return x / 1024L / 1024L;
-	}
-
-	public static void forceDeleteBuffers() {
-		if (!ACTIVE_BUFFERS.isEmpty()) {
-			Iris.logger.warn("Found " + ACTIVE_BUFFERS.size() + " stored buffers with a total size of " + ACTIVE_BUFFERS.stream().map(ShaderStorageBuffer::getSize).reduce(0L, Long::sum) + ", forcing them to be deleted.");
-			ACTIVE_BUFFERS.forEach(ShaderStorageBuffer::destroy);
-			ACTIVE_BUFFERS.clear();
-		}
 	}
 
 	public void hasResizedScreen(int width, int height) {
@@ -67,6 +64,14 @@ public class ShaderStorageBufferHolder {
 					buffer.resizeIfRelative(width, height);
 				}
 			}
+		}
+	}
+
+	public static void forceDeleteBuffers() {
+		if (!ACTIVE_BUFFERS.isEmpty()) {
+			Iris.logger.warn("Found " + ACTIVE_BUFFERS.size() + " stored buffers with a total size of " + ACTIVE_BUFFERS.stream().map(ShaderStorageBuffer::getSize).reduce(0L, Long::sum) + ", forcing them to be deleted.");
+			ACTIVE_BUFFERS.forEach(ShaderStorageBuffer::destroy);
+			ACTIVE_BUFFERS.clear();
 		}
 	}
 

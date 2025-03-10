@@ -7,7 +7,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
-import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
@@ -52,7 +51,6 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -63,6 +61,7 @@ public class CompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final TextureAccess noiseTexture;
+	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
@@ -71,17 +70,16 @@ public class CompositeRenderer {
 	private final Set<GlImage> customImages;
 	private final TextureStage textureStage;
 	private final WorldRenderingPipeline pipeline;
-	private final CompositePass compositePass;
 
-	public CompositeRenderer(WorldRenderingPipeline pipeline, CompositePass compositePass, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
+	public CompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
 							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
 							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips,
 							 CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
-		this.compositePass = compositePass;
 		this.noiseTexture = noiseTexture;
+		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
@@ -111,9 +109,8 @@ public class CompositeRenderer {
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			if (source == null || !source.isValid()) {
-				if (computes.length != 0 && computes[i] != null && computes[i].length > 0) {
+				if (computes[i] != null) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
-					pass.name = computes[i].length > 0 ? Arrays.stream(computes[i]).filter(Objects::nonNull).findFirst().map(ComputeSource::getName).orElse("unknown") : "unknown";
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 					passes.add(pass);
 				}
@@ -123,14 +120,9 @@ public class CompositeRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
-			pass.name = source.getName();
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
-			if (computes.length != 0) {
-				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
-			} else {
-				pass.computes = new ComputeProgram[0];
-			}
+			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 			int[] drawBuffers = directives.getDrawBuffers();
 
 
@@ -180,23 +172,6 @@ public class CompositeRenderer {
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
-	}
-
-	private boolean hasComputes(ComputeSource[][] computes) {
-		boolean hasCompute = false;
-
-		for (int i = 0; i < computes.length; i++) {
-			if (computes[i].length > 0) {
-				for (int j = 0; j < computes[i].length; j++) {
-					if (computes[i][j] != null) {
-						hasCompute = true;
-						break;
-					}
-				}
-			}
-		}
-
-		return hasCompute;
 	}
 
 	private static void setupMipmapping(net.irisshaders.iris.targets.RenderTarget target, boolean readFromAlt) {
@@ -251,15 +226,12 @@ public class CompositeRenderer {
 	}
 
 	public void renderAll() {
-		GLDebug.pushGroup(20 + compositePass.ordinal(), compositePass.name().toLowerCase(Locale.ROOT));
 		RenderSystem.disableBlend();
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
-		for (int i = 0, passesSize = passes.size(); i < passesSize; i++) {
-			Pass renderPass = passes.get(i);
-			GLDebug.pushGroup(20 * compositePass.ordinal() + i, renderPass.name);
+		for (Pass renderPass : passes) {
 			boolean ranCompute = false;
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
@@ -277,7 +249,6 @@ public class CompositeRenderer {
 			Program.unbind();
 
 			if (renderPass instanceof ComputeOnlyPass) {
-				GLDebug.popGroup();
 				continue;
 			}
 
@@ -309,7 +280,6 @@ public class CompositeRenderer {
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 
 			BlendModeOverride.restore();
-			GLDebug.popGroup();
 		}
 
 		FullScreenQuadRenderer.INSTANCE.end();
@@ -332,8 +302,6 @@ public class CompositeRenderer {
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
-
-		GLDebug.popGroup();
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
@@ -401,7 +369,8 @@ public class CompositeRenderer {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-			if (source == null || source.getSource().isEmpty()) {
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
 			} else {
 				// TODO: Properly handle empty shaders
 				Objects.requireNonNull(flipped);
@@ -466,7 +435,6 @@ public class CompositeRenderer {
 		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
-		String name;
 		Program program;
 		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;

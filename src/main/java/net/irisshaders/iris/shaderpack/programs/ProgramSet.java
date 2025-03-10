@@ -19,12 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Function;
 
 public class ProgramSet implements ProgramSetInterface {
@@ -61,32 +56,18 @@ public class ProgramSet implements ProgramSetInterface {
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
 
-		try (ExecutorService service = Executors.newFixedThreadPool(10)) {
-			for (ProgramArrayId id : ProgramArrayId.values()) {
-				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
-				compositePrograms.put(id, sources);
-				ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
-				boolean hasNoComputes = true;
-				for (int i = 0; i < id.getNumPrograms(); i++) {
-					computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
-					if (computes[i].length > 0) {
-						hasNoComputes = false;
-					}
-				}
-				computePrograms.put(id, hasNoComputes ? new ComputeSource[0][] : computes);
+		for (ProgramArrayId id : ProgramArrayId.values()) {
+			ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
+			compositePrograms.put(id, sources);
+			ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
+			for (int i = 0; i < id.getNumPrograms(); i++) {
+				computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
 			}
+			computePrograms.put(id, computes);
+		}
 
-			Future[] sources = new Future[ProgramId.values().length];
-
-			for (ProgramId programId : ProgramId.values()) {
-				sources[programId.ordinal()] = service.submit(() -> readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
-			}
-
-			for (ProgramId id : ProgramId.values()) {
-				gbufferPrograms.put(id, (ProgramSource) sources[id.ordinal()].get());
-			}
-		} catch (ExecutionException | InterruptedException e) {
-			throw new RuntimeException(e);
+		for (ProgramId programId : ProgramId.values()) {
+			gbufferPrograms.put(programId, readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
 		}
 
 		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
@@ -203,10 +184,6 @@ public class ProgramSet implements ProgramSetInterface {
 			}
 		}
 
-		if (Arrays.stream(programs).allMatch(Objects::isNull)) {
-			return new ComputeSource[0];
-		}
-
 		return programs;
 	}
 
@@ -306,6 +283,6 @@ public class ProgramSet implements ProgramSetInterface {
 	}
 
 	public ComputeSource[][] getCompute(ProgramArrayId programArrayId) {
-		return computePrograms.getOrDefault(programArrayId, new ComputeSource[0][0]);
+		return computePrograms.getOrDefault(programArrayId, new ComputeSource[programArrayId.getNumPrograms()][27]);
 	}
 }

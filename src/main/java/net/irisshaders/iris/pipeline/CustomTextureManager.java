@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.GlTexture;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
@@ -27,16 +26,15 @@ import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
-import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Optional;
 
 public class CustomTextureManager {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureAccess>> customTextureIdMap = new EnumMap<>(TextureStage.class);
@@ -53,7 +51,7 @@ public class CustomTextureManager {
 
 	public CustomTextureManager(PackDirectives packDirectives,
 								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
-								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, CustomTextureData customNoiseTextureData) {
+								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
 			Object2ObjectMap<String, TextureAccess> customTextureIds = new Object2ObjectOpenHashMap<>();
 
@@ -77,20 +75,22 @@ public class CustomTextureManager {
 			}
 		});
 
-		if (customNoiseTextureData == null) {
+		noise = customNoiseTextureData.flatMap(textureData -> {
+			try {
+				return Optional.of(createCustomTexture(textureData));
+			} catch (IOException | ResourceLocationException e) {
+				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
+
+				return Optional.empty();
+			}
+		}).orElseGet(() -> {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
 			NativeImageBackedNoiseTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 			ownedTextures.add(texture);
 
-			noise = texture;
-		} else {
-			try {
-				noise = createCustomTexture(customNoiseTextureData);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+			return texture;
+		});
 	}
 
 	private TextureAccess createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -149,13 +149,6 @@ public class CustomTextureManager {
 				//     now.
 				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
-					if (texture instanceof TextureAtlas || texture instanceof PBRAtlasTexture) {
-						int tex = GlStateManagerAccessor.getActiveTexture();
-						int binding = GlStateManagerAccessor.getTEXTURES()[tex].binding;
-						texture.setFilter(false, Minecraft.getInstance().options.mipmapLevels().get() > 0);
-						GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + tex);
-						GlStateManager._bindTexture(binding);
-					}
 					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
 				}, TextureType.TEXTURE_2D);
 			} else {
@@ -166,18 +159,12 @@ public class CustomTextureManager {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
 
 					if (texture != null) {
-						if (texture instanceof TextureAtlas || texture instanceof PBRAtlasTexture) {
-							int tex = GlStateManagerAccessor.getActiveTexture();
-							int binding = GlStateManagerAccessor.getTEXTURES()[tex].binding;
-							texture.setFilter(false, Minecraft.getInstance().options.mipmapLevels().get() > 0);
-							GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + tex);
-							GlStateManager._bindTexture(binding);
-						}
 						int id = texture.getId();
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 						AbstractTexture pbrTexture = switch (pbrType) {
 							case NORMAL -> pbrHolder.normalTexture();
 							case SPECULAR -> pbrHolder.specularTexture();
+							default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
 						};
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();

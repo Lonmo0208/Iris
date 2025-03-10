@@ -2,18 +2,19 @@ package net.irisshaders.iris.shaderpack.properties;
 
 import net.irisshaders.iris.Iris;
 
+import java.util.Optional;
+
 public enum ParticleRenderingSettings {
-	UNSET,
 	BEFORE,
 	MIXED,
 	AFTER;
 
-	public static ParticleRenderingSettings fromString(String name) {
+	public static Optional<ParticleRenderingSettings> fromString(String name) {
 		try {
-			return ParticleRenderingSettings.valueOf(name);
+			return Optional.of(ParticleRenderingSettings.valueOf(name));
 		} catch (IllegalArgumentException e) {
-			Iris.logger.error("Invalid particle rendering settings! " + name);
-			return ParticleRenderingSettings.UNSET;
+			Iris.logger.warn("Invalid particle rendering settings! " + name);
+			return Optional.empty();
 		}
 	}
 }

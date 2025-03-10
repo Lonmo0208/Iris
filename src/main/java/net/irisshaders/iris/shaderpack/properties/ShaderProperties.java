@@ -111,7 +111,7 @@ public class ShaderProperties {
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
-	private ParticleRenderingSettings particleRenderingSettings = ParticleRenderingSettings.UNSET;
+	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private List<String> mainScreenOptions = null;
@@ -210,7 +210,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> {
 				separateEntityDraws = bool;
-				particleRenderingSettings = ParticleRenderingSettings.MIXED;
+				particleRenderingSettings = Optional.of(ParticleRenderingSettings.MIXED);
 			});
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
@@ -218,16 +218,20 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "skipAllRendering", bool -> skipAllRendering = bool);
 			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
-				if (bool.orElse(false) && particleRenderingSettings == ParticleRenderingSettings.UNSET) {
-					particleRenderingSettings = ParticleRenderingSettings.BEFORE;
+				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
+					particleRenderingSettings = Optional.of(ParticleRenderingSettings.BEFORE);
 				}
 			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
 			handleBooleanDirective(key, value, "supportsColorCorrection", bool -> supportsColorCorrection = bool);
-			handleIntDirective(key, value, "fallbackTex", bool -> fallbackTex = bool);
 
 			if (key.startsWith("particles.ordering")) {
-				particleRenderingSettings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
+				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
+				if (settings.isPresent()) {
+					particleRenderingSettings = settings;
+				} else {
+					throw new RuntimeException("Failed to parse particle rendering order! " + value);
+				}
 			}
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
@@ -377,7 +381,9 @@ public class ShaderProperties {
 				}
 			});
 
-			handleProgramEnabledDirective("program.", key, value, program -> conditionallyEnabledPrograms.put(program, value));
+			handleProgramEnabledDirective("program.", key, value, program -> {
+				conditionallyEnabledPrograms.put(program, value);
+			});
 
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
@@ -385,19 +391,13 @@ public class ShaderProperties {
 				boolean isRelative;
 				float scaleX, scaleY;
 				String[] parts = value.split(" ");
-				if (parts.length <= 2) {
+				if (parts.length == 1) {
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Long.parseLong(parts[0]);
+						trueSize = Long.parseLong(value);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 						return;
-					}
-
-					String name = null;
-
-					if (parts.length > 1) {
-						name = parts[1];
 					}
 
 					if (trueIndex > 8) {
@@ -410,7 +410,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0, name));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
 				} else {
 					// Assume it's a long one
 					try {
@@ -434,7 +434,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY, null));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY));
 				}
 			});
 
@@ -566,8 +566,12 @@ public class ShaderProperties {
 				irisCustomImages.add(image);
 			});
 
-			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value, shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
-					.put(buffer, shouldFlip)));
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
+				handleBooleanValue(key, value, shouldFlip -> {
+					explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+							.put(buffer, shouldFlip);
+				});
+			});
 
 			handlePassDirective("variable.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
@@ -877,8 +881,9 @@ public class ShaderProperties {
 		return shadowEnabled;
 	}
 
-	public ParticleRenderingSettings getParticleRenderingSettings() {
-		// Mixed is implied if separateEntityDraws is true.
+	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+		// Before is implied if separateEntityDraws is true.
+		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.MIXED);
 		return particleRenderingSettings;
 	}
 

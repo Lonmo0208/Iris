@@ -30,12 +30,6 @@ public abstract class MixinDefaultChunkRenderer extends ShaderChunkRenderer {
 	}
 
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lorg/embeddedt/embeddium/impl/gui/EmbeddiumOptions$PerformanceSettings;useBlockFaceCulling:Z"), remap = false)
-	private boolean iris$disableBlockFaceCullingInShadowPass(EmbeddiumOptions.PerformanceSettings instance) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) return false;
-		return instance.useBlockFaceCulling;
-	}
-
 //	// TODO
 //	@WrapOperation(method = "prepareTessellation", at = @At(value = "INVOKE", target = "Lorg/embeddedt/embeddium/impl/render/chunk/DefaultChunkRenderer;createRegionTessellation(Lorg/embeddedt/embeddium/impl/gl/device/CommandList;Lorg/embeddedt/embeddium/impl/render/chunk/region/RenderRegion$DeviceResources;)Lorg/embeddedt/embeddium/impl/gl/tessellation/GlTessellation;"), remap = false)
 //	private GlTessellation doNotSortInShadow(DefaultChunkRenderer instance, CommandList commandList, RenderRegion.DeviceResources resources, Operation<GlTessellation> original) {

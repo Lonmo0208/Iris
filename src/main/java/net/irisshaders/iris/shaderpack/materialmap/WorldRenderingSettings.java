@@ -22,6 +22,7 @@ public class WorldRenderingSettings {
 	private boolean disableDirectionalShading;
 	private boolean hasVillagerConversionId;
 	private boolean useSeparateAo;
+	private boolean useExtendedVertexFormat;
 	private boolean separateEntityDraws;
 	private boolean voxelizeLightBlocks;
 	private ChunkVertexType chunkVertexFormat;
@@ -33,6 +34,7 @@ public class WorldRenderingSettings {
 		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
+		useExtendedVertexFormat = false;
 		chunkVertexFormat = ChunkMeshFormats.COMPACT;
 		separateEntityDraws = false;
 		voxelizeLightBlocks = false;
@@ -93,6 +95,19 @@ public class WorldRenderingSettings {
 	public void setItemIds(Object2IntFunction<NamespacedId> itemIds) {
 		// note: no reload needed, entities are rebuilt every frame.
 		this.itemIds = itemIds;
+	}
+
+	public boolean shouldUseExtendedVertexFormat() {
+		return useExtendedVertexFormat;
+	}
+
+	public void setUseExtendedVertexFormat(boolean useExtendedVertexFormat) {
+		if (useExtendedVertexFormat == this.useExtendedVertexFormat) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.useExtendedVertexFormat = useExtendedVertexFormat;
 	}
 
 	public float getAmbientOcclusionLevel() {

@@ -11,26 +11,31 @@
     "conformVisibility": true
   },
   "client": [
+    "oculus.shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
+    "oculus.shadow_map.frustum.MixinBoxCullingFrustum",
+    "oculus.shadow_map.frustum.MixinNonCullingFrustum",
+    "shadow_map.frustum.MixinCullEverythingFrustum"
   ],
   "mixins": [
-    "oculus.ChunkMeshAttributeAccessor",
     "monocle.mixin.EmbeddiumWorldRendererAssessor",
     "monocle.mixin.MixinChunkBuildBuffers",
-    "oculus.MixinChunkMeshAttribute",
     "monocle.mixin.MixinChunkMeshBufferBuilder",
     "monocle.mixin.MixinChunkMeshBuildTask",
     "monocle.mixin.MixinChunkShaderInterface",
     "monocle.mixin.MixinCloudRenderer",
     "monocle.mixin.MixinDefaultChunkRenderer",
-    "oculus.MixinGlRenderDevice",
     "monocle.mixin.MixinGlVertexFormatbuilder",
     "monocle.mixin.MixinRenderRegionArenas",
     "monocle.mixin.MixinRenderSectionManager",
-    "oculus.MixinRenderSectionManagerShadow",
+    "oculus.ChunkMeshAttributeAccessor",
+    "oculus.MixinChunkMeshAttribute",
+    "oculus.MixinGlRenderDevice",
     "oculus.MixinShaderChunkRenderer",
-    "oculus.MixinSodiumWorldRenderer",
     "oculus.MixinVertexSerializerCache",
     "oculus.entity.CommonVertexAttributeInterface",
-    "oculus.entity.MixinCommonVertexAttribute"
+    "oculus.entity.MixinCommonVertexAttribute",
+    "oculus.shadow_map.MixinDefaultChunkRenderer",
+    "oculus.shadow_map.MixinEmbeddiumWorldRenderer",
+    "oculus.shadow_map.MixinRenderSectionManager"
   ]
 }

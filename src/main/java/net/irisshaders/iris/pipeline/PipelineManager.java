@@ -9,9 +9,7 @@ import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class PipelineManager {
@@ -24,8 +22,17 @@ public class PipelineManager {
 		this.pipelineFactory = pipelineFactory;
 	}
 
+	private boolean containsKey(NamespacedId currentDimension){
+		for (NamespacedId namespacedId : pipelinesPerDimension.keySet()) {
+			if(namespacedId.equals(currentDimension)){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public WorldRenderingPipeline preparePipeline(NamespacedId currentDimension) {
-		if (!pipelinesPerDimension.containsKey(currentDimension)) {
+		if (!containsKey(currentDimension)) {
 			SystemTimeUniforms.COUNTER.reset();
 			SystemTimeUniforms.TIMER.reset();
 

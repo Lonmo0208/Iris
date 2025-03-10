@@ -11,6 +11,7 @@ import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
+import net.irisshaders.iris.targets.RenderTargetStateListener;
 import net.minecraft.client.Camera;
 
 import java.util.List;
@@ -28,6 +29,8 @@ public interface WorldRenderingPipeline {
 	Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap();
 
 	WorldRenderingPhase getPhase();
+
+	RenderTargetStateListener getRenderTargetStateListener();
 
 	void setPhase(WorldRenderingPhase phase);
 

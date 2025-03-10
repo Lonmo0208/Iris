@@ -1,5 +1,7 @@
 package net.irisshaders.iris.gl;
 
+import net.irisshaders.iris.Iris;
+
 public abstract class GlResource {
 	private final int id;
 	private boolean isValid;
@@ -10,6 +12,10 @@ public abstract class GlResource {
 	}
 
 	public final void destroy() {
+		if(!isValid){
+			Iris.logger.warn("Tried to destroy a GlResource that was already destroyed");
+			return;
+		}
 		destroyInternal();
 		isValid = false;
 	}

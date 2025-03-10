@@ -1,6 +1,7 @@
 package net.irisshaders.iris.targets;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
@@ -112,6 +113,10 @@ public class RenderTarget {
 	}
 
 	public void destroy() {
+		if(!isValid){
+			Iris.logger.warn("Tried to destroy a RenderTarget that was already destroyed");
+			return;
+		}
 		requireValid();
 		isValid = false;
 

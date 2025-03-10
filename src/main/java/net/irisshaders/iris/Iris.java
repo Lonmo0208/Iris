@@ -638,19 +638,6 @@ public class Iris {
 			pipelineManager = new PipelineManager(Iris::createPipeline);
 		}
 
-		if (loadPackWhenPossible && renderSystemInit) {
-			loadPackWhenPossible = false;
-			try {
-				reload();
-			} catch (IOException e) {
-				logger.error("Error while reloading Shaders for " + MODNAME + "!", e);
-
-				if (Minecraft.getInstance().player != null) {
-					Minecraft.getInstance().player.displayClientMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-				}
-			}
-		}
-
 		return pipelineManager;
 	}
 
