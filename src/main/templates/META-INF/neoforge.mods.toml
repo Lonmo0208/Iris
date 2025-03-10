@@ -24,6 +24,9 @@ AcceleratedRendering by Argon4W under MIT License
 SwayingGarden by joe-vettek , ARR
 '''
 
+[[mods]]
+modId="iris"
+description="fake mod"
 
 [[mixins]]
 config="mixins.oculus.json"

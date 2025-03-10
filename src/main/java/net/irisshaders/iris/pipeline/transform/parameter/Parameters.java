@@ -38,6 +38,7 @@ public abstract class Parameters implements JobParameters {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((patch == null) ? 0 : patch.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		return result;
 	}
@@ -52,6 +53,8 @@ public abstract class Parameters implements JobParameters {
 			return false;
 		Parameters other = (Parameters) obj;
 		if (patch != other.patch)
+			return false;
+		if (type != other.type)
 			return false;
 		if (textureMap == null) {
 			return other.textureMap == null;

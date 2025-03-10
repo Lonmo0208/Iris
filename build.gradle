@@ -111,7 +111,7 @@ dependencies {
 	implementation jarJar("org.anarres:jcpp:1.4.14")
 
 	implementation jarJar("curse.maven:swaying-garden-1203057:6266721")
-	implementation jarJar("com.github.argon4w:acceleratedrendering:1.0.0")
+	implementation jarJar("com.github.argon4w:acceleratedrendering:${acceleratedrendering_version}")
 
 
 	jarJar(implementation("org.taumc:glsl-transformation-lib:0.2.0-20.ge3cb096")) {
@@ -120,6 +120,9 @@ dependencies {
 	additionalRuntimeClasspath("org.taumc:glsl-transformation-lib:0.2.0-20.ge3cb096") {
 		transitive = false
 	}
+
+	runtimeOnly "curse.maven:distant-horizons-508933:6251735"
+	runtimeOnly "curse.maven:the-twilight-forest-227639:6087105"
 }
 
 
@@ -144,21 +147,21 @@ sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
 
-shadowJar {
-	configurations = [project.configurations.shadow]
-
-	from jar.archiveFile
-
-	relocate 'org.apache.commons.collections4', 'oculus.org.apache.commons.collections4'
-
-	archiveClassifier.set "shadow"
-
-	manifest {
-		attributes(
-				'Main-Class': 'net.irisshaders.iris.LaunchWarn'
-		)
-	}
-}
+//shadowJar {
+//	configurations = [project.configurations.shadow]
+//
+//	from jar.archiveFile
+//
+//	relocate 'org.apache.commons.collections4', 'oculus.org.apache.commons.collections4'
+//
+//	archiveClassifier.set "shadow"
+//
+//	manifest {
+//		attributes(
+//				'Main-Class': 'net.irisshaders.iris.LaunchWarn'
+//		)
+//	}
+//}
 configurations {
 	runtimeClasspath.extendsFrom localRuntime
 }

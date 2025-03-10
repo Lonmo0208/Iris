@@ -41,6 +41,13 @@ public class EmbeddiumEvent {
                 .add(AROptions.acceleratedTextRenderingMeshType)
                 .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_text_rendering"))
                 .build();
+        OptionGroup item = OptionGroup.createBuilder()
+                .add(AROptions.acceleratedItemRenderingFeatureStatus)
+                .add(AROptions.acceleratedItemRenderingDefaultPipeline)
+                .add(AROptions.acceleratedItemRenderingMeshType)
+                .add(AROptions.acceleratedItemRenderingBakeMeshForQuads)
+                .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_item_rendering"))
+                .build();
         OptionGroup culling = OptionGroup.createBuilder()
                 .add(AROptions.normalCullingFeatureStatus)
                 .add(AROptions.normalCullingDefaultCulling)
@@ -59,7 +66,7 @@ public class EmbeddiumEvent {
 
         page = new OptionPage(OptionIdentifier.create(ResourceLocation.fromNamespaceAndPath(Iris.MODID, "accelerated_rendering")),
                 Component.translatable("acceleratedrendering.configuration.title"),
-                ImmutableList.of(core, entity, text, culling, compatibility));
+                ImmutableList.of(core, entity, text, item,culling, compatibility));
         event.addPage(page);
     }
 

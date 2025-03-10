@@ -28,6 +28,10 @@ public class AROptions {
     public static final Option<FeatureStatus> acceleratedTextRenderingFeatureStatus;
     public static final Option<PipelineSetting> acceleratedTextRenderingDefaultPipeline;
     public static final Option<MeshType> acceleratedTextRenderingMeshType;
+    public static final Option<FeatureStatus> acceleratedItemRenderingFeatureStatus;
+    public static final Option<FeatureStatus> acceleratedItemRenderingBakeMeshForQuads;
+    public static final Option<PipelineSetting> acceleratedItemRenderingDefaultPipeline;
+    public static final Option<MeshType> acceleratedItemRenderingMeshType;
     public static final Option<FeatureStatus> normalCullingFeatureStatus;
     public static final Option<FeatureStatus> normalCullingDefaultCulling;
     public static final Option<FeatureStatus> normalCullingIgnoreCullState;
@@ -132,6 +136,38 @@ public class AROptions {
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.mesh_type.tooltip"))
                 .setControl(e->new CyclingControl<>(e,MeshType.class))
                 .setBinding(meshTypeBinding)
+                .setImpact(OptionImpact.VARIES)
+                .build();
+
+        acceleratedItemRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingFeatureStatus))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.feature_status"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.feature_status"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.feature_status.tooltip"))
+                .setControl(FeatureStatusTickBoxControl::new)
+                .setBinding(featureStatusBinding)
+                .setImpact(OptionImpact.LOW)
+                .build();
+        acceleratedItemRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingDefaultPipeline))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.default_pipeline"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.default_pipeline"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.default_pipeline.tooltip"))
+                .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
+                .setBinding(pipelineSettingBinding)
+                .build();
+        acceleratedItemRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingMeshType))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.mesh_type"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.mesh_type"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.mesh_type.tooltip"))
+                .setControl(e->new CyclingControl<>(e,MeshType.class))
+                .setBinding(meshTypeBinding)
+                .setImpact(OptionImpact.VARIES)
+                .build();
+        acceleratedItemRenderingBakeMeshForQuads = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingBakeMeshForQuads))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.bake_mesh_for_quads"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.bake_mesh_for_quads"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.bake_mesh_for_quads.tooltip"))
+                .setControl(FeatureStatusTickBoxControl::new)
+                .setBinding(featureStatusBinding)
                 .setImpact(OptionImpact.VARIES)
                 .build();
         normalCullingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.normalCullingFeatureStatus))

@@ -68,7 +68,7 @@ public abstract class MixinDebugScreenOverlay {
 
 		messages.add("");
 		messages.add("[" + Iris.MODNAME + "] Version: " + Iris.getFormattedVersion());
-		messages.add("[" + AcceleratedRenderingModInfo.getArModName() + "] Version: " + AcceleratedRenderingModInfo.getArModVersion());
+		messages.add("[" + AcceleratedRenderingModInfo.getArModName() + "] Version: " + AcceleratedRenderingModInfo.getFormattedArModVersion());
 		messages.add("");
 
 		if (Iris.getIrisConfig().areShadersEnabled()) {

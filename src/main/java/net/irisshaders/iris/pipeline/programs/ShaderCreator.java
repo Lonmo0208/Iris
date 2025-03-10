@@ -96,7 +96,25 @@ public class ShaderCreator {
 			        { "name": "iris_GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
 			        { "name": "iris_FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
 			        { "name": "iris_FogEnd", "type": "float", "count": 1, "values": [ 1.0 ] },
-			        { "name": "iris_FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] }
+			        { "name": "iris_FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+			        {
+			                    "name": "iris_OverlayUV",
+			                    "type": "int",
+			                    "count": 2,
+			                    "values": [
+			                        0,
+			                        0
+			                    ]
+			                },
+			                {
+			                    "name": "iris_LightUV",
+			                    "type": "int",
+			                    "count": 2,
+			                    "values": [
+			                        0,
+			                        0
+			                    ]
+			                }
 			    ]
 			}""", name, name);
 
@@ -117,9 +135,7 @@ public class ShaderCreator {
 			customUniforms.assignTo(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 			VanillaUniforms.addVanillaUniforms(uniforms);
-		}, (samplerHolder, imageHolder) -> {
-			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
-		}, isIntensity, parent, overrides, customUniforms);
+		}, (samplerHolder, imageHolder) -> parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay()), isIntensity, parent, overrides, customUniforms);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
