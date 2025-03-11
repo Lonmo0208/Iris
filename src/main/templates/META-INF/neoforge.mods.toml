@@ -24,6 +24,13 @@ AcceleratedRendering by Argon4W under MIT License
 SwayingGarden by joe-vettek , ARR
 '''
 
+[[mods]]
+modId="iris"
+version="${mod_version}"
+displayName="Iris"
+description='''
+Dummy Mod of Iris
+'''
 
 [[mixins]]
 config="mixins.oculus.json"
