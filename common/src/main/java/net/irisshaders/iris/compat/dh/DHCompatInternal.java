@@ -100,9 +100,9 @@ public class DHCompatInternal<IDhApiGenericObjectShaderProgram> {
 	}
 
 	public static int getDhBlockRenderDistance() {
-		if (DhApi.Delayed.configs == null) {
+		if (DhApi.Delayed.configs == null || !dhEnabled) {
 			// Called before DH has finished setup
-			return 0;
+			return Minecraft.getInstance().options.getEffectiveRenderDistance();
 		}
 
 		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;

@@ -12,16 +12,20 @@ import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
 import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.encodeLight;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.encodeTexture;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.packLightAndData;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.packPositionHi;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.packPositionLo;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.packTexture;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.quantizePosition;
 
 public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertexWriter {
-	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
+	private final QuadViewTerrain quad = new QuadViewTerrain();
 	private final Vector3f normal = new Vector3f();
 
 	private BlockContextHolder contextHolder;
 
-	private int vertexCount;
-	private float uSum;
-	private float vSum;
 	private boolean flipUpcomingNormal;
 
 	// TODO: FIX
@@ -61,8 +65,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	}
 
 	@Override
-	public long write(long ptr,
-					  Material material, Vertex[] vertices, int section) {
+	public long write(long ptr, Material material, Vertex[] vertices, int section) {
+		quad.set(vertices);
+
 		// Calculate the center point of the texture region which is mapped to the quad
 		float texCentroidU = 0.0f;
 		float texCentroidV = 0.0f;
@@ -74,24 +79,20 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 
 		texCentroidU *= (1.0f / 4.0f);
 		texCentroidV *= (1.0f / 4.0f);
-		int midUV = XHFPModelVertexType.encodeOld(texCentroidU, texCentroidV);
-		NormalHelper.computeFaceNormalManual(normal, vertices[0].x, vertices[0].y, vertices[0].z,
-			vertices[1].x, vertices[1].y, vertices[1].z,
-			vertices[2].x, vertices[2].y, vertices[2].z,
-			vertices[3].x, vertices[3].y, vertices[3].z);
-		int packedNormal = NormI8.pack(normal);
-		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
-			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
-			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
 
-		if (tangent == -1) {
-			// Try calculating the second triangle
-			tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
-				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
-				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+		int midUV = XHFPModelVertexType.encodeTextureOld(texCentroidU, texCentroidV);
+
+		if (flipUpcomingNormal) {
+			NormalHelper.computeFaceNormalFlipped(normal, quad);
+			flipUpcomingNormal = false;
+		} else {
+			NormalHelper.computeFaceNormal(normal, quad);
 		}
+
+		int normalV = NormI8.pack(normal);
+
+		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
+
 
 		for (int i = 0; i < 4; i++) {
 			var vertex = vertices[i];
@@ -110,17 +111,16 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			MemoryUtil.memPutInt(ptr +  8L, vertex.color);
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material.bits(), section));
-
-			MemoryUtil.memPutShort(ptr + 32, contextHolder.blockId);
+			MemoryUtil.memPutInt(ptr + 20L, midUV);
+			MemoryUtil.memPutInt(ptr + 24L, tangent);
+			MemoryUtil.memPutInt(ptr + 28L, normalV);
+			MemoryUtil.memPutShort(ptr + 32L, contextHolder.blockId);
 			MemoryUtil.memPutShort(ptr + 34, contextHolder.renderType);
 			MemoryUtil.memPutInt(ptr + 36, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 			MemoryUtil.memPutByte(ptr + 39, contextHolder.lightValue);
 
-			MemoryUtil.memPutInt(ptr + 20, midUV);
-			MemoryUtil.memPutInt(ptr + 28, packedNormal);
-			MemoryUtil.memPutInt(ptr + 24, tangent);
-
 			ptr += STRIDE;
+
 		}
 
 		return ptr;

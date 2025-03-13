@@ -5,6 +5,7 @@ import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shadows.ShadowMatrices;
 import net.irisshaders.iris.shadows.ShadowRenderer;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -23,8 +24,8 @@ public final class MatrixUniforms {
 		addShadowMatrix(uniforms, "ModelView", () ->
 			new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
 		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
-			directives.getShadowDirectives().getNearPlane() < 0 ? -DHCompat.getRenderDistance() : directives.getShadowDirectives().getNearPlane(),
-			directives.getShadowDirectives().getFarPlane() < 0 ? DHCompat.getRenderDistance() : directives.getShadowDirectives().getFarPlane()));
+			Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+			Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
