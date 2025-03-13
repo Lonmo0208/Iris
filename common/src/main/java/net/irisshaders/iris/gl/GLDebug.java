@@ -33,7 +33,7 @@ public final class GLDebug {
 	public static int setupDebugMessageCallback() {
 		reloadDebugState();
 
-		return setupDebugMessageCallback(System.out);
+		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
 	}
 
 	private static void trace(Consumer<String> output) {
@@ -77,7 +77,6 @@ public final class GLDebug {
 
 	public static int setupDebugMessageCallback(PrintStream stream) {
 		GLCapabilities caps = GL.getCapabilities();
-		GL46C.glEnable(GL46C.GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		if (caps.OpenGL43) {
 			Iris.logger.info("[GL] Using OpenGL 4.3 for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
@@ -314,15 +313,11 @@ public final class GLDebug {
 	}
 
 	public static void pushGroup(int id, String name) {
-		debugState.pushGroup(id, name);
-	}
-
-	public static void pushNow() {
-		debugState.pushNow();
+		//debugState.pushGroup(id, name);
 	}
 
 	public static void popGroup() {
-		debugState.popGroup();
+		//debugState.popGroup();
 	}
 
 	private interface DebugState {
@@ -330,18 +325,11 @@ public final class GLDebug {
 
 		void pushGroup(int id, String name);
 
-		void pushNow();
-
 		void popGroup();
 	}
 
 	private static class KHRDebugState implements DebugState {
-		// Let's see how bad this goes
-		private static final boolean ENABLE_DEBUG_GROUPS = true;
 		private int stackSize;
-		private final Stack<String> stack = new Stack<>();
-		private String toPush;
-		private int toPushId;
 
 		@Override
 		public void nameObject(int id, int object, String name) {
@@ -350,36 +338,15 @@ public final class GLDebug {
 
 		@Override
 		public void pushGroup(int id, String name) {
-			if (toPush != null) pushNow();
-			if (ENABLE_DEBUG_GROUPS) {
-				toPush = name;
-				toPushId = id;
-			}
-		}
-
-		@Override
-		public void pushNow() {
-			if (toPush != null) {
-				KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, toPushId, toPush);
-				stack.push(toPush);
-				stackSize += 1;
-				toPush = null;
-			}
+			KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, id, name);
+			stackSize += 1;
 		}
 
 		@Override
 		public void popGroup() {
-			if (ENABLE_DEBUG_GROUPS) {
-				if (toPush != null) {
-					toPush = null;
-					return;
-				}
-
-				if (stackSize != 0) {
-					KHRDebug.glPopDebugGroup();
-					stack.pop();
-					stackSize -= 1;
-				}
+			if (stackSize != 0) {
+				KHRDebug.glPopDebugGroup();
+				stackSize -= 1;
 			}
 		}
 	}
@@ -391,11 +358,6 @@ public final class GLDebug {
 
 		@Override
 		public void pushGroup(int id, String name) {
-		}
-
-		@Override
-		public void pushNow() {
-
 		}
 
 		@Override

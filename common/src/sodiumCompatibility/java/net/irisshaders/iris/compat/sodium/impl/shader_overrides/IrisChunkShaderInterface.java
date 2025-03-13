@@ -5,6 +5,7 @@ import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.device.GLRenderDevice;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
@@ -40,6 +41,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	@Nullable
 	private final GlUniformMatrix4f uniformModelViewMatrix;
 	@Nullable
+	private final GlUniformFloat2v uniformTexCoordShrink;
+	@Nullable
 	private final GlUniformMatrix4f uniformModelViewMatrixInverse;
 	@Nullable
 	private final GlUniformMatrix4f uniformProjectionMatrix;
@@ -62,7 +65,6 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private final boolean hasOverrides;
 	private final boolean isTess;
 	private final CustomUniforms customUniforms;
-	private boolean uniformTexCoordShrink;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline, ChunkShaderOptions options,
 									boolean isTess, boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha, CustomUniforms customUniforms) {
@@ -78,6 +80,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 			}
 		}, options);
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("iris_ModelViewMatrix", GlUniformMatrix4f::new);
+		this.uniformTexCoordShrink = contextExt.bindUniformIfPresent("u_TexCoordShrink", GlUniformFloat2v::new);
 		this.uniformModelViewMatrixInverse = contextExt.bindUniformIfPresent("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("iris_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrixInverse = contextExt.bindUniformIfPresent("iris_ProjectionMatrixInverse", GlUniformMatrix4f::new);
@@ -86,9 +89,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 		this.customUniforms = customUniforms;
 		this.isTess = isTess;
-
 		this.alpha = alpha;
-
 		this.blendModeOverride = blendModeOverride;
 		this.bufferBlendOverrides = bufferOverrides;
 		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
@@ -97,50 +98,56 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		ProgramUniforms.Builder builder = pipeline.initUniforms(handle);
 		customUniforms.mapholderToPass(builder, this);
 		this.irisProgramUniforms = builder.buildUniforms();
-		this.irisProgramSamplers
-			= isShadowPass ? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
+		this.irisProgramSamplers = isShadowPass ? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
 	}
 
 	@Override
 	public void setupState() {
-		// See IrisSamplers#addLevelSamplers
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
-		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
 		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
+
+		if (this.uniformTexCoordShrink != null) {
+			TextureAtlas textureAtlas = (TextureAtlas) Minecraft.getInstance()
+				.getTextureManager()
+				.getTexture(TextureAtlas.LOCATION_BLOCKS);
+
+
+			// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
+			// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
+			// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
+			double subTexelPrecision = (1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
+			double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
+
+			this.uniformTexCoordShrink.set(
+				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetWidth()) / subTexelPrecision))),
+				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight()) / subTexelPrecision)))
+			);
+		}
+
 
 		if (blendModeOverride != null) blendModeOverride.apply();
 		ImmediateState.usingTessellation = isTess;
 
-		if (hasOverrides) {
-			bufferBlendOverrides.forEach(BufferBlendOverride::apply);
-		}
+		if (hasOverrides) bufferBlendOverrides.forEach(BufferBlendOverride::apply);
 
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();
 		irisProgramSamplers.update();
 		irisProgramImages.update();
-
 		customUniforms.push(this);
 	}
 
 	public void restore() {
 		ImmediateState.usingTessellation = false;
-
-		if (blendModeOverride != null || hasOverrides) {
-			BlendModeOverride.restore();
-		}
+		if (blendModeOverride != null || hasOverrides) BlendModeOverride.restore();
 	}
-
 
 	@Override
 	public void setProjectionMatrix(Matrix4fc matrix) {
-		if (this.uniformProjectionMatrix != null) {
-			this.uniformProjectionMatrix.set(matrix);
-		}
-
+		if (this.uniformProjectionMatrix != null) this.uniformProjectionMatrix.set(matrix);
 		if (this.uniformProjectionMatrixInverse != null) {
 			Matrix4f inverted = new Matrix4f(matrix);
 			inverted.invert();
@@ -150,10 +157,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 
 	@Override
 	public void setModelViewMatrix(Matrix4fc modelView) {
-		if (this.uniformModelViewMatrix != null) {
-			this.uniformModelViewMatrix.set(modelView);
-		}
-
+		if (this.uniformModelViewMatrix != null) this.uniformModelViewMatrix.set(modelView);
 		if (this.uniformModelViewMatrixInverse != null) {
 			Matrix4f invertedMatrix = new Matrix4f(modelView);
 			invertedMatrix.invert();
@@ -171,15 +175,11 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	}
 
 	public void setDrawUniforms(GlMutableBuffer buffer) {
-		if (this.uniformBlockDrawParameters != null) {
-			this.uniformBlockDrawParameters.bindBuffer(buffer);
-		}
+		if (this.uniformBlockDrawParameters != null) this.uniformBlockDrawParameters.bindBuffer(buffer);
 	}
 
 	@Override
 	public void setRegionOffset(float x, float y, float z) {
-		if (this.uniformRegionOffset != null) {
-			this.uniformRegionOffset.set(x, y, z);
-		}
+		if (this.uniformRegionOffset != null) this.uniformRegionOffset.set(x, y, z);
 	}
 }

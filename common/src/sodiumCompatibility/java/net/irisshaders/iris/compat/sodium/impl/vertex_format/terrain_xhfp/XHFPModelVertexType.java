@@ -32,21 +32,18 @@ public class XHFPModelVertexType implements ChunkVertexType {
 
 	private static final float MODEL_ORIGIN = 8.0f;
 	private static final float MODEL_RANGE = 32.0f;
-	private static final float MODEL_SCALE = MODEL_RANGE / POSITION_MAX_VALUE;
 
 	protected static int packPositionHi(int x, int y, int z) {
 		return  (((x >>> 10) & 0x3FF) <<  0) |
 			(((y >>> 10) & 0x3FF) << 10) |
 			(((z >>> 10) & 0x3FF) << 20);
 	}
-	private static final float MODEL_SCALE_INV = POSITION_MAX_VALUE / MODEL_RANGE;
 
 	protected static int packPositionLo(int x, int y, int z) {
 		return  ((x & 0x3FF) <<  0) |
 			((y & 0x3FF) << 10) |
 			((z & 0x3FF) << 20);
 	}
-	private static final float TEXTURE_SCALE = (1.0f / TEXTURE_MAX_VALUE);
 
 	public static int quantizePosition(float position) {
 		return ((int) (normalizePosition(position) * POSITION_MAX_VALUE)) & 0xFFFFF;
@@ -64,9 +61,6 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	public static int packTexture(int u, int v) {
 		return ((u & 0xFFFF) << 0) | ((v & 0xFFFF) << 16);
 	}
-	static float decodeBlockTexture(short raw) {
-		return (raw & 0xFFFF) * TEXTURE_SCALE;
-	}
 
 	public static int encodeTexture(float center, float x) {
 		// Shrink the texture coordinates (towards the center of the mapped texture region) by the minimum
@@ -78,9 +72,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
 		int bias = (x < center) ? 1 : -1;
 		int quantized = Math.round(x * TEXTURE_MAX_VALUE) + bias;
 
-		return (quantized & 0x7FFF) | (sign(bias) << 15);}
-	static short encodePosition(float v) {
-		return (short) ((MODEL_ORIGIN + v) * MODEL_SCALE_INV);
+		return (quantized & 0x7FFF) | (sign(bias) << 15);
 	}
 
 	public static int encodeLight(int light) {
@@ -93,20 +85,13 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	public static int packLightAndData(int light, int material, int section) {
 		return ((light & 0xFFFF) << 0) |
 			((material & 0xFF) << 16) |
-			((section & 0xFF) << 24);}
-	static float decodePosition(short raw) {
-		return (raw & 0xFFFF) * MODEL_SCALE - MODEL_ORIGIN;
+			((section & 0xFF) << 24);
 	}
 
 	private static int sign(int x) {
 		// Shift the sign-bit to the least significant bit's position
 		// (0) if positive, (1) if negative
 		return (x >>> 31);
-	}
-
-	public static int encodeOld(float u, float v) {
-		return ((Math.round(u * TEXTURE_MAX_VALUE) & 0xFFFF) << 0) |
-			((Math.round(v * TEXTURE_MAX_VALUE) & 0xFFFF) << 16);
 	}
 
 	@Override

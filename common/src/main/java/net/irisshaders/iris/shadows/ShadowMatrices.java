@@ -8,18 +8,11 @@ public class ShadowMatrices {
 	public static final float NEAR = -100.05f;
 	public static final float FAR = 156.0f;
 
+	// NB: These matrices are in column-major order, not row-major order like what you'd expect!
+
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
-		return new Matrix4f(
-			// column 1
-			1.0f / halfPlaneLength, 0f, 0f, 0f,
-			// column 2
-			0f, 1.0f / halfPlaneLength, 0f, 0f,
-			// column 3
-			0f, 0f, 2.0f / (nearPlane - farPlane), 0f,
-			// column 4
-			0f, 0f, -(farPlane + nearPlane) / (farPlane - nearPlane), 1f
-		).setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane);
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane);
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
@@ -49,7 +42,6 @@ public class ShadowMatrices {
 		target.last().normal().identity();
 		target.last().pose().identity();
 
-		target.last().pose().translate(0.0f, 0.0f, -100.0f);
 		target.mulPose(Axis.XP.rotationDegrees(90.0F));
 		target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
 		target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));
