@@ -171,7 +171,6 @@ public class SodiumTransformer {
 				     return mix(vec2(-TEXTURE_GROW_FACTOR), vec2(TEXTURE_GROW_FACTOR), bvec2(a_TexCoord >> TEXTURE_BITS));
 				 }
 			""",
-			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
