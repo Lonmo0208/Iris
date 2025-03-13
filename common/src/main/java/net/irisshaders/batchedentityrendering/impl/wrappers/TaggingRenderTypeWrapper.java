@@ -1,5 +1,6 @@
 package net.irisshaders.batchedentityrendering.impl.wrappers;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.batchedentityrendering.impl.WrappableRenderType;
@@ -61,6 +62,16 @@ public class TaggingRenderTypeWrapper extends RenderType implements WrappableRen
 		// Add one so that we don't have the exact same hash as the wrapped object.
 		// This means that we won't have a guaranteed collision if we're inserted to a map alongside the unwrapped object.
 		return this.wrapped.hashCode() + this.tag + 1;
+	}
+
+	@Override
+	public VertexFormat format() {
+		return wrapped.format();
+	}
+
+	@Override
+	public VertexFormat.Mode mode() {
+		return wrapped.mode();
 	}
 
 	@Override

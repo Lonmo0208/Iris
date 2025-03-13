@@ -27,7 +27,6 @@ public final class MatrixUniforms {
 			Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
 			Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()));
 	}
-
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
 		uniforms
 			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)

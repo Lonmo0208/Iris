@@ -218,6 +218,7 @@ public class IrisChunkProgramOverrides {
 
 			return builder.attachShader(vertShader)
 				.attachShader(fragShader)
+				// The following 4 attributes are part of Sodium.
 				.bindAttribute("a_PositionHi", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI)
 				.bindAttribute("a_PositionLo", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO)
 				.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
@@ -228,7 +229,7 @@ public class IrisChunkProgramOverrides {
 				.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
 				.bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
 				.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
-				.link(shader -> {
+				.link((shader) -> {
 					int handle = ((GlObject) shader).handle();
 					ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 					GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
@@ -260,7 +261,12 @@ public class IrisChunkProgramOverrides {
 
 	private SodiumTerrainPipeline getSodiumTerrainPipeline() {
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
-		return worldRenderingPipeline != null ? worldRenderingPipeline.getSodiumTerrainPipeline() : null;
+
+		if (worldRenderingPipeline != null) {
+			return worldRenderingPipeline.getSodiumTerrainPipeline();
+		} else {
+			return null;
+		}
 	}
 
 	public void createShaders(SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
@@ -292,16 +298,29 @@ public class IrisChunkProgramOverrides {
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
 		SodiumTerrainPipeline sodiumTerrainPipeline = worldRenderingPipeline != null ? worldRenderingPipeline.getSodiumTerrainPipeline() : null;
 
+		if (worldRenderingPipeline != null) {
+			sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
+		}
 		if (!shadersCreated) createShaders(sodiumTerrainPipeline, vertexType);
 
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (sodiumTerrainPipeline != null && !sodiumTerrainPipeline.hasShadowPass()) {
 				throw new IllegalStateException("Shadow program requested, but the pack does not have a shadow pass?");
 			}
-			return pass.supportsFragmentDiscard() ? this.programs.get(IrisTerrainPass.SHADOW_CUTOUT) : this.programs.get(IrisTerrainPass.SHADOW);
+
+			if (pass.supportsFragmentDiscard()) {
+				return this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
+			} else {
+				return this.programs.get(IrisTerrainPass.SHADOW);
+			}
 		} else {
-			return pass.supportsFragmentDiscard() ? this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT) :
-				pass.isTranslucent() ? this.programs.get(IrisTerrainPass.GBUFFER_TRANSLUCENT) : this.programs.get(IrisTerrainPass.GBUFFER_SOLID);
+			if (pass.supportsFragmentDiscard()) {
+				return this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT);
+			} else if (pass.isTranslucent()) {
+				return this.programs.get(IrisTerrainPass.GBUFFER_TRANSLUCENT);
+			} else {
+				return this.programs.get(IrisTerrainPass.GBUFFER_SOLID);
+			}
 		}
 	}
 
@@ -310,21 +329,37 @@ public class IrisChunkProgramOverrides {
 		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
 		if (pipeline != null) {
-			GlFramebuffer framebuffer = isShadowPass ? pipeline.getShadowFramebuffer() :
-				pass.isTranslucent() ? pipeline.getTranslucentFramebuffer() : pipeline.getTerrainSolidFramebuffer();
-			if (framebuffer != null) framebuffer.bind();
+			GlFramebuffer framebuffer;
+
+			if (isShadowPass) {
+				framebuffer = pipeline.getShadowFramebuffer();
+			} else if (pass.isTranslucent()) {
+				framebuffer = pipeline.getTranslucentFramebuffer();
+			} else {
+				framebuffer = pipeline.getTerrainSolidFramebuffer();
+			}
+
+			if (framebuffer != null) {
+				framebuffer.bind();
+			}
 		}
 	}
 
 	public void unbindFramebuffer() {
 		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
-		if (pipeline != null) Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+
+		if (pipeline != null) {
+			Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+		}
 	}
 
 	public void deleteShaders() {
 		for (GlProgram<?> program : this.programs.values()) {
-			if (program != null) program.delete();
+			if (program != null) {
+				program.delete();
+			}
 		}
+
 		this.programs.clear();
 		shadersCreated = false;
 	}
