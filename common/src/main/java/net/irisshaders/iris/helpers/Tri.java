@@ -1,7 +1,5 @@
 package net.irisshaders.iris.helpers;
 
-import java.util.Objects;
-
 public record Tri<X, Y, Z>(X first, Y second, Z third) {
 
 
@@ -9,17 +7,7 @@ public record Tri<X, Y, Z>(X first, Y second, Z third) {
 	public boolean equals(Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof Tri tri)) return false;
-		return Objects.equals(tri.first, this.first) && Objects.equals(tri.second, this.second) && Objects.equals(tri.third, this.third);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((first == null) ? 0 : first.hashCode());
-		result = prime * result + ((second == null) ? 0 : second.hashCode());
-		result = prime * result + ((third == null) ? 0 : third.hashCode());
-		return result;
+		return tri.first == this.first && tri.second == this.second && tri.third == this.third;
 	}
 
 	@Override

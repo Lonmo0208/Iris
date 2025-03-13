@@ -22,11 +22,11 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 	private static final Vector3f saveNormal = new Vector3f();
 	private static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
 
-	private static void endQuad(float uSum, float vSum, long dst) {
+	private static void endQuad(float uSum, float vSum, long src, long dst) {
 		uSum *= 0.25f;
 		vSum *= 0.25f;
 
-		quad.setup(dst, STRIDE);
+		quad.setup(src, IrisVertexFormats.GLYPH.getVertexSize());
 
 		float normalX, normalY, normalZ;
 
@@ -48,10 +48,6 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 
 	@Override
 	public void serialize(long src, long dst, int vertexCount) {
-		if (vertexCount != 4) {
-			throw new IllegalStateException();
-		}
-
 		float uSum = 0.0f, vSum = 0.0f;
 
 		for (int i = 0; i < vertexCount; i++) {
@@ -68,9 +64,9 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 			MemoryUtil.memPutShort(dst + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 			src += DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP.getVertexSize();
-			dst += STRIDE;
+			dst += IrisVertexFormats.GLYPH.getVertexSize();
 		}
 
-		endQuad(uSum, vSum,dst - STRIDE);
+		endQuad(uSum, vSum, src, dst);
 	}
 }

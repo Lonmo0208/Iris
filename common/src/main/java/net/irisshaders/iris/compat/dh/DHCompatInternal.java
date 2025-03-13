@@ -141,7 +141,7 @@ public class DHCompatInternal<IDhApiGenericObjectShaderProgram> {
 		if (DhApi.Delayed.configs == null) return dhEnabled;
 
 		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
-			&& Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline) {
+			&& IrisApi.getInstance().isShaderPackInUse()) {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
 			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
 			try {
