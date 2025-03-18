@@ -26,9 +26,13 @@ Oculus requires [Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddi
 
 * A well-organized codebase. I'd like for working with Oculus code to be a pleasant experience overall.
 
-[//]: # (## Discord)
+## Feature from Embedded Libraries
 
-[//]: # ([![]&#40;https://dcbadge.vercel.app/api/server/UCsyn5RS4s&#41;]&#40;https://discord.gg/UCsyn5RS4s&#41;)
+### [Swaying Garden](https://github.com/joe-vettek/SwayingGarden/blob/1.21.1-neo/README.md)
+* Applying shader effects to modded plant blocks often requires modifying files in the resource pack, which can be cumbersome and tedious, especially when you want to switch shaders easily. This mod simplifies the process by easily enabling modded plant blocks to sway with shader effects, creating a dynamic and immersive visual experience in your world—whether it's flowers, saplings, or other plant-like blocks.
+
+### [Accelerated Rendering](https://github.com/Argon4W/AcceleratedRendering)
+* Using GPU to accelerate vertex transformation, resulting in several times faster fps when rendering a large number of entities/text/item entities
 
 ## Contributors
 <a href="https://github.com/Yuqi154/NeOculus/graphs/contributors">
@@ -39,6 +43,10 @@ Oculus requires [Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddi
 
 Oculus [LGPL-3.0 license](https://github.com/Asek3/Oculus/blob/1.16.5/LICENSE)  
 Monocle [LGPL-3.0 license](https://github.com/ferriarnus/Monocle/blob/main/LICENSE.txt)  
+
+## Embedded Libraries
+[Swaying Garden](https://github.com/joe-vettek/SwayingGarden) ARR Authorized
+Accelerated Rendering [MIT license](https://github.com/Argon4W/AcceleratedRendering/blob/main/LICENSE)
 
 [//]: # (## Consider supporting )
 
