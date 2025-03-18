@@ -26,7 +26,11 @@ SwayingGarden by joe-vettek , ARR
 
 [[mods]]
 modId="iris"
-description="fake mod"
+version="${mod_version}"
+displayName="Iris"
+description='''
+Dummy Mod of Iris
+'''
 
 [[mixins]]
 config="mixins.oculus.json"
