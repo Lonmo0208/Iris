@@ -45,7 +45,7 @@ Oculus [LGPL-3.0 license](https://github.com/Asek3/Oculus/blob/1.16.5/LICENSE)
 Monocle [LGPL-3.0 license](https://github.com/ferriarnus/Monocle/blob/main/LICENSE.txt)  
 
 ## Embedded Libraries
-[Swaying Garden](https://github.com/joe-vettek/SwayingGarden) ARR Authorized
+[Swaying Garden](https://github.com/joe-vettek/SwayingGarden) ARR Authorized  
 Accelerated Rendering [MIT license](https://github.com/Argon4W/AcceleratedRendering/blob/main/LICENSE)
 
 [//]: # (## Consider supporting )
