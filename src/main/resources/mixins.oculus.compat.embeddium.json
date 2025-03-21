@@ -1,0 +1,41 @@
+{
+  "minVersion": "0.8",
+  "package": "net.irisshaders.iris.compat.embeddium.mixin",
+  "plugin": "net.irisshaders.iris.compat.embeddium.mixin.IrisSodiumCompatMixinPlugin",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
+  "client": [
+    "oculus.shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
+    "oculus.shadow_map.frustum.MixinBoxCullingFrustum",
+    "oculus.shadow_map.frustum.MixinNonCullingFrustum",
+    "shadow_map.frustum.MixinCullEverythingFrustum"
+  ],
+  "mixins": [
+    "monocle.mixin.EmbeddiumWorldRendererAssessor",
+    "monocle.mixin.MixinChunkBuildBuffers",
+    "monocle.mixin.MixinChunkMeshBufferBuilder",
+    "monocle.mixin.MixinChunkMeshBuildTask",
+    "monocle.mixin.MixinChunkShaderInterface",
+    "monocle.mixin.MixinCloudRenderer",
+    "monocle.mixin.MixinDefaultChunkRenderer",
+    "monocle.mixin.MixinGlVertexFormatbuilder",
+    "monocle.mixin.MixinRenderRegionArenas",
+    "monocle.mixin.MixinRenderSectionManager",
+    "oculus.ChunkMeshAttributeAccessor",
+    "oculus.MixinChunkMeshAttribute",
+    "oculus.MixinGlRenderDevice",
+    "oculus.MixinShaderChunkRenderer",
+    "oculus.MixinVertexSerializerCache",
+    "oculus.entity.CommonVertexAttributeInterface",
+    "oculus.entity.MixinCommonVertexAttribute",
+    "oculus.shadow_map.MixinDefaultChunkRenderer",
+    "oculus.shadow_map.MixinEmbeddiumWorldRenderer",
+    "oculus.shadow_map.MixinRenderSectionManager"
+  ]
+}
