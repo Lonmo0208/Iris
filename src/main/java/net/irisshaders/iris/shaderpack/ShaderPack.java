@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -362,8 +363,21 @@ public class ShaderPack {
 
 		Path resolvedPath = root.resolve(normalizePath(path));
 		TextureFilteringData filtering = resolveFilteringData(root, path, definition);
-		byte[] content = Files.readAllBytes(resolvedPath);
-		return createTextureData(definition, filtering, content);
+		ByteBuf buffer = null;
+		try {
+			byte[] content = Files.readAllBytes(resolvedPath);
+			buffer = ALLOC.buffer(content.length);
+			buffer.writeBytes(content);
+
+			byte[] data = new byte[buffer.readableBytes()];
+			buffer.getBytes(buffer.readerIndex(), data);
+
+			return createTextureData(definition, filtering, data);
+		} finally {
+			if (buffer != null) {
+				buffer.release();
+			}
+		}
 	}
 
 	private CustomTextureData handleResourceLocation(String path) {
@@ -405,22 +419,21 @@ public class ShaderPack {
 		return definition.getName().contains("sky") || definition.getName().contains("cloud");
 	}
 
-	private CustomTextureData createTextureData(TextureDefinition definition, TextureFilteringData filtering, byte[] content) {
+	private CustomTextureData createTextureData(TextureDefinition definition, TextureFilteringData filtering, byte[] data) {
 		if (definition instanceof TextureDefinition.PNGDefinition) {
-			return new CustomTextureData.PngData(filtering, content);
+			return new CustomTextureData.PngData(filtering,data);
 		} else if (definition instanceof TextureDefinition.RawDefinition raw) {
             return switch (raw.getTarget()) {
-                case TEXTURE_1D -> new CustomTextureData.RawData1D(content, filtering,
+                case TEXTURE_1D -> new CustomTextureData.RawData1D(data, filtering,
                         raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX());
-                case TEXTURE_2D -> new CustomTextureData.RawData2D(content, filtering,
+                case TEXTURE_2D -> new CustomTextureData.RawData2D(data, filtering,
                         raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY());
-                case TEXTURE_3D -> new CustomTextureData.RawData3D(content, filtering,
+                case TEXTURE_3D -> new CustomTextureData.RawData3D(data, filtering,
                         raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
                         raw.getSizeX(), raw.getSizeY(), raw.getSizeZ());
-                case TEXTURE_RECTANGLE -> new CustomTextureData.RawDataRect(content, filtering,
+                case TEXTURE_RECTANGLE -> new CustomTextureData.RawDataRect(data, filtering,
                         raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
                         raw.getSizeX(), raw.getSizeY());
-                default -> throw new IllegalStateException("Unsupported texture target: " + raw.getTarget());
             };
 		}
 		throw new IllegalArgumentException("Unsupported texture type: " + definition.getClass().getSimpleName());
