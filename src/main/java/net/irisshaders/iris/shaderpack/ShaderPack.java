@@ -6,6 +6,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -57,11 +59,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ShaderPack {
+	private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 	private static final Gson GSON = new Gson();
-	private static final int CPU_CORES = Runtime.getRuntime().availableProcessors();
-	private static final int POOL_SIZE = Math.min(32, (int) (CPU_CORES * (1 + 2 * 0.8)));
-	private static final ExecutorService TEXTURE_LOAD_EXECUTOR = Executors.newWorkStealingPool(POOL_SIZE);
-	private static final int MAX_CONCURRENT_LOADS = 16;
+	private static final int CORES = Runtime.getRuntime().availableProcessors();
+	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(
+			Math.min(Integer.MAX_VALUE, CORES * 128));
+	private static final int MAX_CONCURRENT_LOADS = Math.min(Integer.MAX_VALUE, CORES * 4);
 	private static final int LOAD_TIMEOUT = 2;
 
 	private static final LoadingCache<PreprocessKey, String> PREPROCESS_CACHE = CacheBuilder.newBuilder()
@@ -71,8 +74,9 @@ public class ShaderPack {
 					return PropertiesPreprocessor.preprocessSource(key.content, key.defines);
 				}
 			});
+    private static String fileName;
 
-	static {
+    static {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			TEXTURE_LOAD_EXECUTOR.shutdown();
 			try {
@@ -97,8 +101,7 @@ public class ShaderPack {
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
-	private final ProfileSet.ProfileResult profile;
-	private final String profileInfo;
+    private final String profileInfo;
 	private final List<ImageInformation> irisCustomImages;
 	private final Set<FeatureFlags> activeFeatures;
 	private final Function<AbsolutePackPath, String> sourceProvider;
@@ -131,11 +134,11 @@ public class ShaderPack {
 		dimensionIds = new ArrayList<>();
 		final boolean[] hasDimensionIds = {false};
 
-		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines)
+		List<String> dimensionIdCreator = loadProperties(root, environmentDefines)
 				.map(dimensionProperties -> {
 					hasDimensionIds[0] = !dimensionProperties.isEmpty();
-					dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
-					return parseDimensionIds(dimensionProperties, "dimension.");
+					dimensionMap = parseDimensionMap(dimensionProperties);
+					return parseDimensionIds(dimensionProperties);
 				})
 				.orElseGet(ArrayList::new);
 
@@ -231,11 +234,11 @@ public class ShaderPack {
 		environmentDefines = ImmutableList.copyOf(newEnvDefines);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
-		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
+        ProfileSet.ProfileResult profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
 		// Get programs that should be disabled from the detected profile
 		List<String> disabledPrograms = new ArrayList<>();
-		this.profile.current.ifPresent(p -> disabledPrograms.addAll(p.disabledPrograms));
+		profile.current.ifPresent(p -> disabledPrograms.addAll(p.disabledPrograms));
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, option) -> {
 			if (!BooleanParser.parse(option, this.shaderPackOptions.getOptionValues())) {
 				disabledPrograms.add(program);
@@ -328,7 +331,11 @@ public class ShaderPack {
 		this.customUniforms = shaderProperties.getCustomUniforms();
 	}
 
-	// TODO: Copy-paste from IdMap, find a way to deduplicate this
+    public static String getFileName() {
+        return fileName;
+    }
+
+    // TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private CompletableFuture<CustomTextureData> readTextureAsync(Path root, TextureDefinition definition) {
 		return textureCache.computeIfAbsent(definition, def ->
 				CompletableFuture.supplyAsync(() -> {
@@ -404,24 +411,19 @@ public class ShaderPack {
 		if (definition instanceof TextureDefinition.PNGDefinition) {
 			return new CustomTextureData.PngData(filtering, content);
 		} else if (definition instanceof TextureDefinition.RawDefinition raw) {
-			switch (raw.getTarget()) {
-				case TEXTURE_1D:
-					return new CustomTextureData.RawData1D(content, filtering,
-							raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX());
-				case TEXTURE_2D:
-					return new CustomTextureData.RawData2D(content, filtering,
-							raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY());
-				case TEXTURE_3D:
-					return new CustomTextureData.RawData3D(content, filtering,
-							raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
-							raw.getSizeX(), raw.getSizeY(), raw.getSizeZ());
-				case TEXTURE_RECTANGLE:
-					return new CustomTextureData.RawDataRect(content, filtering,
-							raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
-							raw.getSizeX(), raw.getSizeY());
-				default:
-					throw new IllegalStateException("Unsupported texture target: " + raw.getTarget());
-			}
+            return switch (raw.getTarget()) {
+                case TEXTURE_1D -> new CustomTextureData.RawData1D(content, filtering,
+                        raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX());
+                case TEXTURE_2D -> new CustomTextureData.RawData2D(content, filtering,
+                        raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(), raw.getSizeX(), raw.getSizeY());
+                case TEXTURE_3D -> new CustomTextureData.RawData3D(content, filtering,
+                        raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
+                        raw.getSizeX(), raw.getSizeY(), raw.getSizeZ());
+                case TEXTURE_RECTANGLE -> new CustomTextureData.RawDataRect(content, filtering,
+                        raw.getInternalFormat(), raw.getFormat(), raw.getPixelType(),
+                        raw.getSizeX(), raw.getSizeY());
+                default -> throw new IllegalStateException("Unsupported texture target: " + raw.getTarget());
+            };
 		}
 		throw new IllegalArgumentException("Unsupported texture type: " + definition.getClass().getSimpleName());
 	}
@@ -461,8 +463,8 @@ public class ShaderPack {
 	public OptionMenuContainer getMenuContainer() { return menuContainer; }
 	public boolean hasFeature(FeatureFlags feature) { return activeFeatures.contains(feature); }
 
-	private static Optional<Properties> loadProperties(Path shaderPath, String name, Iterable<StringPair> environmentDefines) {
-		return loadPropertiesAsString(shaderPath, name, environmentDefines).map(content -> {
+	private static Optional<Properties> loadProperties(Path shaderPath, Iterable<StringPair> environmentDefines) {
+		return loadPropertiesAsString(shaderPath, "dimension.properties", environmentDefines).map(content -> {
 			Properties props = new OrderBackedProperties();
 			try {
 				props.load(new StringReader(content));
@@ -485,28 +487,29 @@ public class ShaderPack {
 		}
 	}
 
-	private static Map<NamespacedId, String> parseDimensionMap(Properties properties, String prefix, String fileName) {
-		Map<NamespacedId, String> map = new Object2ObjectArrayMap<>();
+	private static Map<NamespacedId, String> parseDimensionMap(Properties properties) {
+        ShaderPack.fileName = "dimension.properties";
+        Map<NamespacedId, String> map = new Object2ObjectArrayMap<>();
 		properties.forEach((k, v) -> {
 			String key = (String) k;
-			if (key.startsWith(prefix)) {
+			if (key.startsWith("dimension.")) {
 				String value = (String) v;
 				Arrays.stream(value.split("\\s+"))
 						.forEach(part -> {
 							NamespacedId id = part.equals("*") ?
 									new NamespacedId("*", "*") :
 									new NamespacedId(part);
-							map.put(id, key.substring(prefix.length()));
+							map.put(id, key.substring("dimension.".length()));
 						});
 			}
 		});
 		return map;
 	}
 
-	private List<String> parseDimensionIds(Properties properties, String prefix) {
+	private List<String> parseDimensionIds(Properties properties) {
 		return properties.stringPropertyNames().stream()
-				.filter(key -> key.startsWith(prefix))
-				.map(key -> key.substring(prefix.length()))
+				.filter(key -> key.startsWith("dimension."))
+				.map(key -> key.substring("dimension.".length()))
 				.collect(Collectors.toList());
 	}
 
@@ -519,8 +522,8 @@ public class ShaderPack {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof PreprocessKey that)) return false;
-			return content.equals(that.content) && defines.equals(that.defines);
+			if (!(o instanceof PreprocessKey(String content1, ImmutableList<StringPair> defines1))) return false;
+			return content.equals(content1) && defines.equals(defines1);
 		}
 
 		@Override
