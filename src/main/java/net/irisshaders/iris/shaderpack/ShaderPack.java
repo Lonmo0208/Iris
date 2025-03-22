@@ -63,7 +63,7 @@ public class ShaderPack {
 	private static final Gson GSON = new Gson();
 	private static final int CORES = Runtime.getRuntime().availableProcessors();
 	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(
-			Math.min(Integer.MAX_VALUE, CORES * 128));
+				Math.min(Integer.MAX_VALUE, Math.max(4, CORES * 128)));
 	private static final int MAX_CONCURRENT_LOADS = Math.min(Integer.MAX_VALUE, CORES * 4);
 	private static final int LOAD_TIMEOUT = 2;
 
@@ -513,22 +513,27 @@ public class ShaderPack {
 				.collect(Collectors.toList());
 	}
 
-	private record PreprocessKey(String content, ImmutableList<StringPair> defines) {
-		private PreprocessKey(String content, ImmutableList<StringPair> defines) {
-			this.content = content.intern();
-			this.defines = defines;
+	private record PreprocessKey(@NotNull String content, @NotNull ImmutableList<StringPair> defines) {
+		private static final Map<String, String> CONTENT_CACHE =
+				Collections.synchronizedMap(new WeakHashMap<>());
+
+		public PreprocessKey {
+			content = CONTENT_CACHE.computeIfAbsent(content, k -> k);
 		}
 
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof PreprocessKey(String content1, ImmutableList<StringPair> defines1))) return false;
-			return content.equals(content1) && defines.equals(defines1);
+			if (!(o instanceof PreprocessKey)) return false;
+			PreprocessKey that = (PreprocessKey) o;
+			return content.equals(that.content) && defines.equals(that.defines);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(content, defines);
+			int result = content.hashCode();
+			result = 31 * result + defines.hashCode();
+			return result;
 		}
 	}
 }
