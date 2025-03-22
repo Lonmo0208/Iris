@@ -62,10 +62,13 @@ public class ShaderPack {
 	private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 	private static final Gson GSON = new Gson();
 	private static final int CORES = Runtime.getRuntime().availableProcessors();
-	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(
-				Math.min(Integer.MAX_VALUE, Math.max(4, CORES * 128)));
+	private static final int PARALLELISM = Math.min(Runtime.getRuntime().availableProcessors() * 8, 256);
+	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(PARALLELISM, ForkJoinPool.defaultForkJoinWorkerThreadFactory
+			,(t, e) -> Iris.logger.error("Texture loader thread failed", e), true);
 	private static final int MAX_CONCURRENT_LOADS = Math.min(Integer.MAX_VALUE, CORES * 4);
 	private static final int LOAD_TIMEOUT = 2;
+	private static final String DIMENSION_CONFIG_NAME = "dimension.properties";
+	private static String fileName;
 
 	private static final LoadingCache<PreprocessKey, String> PREPROCESS_CACHE = CacheBuilder.newBuilder()
 			.maximumSize(1000)
@@ -74,7 +77,6 @@ public class ShaderPack {
 					return PropertiesPreprocessor.preprocessSource(key.content, key.defines);
 				}
 			});
-    private static String fileName;
 
     static {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -108,10 +110,6 @@ public class ShaderPack {
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
 	private Map<NamespacedId, String> dimensionMap;
-
-	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines, isZip);
-	}
 
 	/**
 	 * Reads a shader pack from the disk.
@@ -488,7 +486,7 @@ public class ShaderPack {
 	}
 
 	private static Map<NamespacedId, String> parseDimensionMap(Properties properties) {
-        ShaderPack.fileName = "dimension.properties";
+		ShaderPack.fileName = ShaderPack.DIMENSION_CONFIG_NAME;
         Map<NamespacedId, String> map = new Object2ObjectArrayMap<>();
 		properties.forEach((k, v) -> {
 			String key = (String) k;
@@ -524,9 +522,8 @@ public class ShaderPack {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof PreprocessKey)) return false;
-			PreprocessKey that = (PreprocessKey) o;
-			return content.equals(that.content) && defines.equals(that.defines);
+			if (!(o instanceof PreprocessKey(String content1, ImmutableList<StringPair> defines1))) return false;
+            return content.equals(content1) && defines.equals(defines1);
 		}
 
 		@Override
