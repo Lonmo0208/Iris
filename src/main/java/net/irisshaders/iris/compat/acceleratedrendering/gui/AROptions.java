@@ -20,6 +20,7 @@ public class AROptions {
     
     public static final Option<Integer> corePooledBufferSetSize;
     public static final Option<Integer> corePooledElementBufferSize;
+    public static final Option<Integer> coreCachedImageSize;
     public static final Option<FeatureStatus> coreForceTranslucentAcceleration;
     public static final Option<FeatureStatus> coreCacheSamePose;
     public static final Option<FeatureStatus> acceleratedEntityRenderingFeatureStatus;
@@ -32,6 +33,9 @@ public class AROptions {
     public static final Option<FeatureStatus> acceleratedItemRenderingBakeMeshForQuads;
     public static final Option<PipelineSetting> acceleratedItemRenderingDefaultPipeline;
     public static final Option<MeshType> acceleratedItemRenderingMeshType;
+    public static final Option<FeatureStatus> acceleratedBlockEntityRenderingFeatureStatus;
+    public static final Option<PipelineSetting> acceleratedBlockEntityRenderingDefaultPipeline;
+    public static final Option<MeshType> acceleratedBlockEntityRenderingMeshType;
     public static final Option<FeatureStatus> normalCullingFeatureStatus;
     public static final Option<FeatureStatus> normalCullingDefaultCulling;
     public static final Option<FeatureStatus> normalCullingIgnoreCullState;
@@ -73,6 +77,14 @@ public class AROptions {
                 .setName(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_element_buffer_size"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_element_buffer_size.tooltip"))
                 .setControl(e->new SliderControl(e,1,256,1, ControlValueFormatter.number()))
+                .setBinding(integerBinding)
+                .setImpact(OptionImpact.VARIES)
+                .build();
+        coreCachedImageSize = OptionImpl.createBuilder(Integer.TYPE,new ConfigValueStorage<>(FeatureConfig.CONFIG.coreCachedImageSize))
+                .setId(AcceleratedRenderingModEntry.location("core_settings.cached_image_size"))
+                .setName(Component.translatable("acceleratedrendering.configuration.core_settings.cached_image_size"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.cached_image_size.tooltip"))
+                .setControl(e->new SliderControl(e,1,128,1, ControlValueFormatter.number()))
                 .setBinding(integerBinding)
                 .setImpact(OptionImpact.VARIES)
                 .build();
@@ -138,7 +150,6 @@ public class AROptions {
                 .setBinding(meshTypeBinding)
                 .setImpact(OptionImpact.VARIES)
                 .build();
-
         acceleratedItemRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingFeatureStatus))
                 .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.feature_status"))
@@ -168,6 +179,29 @@ public class AROptions {
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.bake_mesh_for_quads.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
+                .setImpact(OptionImpact.VARIES)
+                .build();
+        acceleratedBlockEntityRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingFeatureStatus))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.feature_status"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.feature_status"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.feature_status.tooltip"))
+                .setControl(FeatureStatusTickBoxControl::new)
+                .setBinding(featureStatusBinding)
+                .setImpact(OptionImpact.LOW)
+                .build();
+        acceleratedBlockEntityRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingDefaultPipeline))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.default_pipeline"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.default_pipeline"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.default_pipeline.tooltip"))
+                .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
+                .setBinding(pipelineSettingBinding)
+                .build();
+        acceleratedBlockEntityRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingMeshType))
+                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.mesh_type"))
+                .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.mesh_type"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.mesh_type.tooltip"))
+                .setControl(e->new CyclingControl<>(e,MeshType.class))
+                .setBinding(meshTypeBinding)
                 .setImpact(OptionImpact.VARIES)
                 .build();
         normalCullingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.normalCullingFeatureStatus))
