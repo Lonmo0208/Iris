@@ -8,10 +8,16 @@ import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
+import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
+import org.antlr.v4.runtime.BufferedTokenStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import org.taumc.glsl.ShaderParser;
@@ -20,6 +26,7 @@ import org.taumc.glsl.grammar.GLSLLexer;
 import org.taumc.glsl.grammar.GLSLParser;
 import org.taumc.glsl.grammar.GLSLPreParser;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -113,6 +120,11 @@ public class ShaderTransformer {
                 }
                 ShaderTransformer.patch(translationUnit, parameters);
             }
+
+            Transformer transformer = new Transformer(translationUnit);
+            commonPatch(transformer, parameters);
+            replaceMCEntity(transformer);
+
             CompTransformer.transformEach(translationUnit, parameters);
             TextureTransformer.transform(translationUnit, parameters.getTextureStage(), parameters.getTextureMap());
             types.put(type, translationUnit);
@@ -127,10 +139,8 @@ public class ShaderTransformer {
 
     private static void patch(GLSLParser.Translation_unitContext root, EmbeddiumParameters parameters) {
         Transformer transformer = new Transformer(root);
-        commonPatch(transformer, parameters);
 
         replaceMidTexCoord(transformer, 1.0f / 32768.0f);
-        replaceMCEntity(transformer);
 
         transformer.replaceExpression("gl_TextureMatrix[0]", "mat4(1.0f)");
         transformer.replaceExpression("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
@@ -249,7 +259,6 @@ public class ShaderTransformer {
 
             transformer.replaceExpression("textureMatrix", "mat4(1.0f)");
             replaceMidTexCoord(transformer, 1.0f / 32768.0f);
-            replaceMCEntity(transformer);
 
             injectVertInit(transformer, parameters);
         }

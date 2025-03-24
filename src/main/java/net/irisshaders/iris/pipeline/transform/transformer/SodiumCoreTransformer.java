@@ -19,19 +19,23 @@ public class SodiumCoreTransformer {
 		root.rename("projectionMatrixInverse", "iris_ProjectionMatrixInverse");
 		root.rename("normalMatrix", "iris_NormalMatrix");
 		root.rename("chunkOffset", "u_RegionOffset");
-
 		if (parameters.type == PatchShaderType.VERTEX) {
+			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
 			root.replaceReferenceExpressions(t, "vaPosition", "_vert_position + _get_draw_translation(_draw_id)");
 			root.replaceReferenceExpressions(t, "vaColor", "_vert_color");
-			root.rename("vaNormal", "iris_Normal");
+			root.replaceReferenceExpressions(t, "vaNormal", "irs_Normal");
+			root.replaceReferenceExpressions(t, "at_tangent", "irs_Tangent");
+
 			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");
 			root.replaceReferenceExpressions(t, "vaUV1", "ivec2(0, 10)");
-			root.rename("vaUV2", "a_LightCoord");
+			root.replaceReferenceExpressions(t, "vaUV2", "a_LightAndData.xy");
 
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
+			SodiumTransformer.replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
+			SodiumTransformer.replaceMCEntity(t, tree, root);
 
-			SodiumTransformer.injectVertInit(t, tree, root, parameters);
+			SodiumTransformer.injectVertInit(t, tree, root, parameters, needsNormal);
 		}
 	}
 }
