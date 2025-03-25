@@ -16,6 +16,7 @@ import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.embeddium.impl.monocle.EmbeddiumParameters;
 import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
@@ -28,18 +29,7 @@ import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.TextureStageParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
-import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompatibilityTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.TextureTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.VanillaCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.VanillaTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.*;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -153,9 +143,11 @@ public class TransformPatcher {
 									CompositeCoreTransformer.transform(transformer, tree, root, parameters);
 									break;
 								case SODIUM:
-								case EMBEDDIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
 									SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
+								case EMBEDDIUM:
+									EmbeddiumParameters embeddiumParameters = (EmbeddiumParameters) parameters;
+									EmbeddiumCoreTransformer.transform(transformer, tree, root, embeddiumParameters);
 									break;
 								case VANILLA:
 									VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
@@ -179,9 +171,11 @@ public class TransformPatcher {
 									CompositeTransformer.transform(transformer, tree, root, parameters);
 									break;
 								case SODIUM:
-								case EMBEDDIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
 									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+								case EMBEDDIUM:
+									EmbeddiumParameters embeddiumParameters = (EmbeddiumParameters) parameters;
+									EmbeddiumTransformer.transform(transformer, tree, root, embeddiumParameters);
 									break;
 								case VANILLA:
 									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
@@ -325,6 +319,13 @@ public class TransformPatcher {
 														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
 				new SodiumParameters(Patch.SODIUM, textureMap, alpha));
+	}
+
+	public static Map<PatchShaderType, String> patchEmbeddium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
+														   AlphaTest alpha,
+														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
+				new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(

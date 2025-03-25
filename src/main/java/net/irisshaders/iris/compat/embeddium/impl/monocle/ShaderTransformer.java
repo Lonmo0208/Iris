@@ -1,7 +1,9 @@
 package net.irisshaders.iris.compat.embeddium.impl.monocle;
 
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.texture.TextureType;
@@ -41,8 +43,8 @@ public class ShaderTransformer {
 
     private record TransformKey(EnumMap<PatchShaderType, String> inputs, EmbeddiumParameters params) {}
 
-    public static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, AlphaTest alpha, ChunkVertexType vertexType, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-        EmbeddiumParameters parameters = new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha, vertexType);
+    public static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, AlphaTest alpha, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+        EmbeddiumParameters parameters = new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha);
 
         if (vertex == null && geometry == null && tessControl == null && tessEval == null && fragment == null) {
             return null;
@@ -105,6 +107,7 @@ public class ShaderTransformer {
             if (versionString == null) {
                 continue;
             }
+
             String profileString = "#version " + versionString + " " + profile;
             if ((profile == null && Integer.parseInt(versionString) >= 150 || profile != null && profile.equals("core"))) {
                 if (Integer.parseInt(versionString) < 330) {
@@ -123,7 +126,6 @@ public class ShaderTransformer {
 
             Transformer transformer = new Transformer(translationUnit);
             commonPatch(transformer, parameters);
-            replaceMCEntity(transformer);
 
             CompTransformer.transformEach(translationUnit, parameters);
             TextureTransformer.transform(translationUnit, parameters.getTextureStage(), parameters.getTextureMap());
@@ -139,6 +141,7 @@ public class ShaderTransformer {
 
     private static void patch(GLSLParser.Translation_unitContext root, EmbeddiumParameters parameters) {
         Transformer transformer = new Transformer(root);
+        //commonPatch(transformer, parameters);
 
         replaceMidTexCoord(transformer, 1.0f / 32768.0f);
 
@@ -150,8 +153,10 @@ public class ShaderTransformer {
         if (parameters.type.glShaderType == ShaderType.VERTEX) {
 
             transformer.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
-            transformer.replaceExpression("gl_MultiTexCoord0", "vec4(_vert_tex_diffuse_coord, 0.0f, 1.0f)");
-            transformer.replaceExpression("gl_MultiTexCoord1", "vec4(_vert_tex_light_coord, 0.0f, 1.0f)");
+            transformer.replaceExpression("gl_MultiTexCoord0",
+                    "vec4(_vert_tex_diffuse_coord, 0.0f, 1.0f)");
+            transformer.replaceExpression("gl_MultiTexCoord1",
+                    "vec4(_vert_tex_light_coord, 0.0f, 1.0f)");
 
             patchMultiTexCoord3(transformer, parameters);
 
@@ -272,11 +277,10 @@ public class ShaderTransformer {
         transformer.replaceExpression("mc_midTexCoord", "iris_MidTex");
         switch (type) {
             case 0:
-                return;
             case GLSLLexer.BOOL:
                 return;
             case GLSLLexer.FLOAT:
-                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;"); //TODO go back to variable if order is fixed
+                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ");"); //TODO go back to variable if order is fixed
                 break;
             case GLSLLexer.VEC2:
                 transformer.injectFunction("vec2 iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
@@ -288,7 +292,9 @@ public class ShaderTransformer {
                 transformer.injectFunction("vec4 iris_MidTex = vec4(mc_midTexCoord.xy * " + textureScale + ", 0.0, 1.0);");
                 break;
             default:
-
+                System.out.println("The midTexCoord is of an unexpected type: " + type);
+                Iris.logger.error("The midTexCoord is of an unexpected type: " + type);
+                //throw new IllegalStateException("Somehow got a midTexCoord that is *above* 4 dimensions???");
         }
 
         transformer.injectVariable("in vec2 mc_midTexCoord;"); //TODO why is this inserted oddly?
@@ -403,6 +409,7 @@ public class ShaderTransformer {
         }
 
         if (parameters.type.glShaderType == ShaderType.VERTEX) {
+            transformer.rename("gl_FrontColor", "iris_FrontColor");
             transformer.injectVariable("vec4 iris_FrontColor;");
             transformer.replaceExpression("gl_FrontColor", "iris_FrontColor");
         }

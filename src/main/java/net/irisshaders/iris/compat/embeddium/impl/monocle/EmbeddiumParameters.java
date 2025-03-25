@@ -13,11 +13,9 @@ import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import java.util.Objects;
 
 public final class EmbeddiumParameters extends SodiumParameters {
-    private final ChunkVertexType vertexType;
 
-    public EmbeddiumParameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, AlphaTest alpha, ChunkVertexType vertexType) {
+    public EmbeddiumParameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, AlphaTest alpha) {
         super(patch, textureMap, alpha);
-        this.vertexType = vertexType;
     }
 
     @Override
@@ -28,13 +26,12 @@ public final class EmbeddiumParameters extends SodiumParameters {
         return Objects.equals(this.patch, that.patch) &&
                 Objects.equals(this.type, that.type) &&
                 Objects.equals(this.getTextureMap(), that.getTextureMap()) &&
-                Objects.equals(this.alpha, that.alpha) &&
-                Objects.equals(this.vertexType, that.vertexType);
+                Objects.equals(this.alpha, that.alpha);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(patch, type, getTextureMap(), alpha, vertexType);
+        return Objects.hash(patch, type, getTextureMap(), alpha);
     }
 
     public TextureStage getTextureStage() {
