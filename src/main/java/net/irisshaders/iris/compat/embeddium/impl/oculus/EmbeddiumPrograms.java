@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.embeddium.FormatAnalyzer;
 import net.irisshaders.iris.compat.embeddium.impl.monocle.ShaderTransformer;
 import net.irisshaders.iris.compat.embeddium.impl.monocle.vertices.terrain.IrisModelVertexFormats;
 import net.irisshaders.iris.gl.GLDebug;
@@ -14,6 +15,7 @@ import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
+import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
@@ -78,7 +80,7 @@ public class EmbeddiumPrograms {
 
 	private AlphaTest getAlphaTest(Pass pass, ProgramSource source) {
 		return source.getDirectives().getAlphaTestOverride().orElse(
-			pass == Pass.TERRAIN_CUTOUT || pass == Pass.SHADOW_CUTOUT ? AlphaTests.ONE_TENTH_ALPHA : AlphaTest.ALWAYS);
+				pass == Pass.TERRAIN_CUTOUT || pass == Pass.SHADOW_CUTOUT ? AlphaTests.ONE_TENTH_ALPHA : AlphaTest.ALWAYS);
 	}
 
 	private Map<PatchShaderType, String> transformShaders(ProgramSource source, AlphaTest alphaTest, ProgramSet programSet) {
@@ -104,6 +106,7 @@ public class EmbeddiumPrograms {
 
 		//ShaderPrinter.printProgram("old_" + source.getName()).addSources(transformed).print();
 		ShaderPrinter.printProgram("new_" + source.getName()).addSources(transformedNew).print();
+		//ShaderPrinter.printProgram("embeddium_" + source.getName()).addSources(transformedNew).print();
 
 		return transformedNew;
 	}
@@ -113,19 +116,19 @@ public class EmbeddiumPrograms {
 		for (Map.Entry<PatchShaderType, String> entry : transformed.entrySet()) {
 			if (entry.getValue() == null) continue;
 			newMap.put(entry.getKey(), new GlShader(fromGlShaderType(entry.getKey().glShaderType),
-				ResourceLocation.fromNamespaceAndPath("iris", "embeddium-shader-" + passName), entry.getValue()));
+					ResourceLocation.fromNamespaceAndPath("iris", "embeddium-shader-" + passName), entry.getValue()));
 		}
 		return newMap;
 	}
 
 	ShaderType fromGlShaderType(net.irisshaders.iris.gl.shader.ShaderType type) {
-        return switch (type) {
-            case VERTEX -> ShaderType.VERTEX;
-            case GEOMETRY -> ShaderType.GEOM;
-            case FRAGMENT -> ShaderType.FRAGMENT;
-            case TESSELATION_CONTROL -> ShaderType.TESS_CTRL;
-            default -> ShaderType.TESS_EVALUATE;
-        };
+		return switch (type) {
+			case VERTEX -> ShaderType.VERTEX;
+			case GEOMETRY -> ShaderType.GEOM;
+			case FRAGMENT -> ShaderType.FRAGMENT;
+			case TESSELATION_CONTROL -> ShaderType.TESS_CTRL;
+			default -> ShaderType.TESS_EVALUATE;
+		};
 	}
 
 	private Supplier<ImmutableSet<Integer>> getFlipState(IrisRenderingPipeline pipeline, Pass pass, boolean isShadowPass) {
@@ -160,7 +163,7 @@ public class EmbeddiumPrograms {
 											Supplier<ImmutableSet<Integer>> flipState) {
 		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT || pass == Pass.SHADOW_TRANS) {
 			return shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
-				source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
+					source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
 		} else {
 			return renderTargets.createGbufferFramebuffer(flipState.get(), source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0} : source.getDirectives().getDrawBuffers()));
 		}
@@ -182,26 +185,26 @@ public class EmbeddiumPrograms {
 														 Supplier<ImmutableSet<Integer>> flipState,
 														 boolean containsTessellation) {
 		return builder
-			.bindAttribute("a_PosId", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
-			.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
-			.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
-			.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
-			.bindAttribute("mc_Entity", 11)
-			.bindAttribute("mc_midTexCoord", 12)
-			.bindAttribute("at_tangent", 13)
-			.bindAttribute("iris_Normal", 10)
-			.bindAttribute("at_midBlock", 14)
-			.link((shader) -> {
-				int handle = ((GlObject) shader).handle();
-				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "embeddium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
-				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
-				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
-				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
-				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
-				return new EmbeddiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
-					createBufferBlendOverrides(source), customUniforms, flipState,
-					alphaTest.reference(), containsTessellation);
-			});
+				.bindAttribute("a_PosId", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
+				.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
+				.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
+				.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
+				.bindAttribute("mc_Entity", 11)
+				.bindAttribute("mc_midTexCoord", 12)
+				.bindAttribute("at_tangent", 13)
+				.bindAttribute("iris_Normal", 10)
+				.bindAttribute("at_midBlock", 14)
+				.link((shader) -> {
+					int handle = ((GlObject) shader).handle();
+					GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "embeddium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
+					if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
+					if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
+					if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
+					if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
+					return new EmbeddiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
+							createBufferBlendOverrides(source), customUniforms, flipState,
+							alphaTest.reference(), containsTessellation);
+				});
 	}
 
 	public GlProgram<ChunkShaderInterface> getProgram(TerrainRenderPass pass) {

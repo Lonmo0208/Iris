@@ -55,7 +55,7 @@ public class ShaderAttributeInputs {
 		this.normal = normal;
 	}
 
-	public boolean hasColor() {
+    public boolean hasColor() {
 		return color;
 	}
 

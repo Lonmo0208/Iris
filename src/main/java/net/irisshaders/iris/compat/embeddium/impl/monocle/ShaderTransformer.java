@@ -2,6 +2,7 @@ package net.irisshaders.iris.compat.embeddium.impl.monocle;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.texture.TextureType;
@@ -279,7 +280,9 @@ public class ShaderTransformer {
                 transformer.injectFunction("vec4 iris_MidTex = vec4(mc_midTexCoord.xy * " + textureScale + ", 0.0, 1.0);");
                 break;
             default:
-
+                System.out.println("The midTexCoord is of an unexpected type: " + type);
+                Iris.logger.error("The midTexCoord is of an unexpected type: " + type);
+                //throw new IllegalStateException("Somehow got a midTexCoord that is *above* 4 dimensions???");
         }
 
         transformer.injectVariable("in vec2 mc_midTexCoord;"); //TODO why is this inserted oddly?
@@ -394,6 +397,7 @@ public class ShaderTransformer {
         }
 
         if (parameters.type.glShaderType == ShaderType.VERTEX) {
+            transformer.rename("gl_FrontColor", "iris_FrontColor");
             transformer.injectVariable("vec4 iris_FrontColor;");
             transformer.replaceExpression("gl_FrontColor", "iris_FrontColor");
         }

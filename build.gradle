@@ -103,6 +103,8 @@ repositories {
 
 dependencies {
 
+	additionalRuntimeClasspath "io.github.douira:glsl-transformer:2.0.2"
+	additionalRuntimeClasspath "org.anarres:jcpp:1.4.14"
 	implementation "maven.modrinth:embeddium:${embeddium_version}"
 	compileOnly("maven.modrinth:distanthorizonsapi:3.0.0")
 	compileOnly("maven.modrinth:mekanism:10.7.8.70")

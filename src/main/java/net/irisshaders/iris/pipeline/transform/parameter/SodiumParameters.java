@@ -9,7 +9,7 @@ import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
 public class SodiumParameters extends Parameters {
-	public final ShaderAttributeInputs inputs;
+	public static ShaderAttributeInputs inputs = null;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	// DO NOT include this field in hashCode or equals, it's mutable!
