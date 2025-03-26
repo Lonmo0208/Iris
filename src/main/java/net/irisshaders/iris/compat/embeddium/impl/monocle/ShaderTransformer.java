@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.embeddium.impl.monocle;
 
-import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
@@ -10,16 +9,10 @@ import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
-import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
-import org.antlr.v4.runtime.BufferedTokenStream;
-import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import org.taumc.glsl.ShaderParser;
@@ -28,7 +21,6 @@ import org.taumc.glsl.grammar.GLSLLexer;
 import org.taumc.glsl.grammar.GLSLParser;
 import org.taumc.glsl.grammar.GLSLPreParser;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,8 +35,8 @@ public class ShaderTransformer {
 
     private record TransformKey(EnumMap<PatchShaderType, String> inputs, EmbeddiumParameters params) {}
 
-    public static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, AlphaTest alpha, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-        EmbeddiumParameters parameters = new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha);
+    public static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, AlphaTest alpha, ChunkVertexType vertexType, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+        EmbeddiumParameters parameters = new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha, vertexType);
 
         if (vertex == null && geometry == null && tessControl == null && tessEval == null && fragment == null) {
             return null;
@@ -107,7 +99,6 @@ public class ShaderTransformer {
             if (versionString == null) {
                 continue;
             }
-
             String profileString = "#version " + versionString + " " + profile;
             if ((profile == null && Integer.parseInt(versionString) >= 150 || profile != null && profile.equals("core"))) {
                 if (Integer.parseInt(versionString) < 330) {
@@ -123,10 +114,6 @@ public class ShaderTransformer {
                 }
                 ShaderTransformer.patch(translationUnit, parameters);
             }
-
-            Transformer transformer = new Transformer(translationUnit);
-            commonPatch(transformer, parameters);
-
             CompTransformer.transformEach(translationUnit, parameters);
             TextureTransformer.transform(translationUnit, parameters.getTextureStage(), parameters.getTextureMap());
             types.put(type, translationUnit);
@@ -141,9 +128,10 @@ public class ShaderTransformer {
 
     private static void patch(GLSLParser.Translation_unitContext root, EmbeddiumParameters parameters) {
         Transformer transformer = new Transformer(root);
-        //commonPatch(transformer, parameters);
+        commonPatch(transformer, parameters);
 
         replaceMidTexCoord(transformer, 1.0f / 32768.0f);
+        replaceMCEntity(transformer);
 
         transformer.replaceExpression("gl_TextureMatrix[0]", "mat4(1.0f)");
         transformer.replaceExpression("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
@@ -153,10 +141,8 @@ public class ShaderTransformer {
         if (parameters.type.glShaderType == ShaderType.VERTEX) {
 
             transformer.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
-            transformer.replaceExpression("gl_MultiTexCoord0",
-                    "vec4(_vert_tex_diffuse_coord, 0.0f, 1.0f)");
-            transformer.replaceExpression("gl_MultiTexCoord1",
-                    "vec4(_vert_tex_light_coord, 0.0f, 1.0f)");
+            transformer.replaceExpression("gl_MultiTexCoord0", "vec4(_vert_tex_diffuse_coord, 0.0f, 1.0f)");
+            transformer.replaceExpression("gl_MultiTexCoord1", "vec4(_vert_tex_light_coord, 0.0f, 1.0f)");
 
             patchMultiTexCoord3(transformer, parameters);
 
@@ -264,6 +250,7 @@ public class ShaderTransformer {
 
             transformer.replaceExpression("textureMatrix", "mat4(1.0f)");
             replaceMidTexCoord(transformer, 1.0f / 32768.0f);
+            replaceMCEntity(transformer);
 
             injectVertInit(transformer, parameters);
         }
@@ -277,10 +264,11 @@ public class ShaderTransformer {
         transformer.replaceExpression("mc_midTexCoord", "iris_MidTex");
         switch (type) {
             case 0:
+                return;
             case GLSLLexer.BOOL:
                 return;
             case GLSLLexer.FLOAT:
-                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ");"); //TODO go back to variable if order is fixed
+                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;"); //TODO go back to variable if order is fixed
                 break;
             case GLSLLexer.VEC2:
                 transformer.injectFunction("vec2 iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
