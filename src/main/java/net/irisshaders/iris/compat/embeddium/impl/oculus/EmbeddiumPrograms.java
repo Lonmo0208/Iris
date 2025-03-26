@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.embeddium.FormatAnalyzer;
+import net.irisshaders.iris.compat.embeddium.impl.monocle.EmbeddiumTransformPatcher;
 import net.irisshaders.iris.compat.embeddium.impl.monocle.ShaderTransformer;
 import net.irisshaders.iris.compat.embeddium.impl.monocle.vertices.terrain.IrisModelVertexFormats;
 import net.irisshaders.iris.gl.GLDebug;
@@ -84,15 +85,15 @@ public class EmbeddiumPrograms {
 	}
 
 	private Map<PatchShaderType, String> transformShaders(ProgramSource source, AlphaTest alphaTest, ProgramSet programSet) {
-//		Map<PatchShaderType, String> transformed = EmbeddiumTransformPatcher.patchEmbeddium(
-//			source.getName(),
-//			source.getVertexSource().orElse(null),
-//			source.getGeometrySource().orElse(null),
-//			source.getTessControlSource().orElse(null),
-//			source.getTessEvalSource().orElse(null),
-//			source.getFragmentSource().orElse(null),
-//			alphaTest, IrisModelVertexFormats.MODEL_VERTEX_XHFP,
-//			programSet.getPackDirectives().getTextureMap());
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchEmbeddium(
+				source.getName(),
+				source.getVertexSource().orElse(null),
+				source.getGeometrySource().orElse(null),
+				source.getTessControlSource().orElse(null),
+				source.getTessEvalSource().orElse(null),
+				source.getFragmentSource().orElse(null),
+				alphaTest, IrisModelVertexFormats.MODEL_VERTEX_XHFP,
+				programSet.getPackDirectives().getTextureMap());
 
 		Map<PatchShaderType, String> transformedNew = ShaderTransformer.transform(
 				source.getName(),
@@ -104,12 +105,12 @@ public class EmbeddiumPrograms {
 				alphaTest, IrisModelVertexFormats.MODEL_VERTEX_XHFP,
 				programSet.getPackDirectives().getTextureMap());
 
-		//ShaderPrinter.printProgram("old_" + source.getName()).addSources(transformed).print();
+		ShaderPrinter.printProgram("old_" + source.getName()).addSources(transformed).print();
 		ShaderPrinter.printProgram("new_" + source.getName()).addSources(transformedNew).print();
-		//ShaderPrinter.printProgram("embeddium_" + source.getName()).addSources(transformedNew).print();
+		ShaderPrinter.printProgram("embeddium_" + source.getName()).addSources(transformedNew).print();
 
 		return transformedNew;
-	}
+    }
 
 	private Map<PatchShaderType, GlShader> createGlShaders(String passName, Map<PatchShaderType, String> transformed) {
 		Map<PatchShaderType, GlShader> newMap = new EnumMap<>(PatchShaderType.class);
