@@ -104,45 +104,57 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 
 	@Override
 	public void setupState() {
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
-		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
-		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
+		applyBlendModes();
+		bindTextures();
+		updateUniforms();
 
 		if (this.uniformTexCoordShrink != null) {
 			TextureAtlas textureAtlas = (TextureAtlas) Minecraft.getInstance()
 				.getTextureManager()
 				.getTexture(TextureAtlas.LOCATION_BLOCKS);
 
-
-			// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
-			// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
-			// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
 			double subTexelPrecision = (1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
 			double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
 
 			this.uniformTexCoordShrink.set(
 				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetWidth()) / subTexelPrecision))),
-				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight()) / subTexelPrecision)))
-			);
+				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight()) / subTexelPrecision))
+				));
 		}
 
-
-		if (blendModeOverride != null) blendModeOverride.apply();
 		ImmediateState.usingTessellation = isTess;
-
-		if (hasOverrides) bufferBlendOverrides.forEach(BufferBlendOverride::apply);
-
 		fogShaderComponent.setup();
-		irisProgramUniforms.update();
-		irisProgramSamplers.update();
 		irisProgramImages.update();
+	}
+
+	private void bindTextures() {
+		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
+		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
+		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
+	}
+
+	private void applyBlendModes() {
+		if (blendModeOverride != null) {
+			blendModeOverride.apply();
+		}
+		if (hasOverrides) {
+			bufferBlendOverrides.forEach(BufferBlendOverride::apply);
+		}
+	}
+
+	private void updateUniforms() {
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
+		irisProgramSamplers.update();
+		irisProgramUniforms.update();
 		customUniforms.push(this);
 	}
 
 	public void restore() {
 		ImmediateState.usingTessellation = false;
-		if (blendModeOverride != null || hasOverrides) BlendModeOverride.restore();
+		BlendModeOverride.restore();
+		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	@Override
@@ -163,8 +175,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 			invertedMatrix.invert();
 			this.uniformModelViewMatrixInverse.set(invertedMatrix);
 			if (this.uniformNormalMatrix != null) {
-				invertedMatrix.transpose();
-				this.uniformNormalMatrix.set(new Matrix3f(invertedMatrix));
+				Matrix3f normalMatrix = invertedMatrix.transpose3x3(new Matrix3f());
+				this.uniformNormalMatrix.set(normalMatrix);
 			}
 		} else if (this.uniformNormalMatrix != null) {
 			Matrix3f normalMatrix = new Matrix3f(modelView);

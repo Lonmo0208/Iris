@@ -181,7 +181,7 @@ public class SodiumTerrainPipeline {
 				sources.getTessControlSource().orElse(null),
 				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
-				AlphaTest.ALWAYS, inputs, parent.getTextureMap());
+				AlphaTest.ALWAYS, inputs, vertexType, parent.getTextureMap());
 			terrainSolidVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainSolidGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainSolidTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
@@ -217,7 +217,7 @@ public class SodiumTerrainPipeline {
 				sources.getTessControlSource().orElse(null),
 				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
-				terrainCutoutAlpha.orElse(AlphaTests.ONE_TENTH_ALPHA), inputs, parent.getTextureMap());
+				terrainCutoutAlpha.orElse(AlphaTests.ONE_TENTH_ALPHA), inputs, vertexType, parent.getTextureMap());
 			terrainCutoutVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainCutoutGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainCutoutTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
@@ -255,7 +255,7 @@ public class SodiumTerrainPipeline {
 				sources.getTessControlSource().orElse(null),
 				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
-				translucentAlpha.orElse(AlphaTest.ALWAYS), inputs, parent.getTextureMap());
+				translucentAlpha.orElse(AlphaTest.ALWAYS), inputs, vertexType, parent.getTextureMap());
 			translucentVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			translucentTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
@@ -292,7 +292,7 @@ public class SodiumTerrainPipeline {
 				sources.getTessControlSource().orElse(null),
 				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
-				AlphaTest.ALWAYS, inputs, parent.getTextureMap());
+				AlphaTest.ALWAYS, inputs, vertexType, parent.getTextureMap());
 			Map<PatchShaderType, String> transformedCutout = TransformPatcher.patchSodium(
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
@@ -300,7 +300,7 @@ public class SodiumTerrainPipeline {
 				sources.getTessControlSource().orElse(null),
 				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
-				shadowAlpha.get(), inputs, parent.getTextureMap());
+				shadowAlpha.get(), inputs, vertexType, parent.getTextureMap());
 			shadowVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			shadowGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			shadowTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));

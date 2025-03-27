@@ -15,6 +15,7 @@ import io.github.douira.glsl_transformer.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -22,22 +23,8 @@ import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
-import net.irisshaders.iris.pipeline.transform.parameter.ComputeParameters;
-import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
-import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
-import net.irisshaders.iris.pipeline.transform.parameter.TextureStageParameters;
-import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
-import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompatibilityTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.DHTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.TextureTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.VanillaCoreTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.VanillaTransformer;
+import net.irisshaders.iris.pipeline.transform.parameter.*;
+import net.irisshaders.iris.pipeline.transform.transformer.*;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -49,6 +36,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.embeddedt.embeddium.render.chunk.ChunkColorWriter.EMBEDDIUM;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
@@ -75,7 +64,7 @@ public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	// TODO: Only do the NewLines patches if the source code isn't from
 	// gbuffers_lines (what does this mean?)
-	static TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<>(TokenChannel.PREPROCESSOR) {
+	static final TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<>(TokenChannel.PREPROCESSOR) {
 		@Override
 		public boolean isTokenAllowed(Token token) {
 			if (!super.isTokenAllowed(token)) {
@@ -310,10 +299,10 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
-														   AlphaTest alpha, ShaderAttributeInputs inputs,
+														   AlphaTest alpha, ShaderAttributeInputs inputs,ChunkVertexType vertexType,
 														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs));
+			new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs,vertexType));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
@@ -330,6 +319,7 @@ public class TransformPatcher {
 		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
 			.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
+
 
 	private static class CacheKey {
 		final Parameters parameters;
