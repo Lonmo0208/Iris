@@ -36,7 +36,7 @@ public class SodiumTransformer {
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
 
-			if (parameters.inputs.hasTex()) {
+			if (parameters.getInputs().hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
 			} else {
@@ -44,7 +44,7 @@ public class SodiumTransformer {
 					"vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
-			if (parameters.inputs.hasLight()) {
+			if (parameters.getInputs().hasLight()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 					"vec4(_vert_tex_light_coord, 0.0, 1.0)");
 			} else {
@@ -60,7 +60,7 @@ public class SodiumTransformer {
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
-		if (parameters.inputs.hasColor()) {
+		if (parameters.getInputs().hasColor()) {
 			// TODO: Handle the fragment shader here
 			root.rename("gl_Color", "_vert_color");
 		} else {
@@ -68,7 +68,7 @@ public class SodiumTransformer {
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			if (parameters.inputs.hasNormal()) {
+			if (parameters.getInputs().hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 			} else {
