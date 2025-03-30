@@ -51,6 +51,8 @@ dependencies {
     include("io.github.douira:glsl-transformer:2.0.2")
     modImplementation("org.anarres:jcpp:1.4.14")
     include("org.anarres:jcpp:1.4.14")
+    modImplementation("org.taumc:glsl-transformation-lib:0.2.0-25.g3a943bb")
+    include("org.taumc:glsl-transformation-lib:0.2.0-25.g3a943bb")
 
     modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-alpha.3+mc1.20.1.jar")))
 
@@ -122,6 +124,13 @@ tasks {
         environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
     }
 }
+
+
+repositories {
+    maven (
+        "https://maven.taumc.org/releases")
+}
+
 publishing {
     publications {
         register("mavenJava", MavenPublication::class) {
@@ -132,5 +141,8 @@ publishing {
 
     repositories {
         maven("file://${System.getenv("local_maven")}")
+        maven (
+            "https://maven.taumc.org/releases")
+        mavenCentral()
     }
 }

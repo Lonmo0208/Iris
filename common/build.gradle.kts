@@ -48,6 +48,7 @@ dependencies {
     modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-alpha.3+mc1.20.1.jar")))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
+    modCompileOnly("org.taumc:glsl-transformation-lib:0.2.0-25.g3a943bb")
 }
 
 tasks.withType<AbstractRemapJarTask>().configureEach {
@@ -128,5 +129,10 @@ tasks {
         from(vendored.output.resourcesDir)
 
         manifest.attributes["Main-Class"] = "me.jellysquid.mods.sodium.desktop.LaunchWarn"
+    }
+    repositories {
+        maven (
+            "https://maven.taumc.org/releases")
+        mavenCentral()
     }
 }

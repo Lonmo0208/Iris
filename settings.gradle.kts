@@ -2,6 +2,10 @@ rootProject.name = "Iris"
 
 pluginManagement {
     repositories {
+        maven (
+            "https://maven.taumc.org/releases"){
+            name = "Taumc"
+        }
         maven("https://maven.fabricmc.net/") {
             name = "Fabric"
         }

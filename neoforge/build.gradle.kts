@@ -85,6 +85,7 @@ repositories {
     maven { url = uri("https://files.minecraftforge.net/maven/") }
     maven { url = uri("https://maven.neoforged.net/releases/") }
     maven { url = uri("https://maven.su5ed.dev/releases") }
+    maven { url = uri("https://maven.taumc.org/releases") }
     mavenLocal()
     maven("https://repo.spongepowered.org/repository/maven-public/") { name = "Sponge Snapshots" }
 
@@ -151,6 +152,13 @@ dependencies {
     implementation(fg.deobf("me.jellysquid:sodium-forge:0.6.0"))
     compileOnly(files(rootDir.resolve("DHApi.jar")))
     compileOnly(files(rootDir.resolve("Mekanism.jar")))
+    minecraftLibrary("org.taumc:glsl-transformation-lib:0.2.0-25.g3a943bb"){
+    isTransitive = false
+}
+    jarJar("org.taumc:glsl-transformation-lib:[0.2.0-25.g3a943bb,0.2.1)"){
+    jarJar.pin(this, "0.2.0-25.g3a943bb")
+    isTransitive = false
+}
 }
 
 
@@ -202,6 +210,9 @@ publishing {
     }
 
     repositories {
+        maven (
+            "https://maven.taumc.org/releases")
+
         maven("file://${System.getenv("local_maven")}")
     }
 }
