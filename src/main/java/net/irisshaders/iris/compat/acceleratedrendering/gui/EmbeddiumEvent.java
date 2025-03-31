@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.loading.LoadingModList;
 import org.embeddedt.embeddium.api.OptionGUIConstructionEvent;
 import org.embeddedt.embeddium.api.options.OptionIdentifier;
 import org.embeddedt.embeddium.api.options.structure.OptionGroup;
@@ -21,10 +22,12 @@ public class EmbeddiumEvent {
 
     @SubscribeEvent
     public static void onGui(OptionGUIConstructionEvent event){
+        if(LoadingModList.get().getModFileById("acceleratedrendering") == null)return;
 
         OptionGroup core = OptionGroup.createBuilder()
                 .add(AROptions.corePooledBufferSetSize)
                 .add(AROptions.corePooledElementBufferSize)
+                .add(AROptions.coreCachedImageSize)
                 .add(AROptions.coreForceTranslucentAcceleration)
                 .add(AROptions.coreCacheSamePose)
                 .setId(AcceleratedRenderingModEntry.location("configuration.core_settings"))

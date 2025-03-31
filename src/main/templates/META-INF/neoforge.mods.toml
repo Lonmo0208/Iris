@@ -54,6 +54,8 @@ config="mixins.oculus.compat.indium.json"
 config="mixins.oculus.compat.dh.json"
 [[mixins]]
 config="mixins.oculus.compat.pixelmon.json"
+[[mixins]]
+config="mixins.oculus.compat.acceleratedrendering.json"
 
 [[accessTransformers]]
 file="META-INF/accesstransformer.cfg"
