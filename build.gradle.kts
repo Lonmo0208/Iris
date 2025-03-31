@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.8" }
+val MOD_VERSION by extra { "1.8.8-Asycn" }
 
 allprojects {
     apply(plugin = "java")
@@ -55,9 +55,9 @@ subprojects {
 
         if (!isReleaseBuild) {
             if (buildId != null) {
-                builder.append("-build.${buildId}")
-            } else {
-                builder.append("-local")
+               builder.append("-build.${buildId}")
+           } else {
+                //builder.append("-local")
             }
         }
 
