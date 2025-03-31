@@ -268,7 +268,7 @@ public class ShaderTransformer {
             case GLSLLexer.BOOL:
                 return;
             case GLSLLexer.FLOAT:
-                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;"); //TODO go back to variable if order is fixed
+                transformer.injectFunction("float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ");"); //TODO go back to variable if order is fixed
                 break;
             case GLSLLexer.VEC2:
                 transformer.injectFunction("vec2 iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
