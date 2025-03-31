@@ -96,14 +96,6 @@ public class EmbeddiumPrograms {
 		ChunkVertexType vertexType = IrisModelVertexFormats.MODEL_VERTEX_XHFP;
 
 		programSet.getPackDirectives().getTextureMap();
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchEmbeddium(
-				source.getName(),
-				source.getVertexSource().orElse(null),
-				source.getGeometrySource().orElse(null),
-				source.getTessControlSource().orElse(null),
-				source.getTessEvalSource().orElse(null),
-				source.getFragmentSource().orElse(null),
-				alphaTest, vertexType, textureMap);
 
 		Map<PatchShaderType, String> transformedNew = ShaderTransformer.transform(
 				source.getName(),
@@ -114,8 +106,6 @@ public class EmbeddiumPrograms {
 				source.getFragmentSource().orElse(null),
 				alphaTest, vertexType, textureMap);
 
-		ShaderPrinter.printProgram("old_" + source.getName()).addSources(transformed).print();
-		ShaderPrinter.printProgram("new_" + source.getName()).addSources(transformedNew).print();
 		ShaderPrinter.printProgram("embeddium_" + source.getName()).addSources(transformedNew).print();
 
 		return transformedNew;

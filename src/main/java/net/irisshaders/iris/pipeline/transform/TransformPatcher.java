@@ -29,7 +29,6 @@ import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -316,19 +315,6 @@ public class TransformPatcher {
 
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
-														   AlphaTest alpha, ShaderAttributeInputs inputs,
-														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-				new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs));
-	}
-
-	public static Map<PatchShaderType, String> patchEmbeddium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
-															  AlphaTest alpha, ChunkVertexType inputs,
-															  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-				new EmbeddiumParameters(Patch.EMBEDDIUM, textureMap, alpha, inputs));
-	}
 	public static Map<PatchShaderType, String> patchComposite(
 			String name, String vertex, String geometry, String fragment,
 			TextureStage stage,
