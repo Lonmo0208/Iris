@@ -27,7 +27,6 @@ import net.minecraft.client.CloudStatus;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -57,7 +56,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
-public class MixinLevelRenderer {
+public abstract class MixinLevelRenderer {
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V";
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FDDD)V";
@@ -82,6 +81,10 @@ public class MixinLevelRenderer {
 	@Shadow
 	@Final
 	private LevelTargetBundle targets;
+
+	@Shadow
+	protected abstract void renderSectionLayer(RenderType renderType, double d, double e, double f, Matrix4f matrix4f, Matrix4f matrix4f2);
+
 	private boolean warned;
 
 	// Begin shader rendering after buffers have been cleared.
@@ -197,8 +200,9 @@ public class MixinLevelRenderer {
 	}
 
 
-	@Inject(method = "renderSectionLayer", at = @At("HEAD"))
+	@Inject(method = "renderSectionLayer", at = @At("HEAD"), cancellable = true)
 	private void iris$beginTerrainLayer(RenderType renderType, double d, double e, double f, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(renderType));
 	}
 

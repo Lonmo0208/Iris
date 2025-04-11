@@ -39,6 +39,8 @@ public enum WorldRenderingPhase {
 			return WorldRenderingPhase.TERRAIN_TRANSLUCENT;
 		} else if (renderType == RenderType.tripwire()) {
 			return WorldRenderingPhase.TRIPWIRE;
+		} else if (renderType == RenderType.skyBlock()) {
+			return WorldRenderingPhase.SKY;
 		} else {
 			throw new IllegalStateException("Illegal render type!");
 		}

@@ -15,6 +15,8 @@ import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.targets.RenderTarget;
 import net.irisshaders.iris.targets.RenderTargets;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
 import java.util.Set;
@@ -51,6 +53,17 @@ public class IrisSamplers {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
+		IntSupplier texture2 = () -> {
+			ImmutableSet<Integer> flippedBuffers = flipped.get();
+			RenderTarget target = renderTargets.getOrCreate(0);
+
+			if (flippedBuffers.contains(0)) {
+				return target.getAltTexture();
+			} else {
+				return target.getMainTexture();
+			}
+		};
+		samplers.addDynamicSampler(texture2, "ctex0");
 
 		for (int i = startIndex; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
@@ -67,6 +80,8 @@ public class IrisSamplers {
 			};
 
 			final String name = "colortex" + i;
+
+
 
 			// TODO: How do custom textures interact with aliases?
 
@@ -185,6 +200,8 @@ public class IrisSamplers {
 			samplers.addDynamicSampler(() -> whitePixel.getTexture().iris$getGlId(), "tex", "texture", "gtexture",
 				"gcolor", "colortex0");
 		}
+
+		samplers.addDynamicSampler(() -> Minecraft.getInstance().getTextureManager().getTexture(SkyRenderer.THE_CODE).getTexture().iris$getGlId(), "codeTex");
 
 		if (hasLightmap) {
 			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap");

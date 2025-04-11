@@ -46,6 +46,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.SUNRISE_SUNSET, p -> ShaderKey.SKY_BASIC_COLOR);
 		assignToMain(RenderPipelines.SKY, p -> ShaderKey.SKY_BASIC);
 		assignToMain(RenderPipelines.CELESTIAL, p -> ShaderKey.SKY_TEXTURED_COLOR);
+		assignToMain(RenderPipelines.CODE_SKY, p -> ShaderKey.CODE_SKY);
 		assignToMain(RenderPipelines.OPAQUE_PARTICLE, p -> ShaderKey.PARTICLES);
 		assignToMain(RenderPipelines.TRANSLUCENT_PARTICLE, p -> ShaderKey.PARTICLES_TRANS);
 		assignToMain(RenderPipelines.WATER_MASK, p -> ShaderKey.BASIC);

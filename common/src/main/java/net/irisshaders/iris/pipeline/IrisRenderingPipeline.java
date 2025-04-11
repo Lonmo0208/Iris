@@ -39,6 +39,7 @@ import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.mixinterface.DimensionEffectsAccess;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
 import net.irisshaders.iris.pathways.HorizonRenderer;
@@ -94,9 +95,9 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.world.level.dimension.DimensionSpecialEffects;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
@@ -1273,7 +1274,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// while rendering the sky.
 		//
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
-		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+		DimensionSpecialEffects.SkyType skyType = ((DimensionEffectsAccess) (Object) Minecraft.getInstance().level.effects()).getSky();
 
 		if (shouldRenderSkyDisc && (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
 			Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();

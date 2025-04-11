@@ -24,9 +24,11 @@ public enum ProgramId {
 	TexturedLit(ProgramGroup.Gbuffers, "textured_lit", Textured),
 	SkyBasic(ProgramGroup.Gbuffers, "skybasic", Basic),
 	SkyTextured(ProgramGroup.Gbuffers, "skytextured", Textured),
+	CodeSky(ProgramGroup.Gbuffers, "codesky", Textured),
 	Clouds(ProgramGroup.Gbuffers, "clouds", Textured),
 
 	Terrain(ProgramGroup.Gbuffers, "terrain", TexturedLit),
+	SkyBlock(ProgramGroup.Gbuffers, "skyblock", Terrain),
 	TerrainSolid(ProgramGroup.Gbuffers, "terrain_solid", Terrain),
 	TerrainCutout(ProgramGroup.Gbuffers, "terrain_cutout", Terrain),
 	DamagedBlock(ProgramGroup.Gbuffers, "damagedblock", Terrain),

@@ -120,14 +120,6 @@ public class TransformPatcher {
 				Root root = tree.getRoot();
 
 				// check for illegal references to internal Iris shader interfaces
-				internalPrefixes.stream()
-					.flatMap(root.getPrefixIdentifierIndex()::prefixQueryFlat)
-					.findAny()
-					.ifPresent(id -> {
-						throw new IllegalArgumentException(
-							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
-								+ id.getName() + ". See debugging.md for more information.");
-					});
 
 				root.indexBuildSession(() -> {
 					VersionStatement versionStatement = tree.getVersionStatement();

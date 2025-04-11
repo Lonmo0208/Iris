@@ -198,6 +198,8 @@ public class SodiumPrograms {
 			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW_CUTOUT : Pass.TERRAIN_CUTOUT;
 		} else if (pass == DefaultTerrainRenderPasses.TRANSLUCENT) {
 			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW_TRANS : Pass.TRANSLUCENT;
+		}  else if (pass == DefaultTerrainRenderPasses.SKY_BLOCK) {
+			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW_TRANS : Pass.SKY_BLOCK;
 		} else {
 			throw new IllegalArgumentException("Unknown pass: " + pass);
 		}
@@ -209,7 +211,8 @@ public class SodiumPrograms {
 		SHADOW_TRANS(ProgramId.ShadowWater),
 		TERRAIN(ProgramId.TerrainSolid),
 		TERRAIN_CUTOUT(ProgramId.TerrainCutout),
-		TRANSLUCENT(ProgramId.Water);
+		TRANSLUCENT(ProgramId.Water),
+		SKY_BLOCK(ProgramId.SkyBlock);
 
 		private final ProgramId originalId;
 

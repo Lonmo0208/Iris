@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -24,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinSkyRenderer {
 	@Inject(method = "renderSkyDisc",
 		at = @At(value = "HEAD"))
-	private void iris$renderSky$beginNormalSky(float f, float g, float h, CallbackInfo ci) {
+	private void iris$renderSky$beginNormalSky(RenderTarget renderTarget, float f, float g, float h, CallbackInfo ci) {
 		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
 		// CUSTOM_SKY.
 		setPhase(WorldRenderingPhase.SKY);
@@ -60,7 +61,7 @@ public class MixinSkyRenderer {
 	}
 
 	@Inject(method = "renderStars", at = @At(value = "HEAD"))
-	private void iris$setStarRenderStage(FogParameters fogParameters, float f, PoseStack poseStack, CallbackInfo ci) {
+	private void iris$setStarRenderStage(RenderTarget renderTarget, FogParameters fogParameters, float f, PoseStack poseStack, CallbackInfo ci) {
 		setPhase(WorldRenderingPhase.STARS);
 	}
 
@@ -70,7 +71,7 @@ public class MixinSkyRenderer {
 	}
 
 	@Inject(method = "renderSunMoonAndStars", at = @At(value = "INVOKE", target = "Lcom/mojang/math/Axis;rotationDegrees(F)Lorg/joml/Quaternionf;", ordinal = 1))
-	private void iris$renderSky$tiltSun(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, float g, float h, FogParameters fogParameters, CallbackInfo ci) {
+	private void iris$renderSky$tiltSun(RenderTarget renderTarget, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, float g, float h, FogParameters fogParameters, CallbackInfo ci) {
 		poseStack.mulPose(Axis.ZP.rotationDegrees(getSunPathRotation()));
 	}
 

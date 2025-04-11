@@ -43,6 +43,17 @@ public abstract class MixinCompiledShaderProgram implements ShaderInstanceInterf
 		shouldSkipList.put(FallbackShader.class, NONE);
 	}
 
+	@Unique
+	private boolean isCode;
+
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void init(int i, String name, CallbackInfo ci) {
+		isCode = name.contains("pipeline/code");
+		if (isCode) {
+			Iris.logger.warn("Found " + name, new Exception());
+		}
+	}
+
 	@Redirect(method = "setupUniforms", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V"))
 	private void iris$silence(Logger instance, String s, Object o, Object o1) {
 		if (!isKnownShader()) {
@@ -77,7 +88,7 @@ public abstract class MixinCompiledShaderProgram implements ShaderInstanceInterf
 				throw new RuntimeException(e);
 			}
 		} else {
-			return !(((Object) this) instanceof ExtendedShader || ((Object) this) instanceof FallbackShader || !shouldOverrideShaders());
+			return !(((Object) this) instanceof ExtendedShader || ((Object) this) instanceof FallbackShader || !shouldOverrideShaders() || this.isCode);
 		}
 	}
 
