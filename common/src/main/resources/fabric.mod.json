@@ -3,12 +3,13 @@
   "id": "iris",
   "version": "${version}",
   "name": "Iris",
-  "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
+  "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs,But now add Async Shader Loading ’Lonmo0208’",
   "authors": [
     "coderbot",
     "IMS212",
     "Justsnoopy30",
-    "FoundationGames"
+    "FoundationGames",
+    "Lonmo0208"
   ],
   "contact": {
     "homepage": "https://github.com/IrisShaders/Iris",
