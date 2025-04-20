@@ -18,6 +18,9 @@ sourceSets {
 }
 
 repositories {
+    flatDir {
+        dir(rootDir.resolve("libs"))
+    }
     mavenLocal()
     maven("https://maven.pkg.github.com/ims212/FRAPI-Testing") {
         credentials {
@@ -128,9 +131,9 @@ dependencies {
     compileOnly(project.project(":common").sourceSets.getByName("vendored").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
     compileOnly(project.project(":common").sourceSets.getByName("api").output)
-    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
-    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42-25w14c")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48-25w14c")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10-25w14c")
     runtimeOnly("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
 
     implementation(SODIUM_DEPENDENCY_NEO)
