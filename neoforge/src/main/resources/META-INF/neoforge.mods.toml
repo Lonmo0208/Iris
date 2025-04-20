@@ -19,14 +19,14 @@ Iris is a modern shaders mod for Minecraft intended to be compatible with existi
 [[dependencies.iris]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.3,)"
+versionRange = "[25w14craftminr,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.iris]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.3.9-beta,)"
+versionRange = "[0.25w14craftmine.4-beta,)"
 ordering = "NONE"
 side = "CLIENT"
 
