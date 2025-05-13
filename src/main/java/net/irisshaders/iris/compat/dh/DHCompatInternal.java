@@ -2,9 +2,12 @@ package net.irisshaders.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
+import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
+import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
+import com.seibel.distanthorizons.core.util.math.Vec3f;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
-import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -13,6 +16,7 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -28,6 +32,7 @@ public class DHCompatInternal {
 	private final IrisRenderingPipeline pipeline;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
+	private GlFramebuffer dhGenericFramebuffer;
 	private IrisLodRenderProgram solidProgram;
 	private IrisLodRenderProgram translucentProgram;
 	private IrisLodRenderProgram shadowProgram;
@@ -54,6 +59,7 @@ public class DHCompatInternal {
 			incompatible = true;
 			return;
 		}
+
 		cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
 
 		createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
@@ -199,16 +205,17 @@ public class DHCompatInternal {
 		translucentDepthDirty = true;
 
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhTerrainFramebufferWrapper);
+		//OverrideInjector.INSTANCE.unbind(IDhApiGenericObjectShaderProgram.class, genericShader);
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhShadowFramebufferWrapper);
 		dhTerrainFramebufferWrapper = null;
 		dhShadowFramebufferWrapper = null;
 	}
 
-	public void setModelPos(Vec3f modelPos) {
+	public void setModelPos(DhApiVec3f modelPos) {
 		solidProgram.bind();
-		solidProgram.setModelPos(modelPos);
+		solidProgram.setModelPos((Vec3f) modelPos);
 		translucentProgram.bind();
-		translucentProgram.setModelPos(modelPos);
+		translucentProgram.setModelPos((Vec3f) modelPos);
 		solidProgram.bind();
 	}
 
@@ -262,9 +269,17 @@ public class DHCompatInternal {
 		return dhWaterFramebuffer;
 	}
 
+	public GlFramebuffer getGenericFB() {
+		return dhGenericFramebuffer;
+	}
+
 	public int getDepthTexNoTranslucent() {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
+	}
+
+	public boolean avoidRenderingClouds() {
+		return pipeline != null && (pipeline.getDHCloudSetting() == CloudSetting.OFF || (pipeline.getDHCloudSetting() == CloudSetting.DEFAULT && pipeline.getCloudSetting() == CloudSetting.OFF));
 	}
 }

@@ -45,6 +45,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.LoadingModList;
 import net.minecraftforge.network.NetworkConstants;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -105,6 +106,8 @@ public class Iris {
 
 	private static String IRIS_VERSION;
 	private static boolean fallback;
+	private static boolean loadPackWhenPossible = false;
+	private static boolean renderSystemInit = false;
 
 	public Iris() {
 		try {
@@ -117,6 +120,10 @@ public class Iris {
 			ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
 		}catch (Exception ignored) {
 		}
+	}
+
+	public static void loadShaderpackWhenPossible() {
+		loadPackWhenPossible = true;
 	}
 
 	public static boolean isPackInUseQuick() {
@@ -145,8 +152,12 @@ public class Iris {
 
 		PBRTextureManager.INSTANCE.init();
 
+		renderSystemInit = true;
+
 		// Only load the shader pack when we can access OpenGL
-		loadShaderpack();
+		if (LoadingModList.get().getModFileById("distanthorizons") == null) {
+			loadShaderpack();
+		}
 	}
 
 	public static void duringRenderSystemInit() {
@@ -632,6 +643,19 @@ public class Iris {
 	public static PipelineManager getPipelineManager() {
 		if (pipelineManager == null) {
 			pipelineManager = new PipelineManager(Iris::createPipeline);
+		}
+
+		if (loadPackWhenPossible && renderSystemInit) {
+			loadPackWhenPossible = false;
+			try {
+				reload();
+			} catch (IOException e) {
+				logger.error("Error while reloading Shaders for " + MODNAME + "!", e);
+
+				if (Minecraft.getInstance().player != null) {
+					Minecraft.getInstance().player.displayClientMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+				}
+			}
 		}
 
 		return pipelineManager;

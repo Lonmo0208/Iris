@@ -110,7 +110,7 @@ dependencies {
 	forge ("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
 	modImplementation "org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}"
-	modCompileOnly(files("DistantHorizons-fabric-forge-2.3.2-b-1.20.1.jar"))
+	modImplementation(files("DistantHorizons-fabric-forge-2.3.2-b-1.20.1.jar"))
 
 	forgeRuntimeLibrary(implementation(shadow(project(path: ":glsl-relocated", configuration: "bundledJar")))) {
 		transitive = false
