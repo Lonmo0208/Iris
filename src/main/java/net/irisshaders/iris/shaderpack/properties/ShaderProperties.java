@@ -383,7 +383,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0, null));
 				} else {
 					// Assume it's a long one
 					try {
@@ -407,7 +407,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY, null));
 				}
 			});
 
