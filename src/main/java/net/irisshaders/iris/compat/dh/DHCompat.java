@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 public class DHCompat {
 	private static boolean dhPresent = true;
 	private static boolean lastIncompatible;
+	private static MethodHandle setupEventHandlers;
 	private static MethodHandle deletePipeline;
 	private static MethodHandle incompatible;
 	private static MethodHandle getDepthTex;
@@ -58,7 +59,7 @@ public class DHCompat {
 		try {
 			if (LoadingModList.get().getModFileById("distanthorizons") != null) {
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
-				MethodHandle setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
+				setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));
@@ -78,7 +79,7 @@ public class DHCompat {
 				if (e instanceof ExceptionInInitializerError eiie) {
 					throw new RuntimeException("Failure loading DH compat.", eiie.getCause());
 				} else {
-					throw new RuntimeException("DH found, but one or more API methods are missing. Iris requires DH [2.0.4] or DH API version [1.1.0] or newer. Please make sure you are on the latest version of DH and Iris.", e);
+					throw new RuntimeException("DH 2.0 not found, yet Fabric claims it's there. Curious.", e);
 				}
 			} else {
 				Iris.logger.info("DH not found, and classes not found.");

@@ -36,7 +36,8 @@ public class DhFrameBufferWrapper implements IDhApiFramebuffer {
 	@Override
 	public int getStatus() {
 		this.bind();
-		return GL32.glCheckFramebufferStatus(GL32.GL_FRAMEBUFFER);
+		int status = GL32.glCheckFramebufferStatus(GL32.GL_FRAMEBUFFER);
+		return status;
 	}
 
 	@Override

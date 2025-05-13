@@ -85,7 +85,7 @@ public class ProgramSet implements ProgramSetInterface {
 		//
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
-		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELLATION_SHADERS);
+		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELATION_SHADERS);
 
 		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
 			BlendModeOverride.OFF, readTesselation);
