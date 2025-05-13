@@ -217,13 +217,13 @@ public class LodRendererEvents {
 					DhApiVec3f modelPos = input.value.modelPos;
 					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						instance.getShadowShader().bind();
-						instance.getShadowShader().setModelPos((Vec3f) modelPos);
+						instance.getShadowShader().setModelPos(modelPos);
 					} else if (atTranslucent) {
 						instance.getTranslucentShader().bind();
-						instance.getTranslucentShader().setModelPos((Vec3f) modelPos);
+						instance.getTranslucentShader().setModelPos(modelPos);
 					} else {
 						instance.getSolidShader().bind();
-						instance.getSolidShader().setModelPos((Vec3f) modelPos);
+						instance.getSolidShader().setModelPos(modelPos);
 					}
 				}
 			}

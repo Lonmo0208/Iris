@@ -213,9 +213,9 @@ public class DHCompatInternal {
 
 	public void setModelPos(DhApiVec3f modelPos) {
 		solidProgram.bind();
-		solidProgram.setModelPos((Vec3f) modelPos);
+		solidProgram.setModelPos(modelPos);
 		translucentProgram.bind();
-		translucentProgram.setModelPos((Vec3f) modelPos);
+		translucentProgram.setModelPos(modelPos);
 		solidProgram.bind();
 	}
 

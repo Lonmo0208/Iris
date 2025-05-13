@@ -196,7 +196,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
 		this.shadowDirectives = packDirectives.getShadowDirectives();
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
-		//this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
+		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();

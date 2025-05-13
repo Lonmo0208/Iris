@@ -30,6 +30,7 @@ public class PackDirectives {
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
 	private CloudSetting cloudSetting;
+	private CloudSetting dhCloudSetting;
 	private boolean underwaterOverlay;
 	private boolean vignette;
 	private boolean sun;
@@ -306,4 +307,8 @@ public class PackDirectives {
 
 		return scale;
 	}
+
+	public CloudSetting getDHCloudSetting() {
+        return null;
+    }
 }
