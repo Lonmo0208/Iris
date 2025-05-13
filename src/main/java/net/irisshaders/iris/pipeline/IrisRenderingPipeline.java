@@ -181,7 +181,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
-	private CloudSetting dhCloudSetting;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -196,7 +195,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
 		this.shadowDirectives = packDirectives.getShadowDirectives();
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
-		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
@@ -1261,17 +1259,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return resolver.resolve(ProgramId.DhTerrain);
 	}
 
-	public Optional<ProgramSource> getDHGenericShader() {
-		return resolver.resolve(ProgramId.DhGeneric);
-	}
-
 	public Optional<ProgramSource> getDHWaterShader() {
 		return resolver.resolve(ProgramId.DhWater);
 	}
-
-    public CloudSetting getDHCloudSetting() {
-        return dhCloudSetting;
-    }
 
 	public Optional<ProgramSource> getDHShadowShader() {
 		return resolver.resolve(ProgramId.DhShadow);

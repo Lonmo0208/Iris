@@ -3,7 +3,8 @@ package net.irisshaders.iris.compat.dh;
 import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
+import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -26,7 +27,6 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryStack;
@@ -135,7 +135,7 @@ public class IrisLodRenderProgram {
 	}
 
 	public static IrisLodRenderProgram createProgram(String name, boolean isShadowPass, boolean translucent, ProgramSource source, CustomUniforms uniforms, IrisRenderingPipeline pipeline) {
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchDHTerrain(
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
 			name,
 			source.getVertexSource().orElseThrow(RuntimeException::new),
 			source.getTessControlSource().orElse(null),
@@ -171,7 +171,7 @@ public class IrisLodRenderProgram {
 		return GL32.glGetUniformLocation(this.id, name);
 	}
 
-	public void setUniform(int index, Matrix4fc matrix) {
+	public void setUniform(int index, Matrix4f matrix) {
 		if (index == -1 || matrix == null) return;
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -216,7 +216,7 @@ public class IrisLodRenderProgram {
 		GL43C.glDeleteProgram(id);
 	}
 
-	public void fillUniformData(Matrix4fc projection, Matrix4fc modelView, int worldYOffset, float partialTicks) {
+	public void fillUniformData(Matrix4f projection, Matrix4f modelView, int worldYOffset, float partialTicks) {
 		GL43C.glUseProgram(id);
 
 		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
@@ -249,11 +249,11 @@ public class IrisLodRenderProgram {
 		GL43C.glUniform1f(index, value);
 	}
 
-	public void setModelPos(DhApiVec3f modelPos) {
+	public void setModelPos(Vec3f modelPos) {
 		setUniform(modelOffsetUniform, modelPos);
 	}
 
-	private void setUniform(int index, DhApiVec3f pos) {
+	private void setUniform(int index, Vec3f pos) {
 		GL43C.glUniform3f(index, pos.x, pos.y, pos.z);
 	}
 

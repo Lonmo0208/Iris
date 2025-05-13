@@ -42,9 +42,9 @@ public class BlockMaterialMapping {
 		blockPropertiesMap.forEach((id, blockType) -> {
 			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
 
-			ForgeRegistries.BLOCKS.getDelegate(resourceLocation).ifPresent(
-					block -> blockTypeIds.put(block, ChunkRenderTypeSet.of(convertBlockToRenderType(blockType)))
-			);
+			Holder.Reference<Block> block = ForgeRegistries.BLOCKS.getDelegateOrThrow(resourceLocation);
+
+			blockTypeIds.put(block, ChunkRenderTypeSet.of(convertBlockToRenderType(blockType)));
 		});
 
 		return blockTypeIds;

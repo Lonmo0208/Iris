@@ -46,7 +46,6 @@ public enum ProgramId {
 	Water(ProgramGroup.Gbuffers, "water", Terrain),
 	HandWater(ProgramGroup.Gbuffers, "hand_water", Hand),
 	DhTerrain(ProgramGroup.Dh, "terrain"),
-	DhGeneric(ProgramGroup.Dh, "generic", DhTerrain),
 	DhWater(ProgramGroup.Dh, "water", DhTerrain),
 	DhShadow(ProgramGroup.Dh, "shadow"),
 

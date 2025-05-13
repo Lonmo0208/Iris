@@ -15,12 +15,10 @@ import java.util.Set;
  */
 public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
-	public static boolean isBendyLibLoaded;
 	public static boolean isRubidiumLoaded;
 
 	@Override
 	public void onLoad(String mixinPackage) {
-		isBendyLibLoaded = LoadingModList.get().getModFileById("bendylib") != null;
 		isRubidiumLoaded = LoadingModList.get().getModFileById("rubidium") != null;
 	}
 
@@ -31,15 +29,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		if (!isRubidiumLoaded) {
-			return false;
-		}
-
-		if (mixinClassName.endsWith(".copyEntity.ModelPartMixin") || mixinClassName.endsWith(".copyEntity.CuboidMixin")) {
-			return !isBendyLibLoaded;
-		}
-
-		return true;
+		return isRubidiumLoaded;
 	}
 
 	@Override
