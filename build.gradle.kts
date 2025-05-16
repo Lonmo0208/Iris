@@ -11,6 +11,7 @@ val FABRIC_API_VERSION by extra { "0.103.0+1.21.1" }
 
 val SODIUM_DEPENDENCY_FABRIC by extra { "maven.modrinth:sodium:26nVNc41"}
 val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
+val EMB_DEPENDENCY by extra {"maven.modrinth:embeddium:J7b96IEd"}
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment

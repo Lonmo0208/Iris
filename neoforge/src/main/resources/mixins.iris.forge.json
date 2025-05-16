@@ -7,11 +7,13 @@
     "MixinHumanoidArmorLayer",
     "MixinGameClientEvents",
     "MixinGooBlock",
+    "MixinHumanoidArmorLayer",
     "MixinItemBlockRenderTypes",
     "MixinShaderInstance",
     "MixinRenderFlame",
     "MixinRenderMekasuit",
     "MixinRenderSPS",
+    "MixinShaderInstance",
     "MixinShadowRenderer",
     "MixinVBOIE"
   ],

@@ -1,0 +1,92 @@
+{
+  "package": "net.irisshaders.iris.compat.Shaders.mixin",
+  "plugin": "net.irisshaders.iris.compat.Shaders.config.ConfigPlugin",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "iris.refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
+  "client": [
+    "IrisRenderingPipelineAccessor",
+    "ProgramSetMixin",
+    "IrisRenderingPipelineMixin",
+    "MixinProgramDirectives",
+
+    "MixinLevelRenderer",
+    "MixinGameRenderer",
+    "MixinSegmentedBufferBuilder",
+    "MixinClientHooks",
+
+    "shaderchanges.MixinEclipseCoreRenderer",
+    "shaderchanges.MixinESPortalRenderer",
+
+    "shaderchanges.MixinRenderFlame",
+    "shaderchanges.MixinRenderMekasuit",
+    "shaderchanges.MixinRenderSPS",
+
+    "shaderchanges.MixinEIClientShaders",
+
+    "shaderchanges.MixinIEGLShaders",
+
+    "shaderchanges.MixinBaseCapabilityPointRenderer",
+    "shaderchanges.MixinBaseEssencePointRenderer",
+
+    "shaderchanges.MixinShatteredRelayRenderer",
+    "shaderchanges.MixinShatterRenderer",
+    "shaderchanges.MixinShatterZapRenderer",
+    "shaderchanges.MixinShatteredFocusRenderer",
+
+    "altshaders.ShaderAccessMixin",
+
+    "altshaders.MixinXYShaders",
+    "altshaders.MixinXynergyGraphRenderer",
+    "altshaders.MixinIcoSphere",
+
+    "altshaders.MixinPortalEntityRender",
+    "altshaders.MixinGooBlockRender_Base",
+    "altshaders.MixinCommonUniforms",
+
+    "altshaders.MixinEssenceBlockEntityRenderer",
+
+    "altshaders.MixinIEGLShaders",
+
+    "altshaders.MixinRedThreadRenderer",
+    "altshaders.MixinClientEvents",
+
+    "altshaders.MixinBlackboardBlockTileRenderer",
+    "altshaders.MixinGlobeBlockTileRenderer",
+    "altshaders.MixinSlimedLayer",
+
+    "altshaders.MixinMonitorBlockEntityRenderer",
+
+    "altshaders.MixinShaderRegistry",
+
+    "altshaders.MixinFAShaders",
+
+    "altshaders.MixinEParticleRenderTypes",
+
+    "altshaders.MixinRenderTypes",
+
+    "altshaders.MixinCaxtonTextRenderLayers",
+
+    "altshaders.MixinESShaders",
+    "altshaders.MixinESPortalRenderer",
+    "altshaders.mixinEclipseCoreRenderer",
+
+    "altshaders.MixinDeferredElectricRenderer",
+
+    "altshaders.MixinRenderCustomEndPortal",
+
+    "altshaders.MixinEIClientShaders",
+
+
+    "altshaders.MixinClientHandlerBase",
+
+    "altshaders.MixinIrisSamplers",
+    "altshaders.MixinGameRenderer"
+  ]
+}

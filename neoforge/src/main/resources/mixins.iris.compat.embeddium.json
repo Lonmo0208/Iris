@@ -1,0 +1,41 @@
+{
+  "package": "net.irisshaders.iris.compat.embeddium.mixin",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "iris.refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
+  "client": [
+    "entity.CommonVertexAttributeInterface",
+    "entity.MixinCommonVertexAttribute",
+    "MixinChunkBuildBuffers",
+    "MixinChunkMeshBuildTask",
+    "MixinCloudRenderer",
+    "MixinChunkMeshBufferBuilder",
+    "MixinDefaultChunkRenderer",
+    "MixinGlRenderDevice",
+    "MixinRenderRegionArenas",
+    "MixinRenderSectionManager",
+    "MixinRenderSectionManagerShadow",
+    "MixinShaderChunkRenderer",
+    "MixinSodiumWorldRenderer",
+    "MixinBakedChunkModelBuilder",
+
+    "ChunkMeshAttributeAccessor",
+    "MixinChunkMeshAttribute",
+    "MixinVertexSerializerCache",
+    "MixinChunkShaderInterface",
+    "MixinGlVertexFormatbuilder",
+    "MixinChunkVertexType",
+    "EmbeddiumWorldRendererAssessor",
+    "MixinMojangVertexConsumer",
+
+    "MixinEmbeddiumGameOptionPages",
+    "MixinEmbeddium",
+    "MixinEmbeddiumVideoOptionsScreen"
+  ]
+}

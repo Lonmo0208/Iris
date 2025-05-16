@@ -42,15 +42,16 @@ config = "mixins.iris.compat.sodium.json"
 config = "mixins.iris.compat.dh.json"
 
 [[mixins]]
+config = "mixins.iris.compat.iris.json"
+
+[[mixins]]
+config = "mixins.iris.compat.shaders.json"
+
+[[mixins]]
+config = "mixins.iris.compat.embeddium.json"
+
+[[mixins]]
 config = "mixins.iris.forge.json"
 
 [mods."sodium:options"]
 "mixin.features.render.world.sky" = false
-
-[[dependencies.iris]]
-modId = "embeddium"
-type = "incompatible"
-reason = "Iris and Embeddium cannot be used together. Please use Sodium 0.6 instead."
-versionRange = "[0.0.1,)"
-ordering = "NONE"
-side = "CLIENT"

@@ -1,0 +1,26 @@
+{
+  "package": "net.irisshaders.iris.compat.iris.mixin",
+  "plugin": "net.irisshaders.iris.compat.core.EmbMixinPlugin",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "iris.refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
+  "client": [
+    "ClientPacketListenerMixin",
+    "CrashReportExtenderMixin",
+    "DebugScreenOverlayMixin",
+    "FrustumSwapperMixin",
+    "IrisRenderingPipelineMixin",
+    "TransformPatcherInvoker",
+    "PatchInvoker",
+    "PatchMixin",
+    "WorldRenderingPipelineMixin",
+    "IrisMixin",
+    "TransformPatcherMixin"
+  ]
+}

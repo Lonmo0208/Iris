@@ -1,7 +1,6 @@
 package net.irisshaders.iris.mixin.forge;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
 import net.minecraft.client.renderer.ShaderInstance;
