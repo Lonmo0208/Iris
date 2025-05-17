@@ -1,11 +1,11 @@
-package net.irisshaders.iris.compat.embeddium.impl;
+package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.compat.embeddium.FormatAnalyzer;
+import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumShader;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.compat.ShaderTransformer;
 import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisModelVertexFormats;
@@ -19,7 +19,6 @@ import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
-import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
@@ -78,7 +77,7 @@ public class EmbeddiumPrograms {
 		stopwatch.stop();
 		Iris.logger.info("Transforming Embeddium shaders completed in {}", stopwatch);
 
-		WorldRenderingSettings.INSTANCE.setVertexFormat((net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType) IrisModelVertexFormats.MODEL_VERTEX_XHFP);
+		WorldRenderingSettings.INSTANCE.setVertexFormat(IrisModelVertexFormats.MODEL_VERTEX_XHFP);
 
 	}
 

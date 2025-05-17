@@ -23,7 +23,7 @@ public class MixinEmbeddiumVideoOptionsScreen {
         if (compactFormat != Embeddium.options().performance.useCompactVertexFormat) {
             compactFormat = !compactFormat;
             try {
-                WorldRenderingSettings.INSTANCE.setVertexFormat((ChunkVertexType) IrisForgeMod.getVertexFormat());
+                WorldRenderingSettings.INSTANCE.setVertexFormat(IrisForgeMod.getVertexFormat());
                 Iris.reload();
             } catch (IOException e) {
                 e.printStackTrace();

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumPrograms;
+import net.irisshaders.iris.pipeline.programs.EmbeddiumPrograms;
 import net.irisshaders.iris.compat.embeddium.impl.WorldRenderingPipelineExtension;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;

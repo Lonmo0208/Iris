@@ -4,18 +4,18 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.DefaultChunkMeshAttributes;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshFormats;
 
 public class FormatAnalyzer {
 	private static final Byte2ObjectMap<ChunkVertexType> classMap = new Byte2ObjectOpenHashMap<>();
 
 	static {
-		classMap.put((byte) 0, ChunkMeshFormats.COMPACT);
+		classMap.put((byte) 0, (ChunkVertexType) ChunkMeshFormats.COMPACT);
 	}
 
-	public static ChunkVertexType createFormat(boolean blockId, boolean normal, boolean midUV, boolean midBlock) {
+	public static org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType createFormat(boolean blockId, boolean normal, boolean midUV, boolean midBlock) {
 		byte key = 0;
 		if (blockId) {
 			key |= 1;
@@ -32,7 +32,7 @@ public class FormatAnalyzer {
 		}
 
 		if (classMap.containsKey(key)) {
-			return classMap.get(key);
+			return (org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType) classMap.get(key);
 		}
 
 		int offset = 20; // Normal Sodium stuff
@@ -89,6 +89,6 @@ public class FormatAnalyzer {
 			VERTEX_FORMAT.addElement(IrisChunkMeshAttributes.MID_BLOCK, 14, midBlockOffset);
 		}
 
-		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
+		return (org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType) classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
 	}
 }

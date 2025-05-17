@@ -2,6 +2,7 @@ package net.irisshaders.iris.platform;
 
 import com.mojang.logging.LogUtils;
 import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisModelVertexFormats;
+import net.irisshaders.iris.gui.screen.ScreenHandler;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
@@ -73,7 +74,7 @@ public class IrisForgeMod {
 
 		// 原 IrisForgeMod 的功能
 		bus.addListener(this::registerKeys);
-		modContainer.registerExtensionPoint(IConfigScreenFactory.class, (game, screen) -> new ShaderPackScreen(screen));
+		modContainer.registerExtensionPoint(IConfigScreenFactory.class, ScreenHandler::registerConfigScreen);
 
 		LOGGER.info("Initialized EmbX compatibility layer");
 	}
