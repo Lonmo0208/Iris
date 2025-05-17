@@ -120,6 +120,7 @@ tasks.named("compileTestJava").configure {
 }
 
 dependencies {
+    implementation(files(rootDir.resolve("acceleratedrendering-1.0.0.jar")))
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 
     compileOnly(project.project(":common").sourceSets.main.get().output)

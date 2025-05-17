@@ -1,5 +1,5 @@
 {
-  "package": "net.irisshaders.iris.compat.iris.mixin",
+  "package": "net.irisshaders.iris.compat.embeddium.mixin",
   "plugin": "net.irisshaders.iris.compat.core.EmbMixinPlugin",
   "required": true,
   "compatibilityLevel": "JAVA_8",
@@ -20,7 +20,6 @@
     "PatchInvoker",
     "PatchMixin",
     "WorldRenderingPipelineMixin",
-    "IrisMixin",
-    "TransformPatcherMixin"
+    "IrisMixin"
   ]
 }

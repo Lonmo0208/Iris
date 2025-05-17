@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat;
 
-import net.irisshaders.iris.compat.iris.impl.EmbeddiumParameters;
+import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumParameters;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import org.taumc.glsl.Transformer;

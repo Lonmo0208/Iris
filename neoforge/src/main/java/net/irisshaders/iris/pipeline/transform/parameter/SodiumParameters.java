@@ -2,6 +2,7 @@ package net.irisshaders.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.blending.AlphaTest;
+import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
@@ -12,11 +13,11 @@ public class SodiumParameters extends Parameters {
 
 	// DO NOT include this field in hashCode or equals, it's mutable!
 	// (See use of setAlphaFor in TransformPatcher)
-	public final AlphaTest alpha;
+	public AlphaTest alpha;
 
 	public SodiumParameters(Patch patch,
 							Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-							AlphaTest alpha) {
+							AlphaTest alpha, ShaderAttributeInputs shaderAttributeInputs) {
 		super(patch, textureMap);
 
 		this.alpha = alpha;

@@ -36,9 +36,6 @@ config = "mixins.iris.vertexformat.json"
 config = "iris-batched-entity-rendering.mixins.json"
 
 [[mixins]]
-config = "mixins.iris.compat.sodium.json"
-
-[[mixins]]
 config = "mixins.iris.compat.dh.json"
 
 [[mixins]]
@@ -49,6 +46,15 @@ config = "mixins.iris.compat.shaders.json"
 
 [[mixins]]
 config = "mixins.iris.compat.embeddium.json"
+
+[[mixins]]
+config = "mixins.iris.compat.pixelmon.json"
+
+[[mixins]]
+config = "mixins.iris.compat.indium.json"
+
+[[mixins]]
+config = "mixins.iris.compat.indigo.json"
 
 [[mixins]]
 config = "mixins.iris.forge.json"

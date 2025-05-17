@@ -10,7 +10,7 @@ import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
 public abstract class Parameters implements JobParameters {
-	public final Patch patch;
+	public Patch patch;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 	public PatchShaderType type; // may only be set by TransformPatcher
 	// WARNING: adding new fields requires updating hashCode and equals methods!
