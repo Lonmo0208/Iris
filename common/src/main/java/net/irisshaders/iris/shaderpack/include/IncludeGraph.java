@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -64,7 +65,7 @@ public class IncludeGraph {
 		this.failures = failures;
 	}
 
-	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths) {
+	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths, boolean isZip) {
 		Map<AbsolutePackPath, AbsolutePackPath> cameFrom = new HashMap<>();
 		Map<AbsolutePackPath, Integer> lineNumberInclude = new HashMap<>();
 
@@ -80,7 +81,18 @@ public class IncludeGraph {
 			String source;
 
 			try {
-				source = readFile(next.resolved(root));
+				Path p = next.resolved(root);
+				if (Iris.getIrisConfig().areDebugOptionsEnabled() && !isZip) {
+					String absolute = p.toAbsolutePath().toString().replace("\\", "/");
+					absolute = absolute.substring(absolute.lastIndexOf("shaders/") + 8);
+
+					String canonical = p.toFile().getCanonicalPath().replace("\\", "/");
+					canonical = canonical.substring(canonical.lastIndexOf("shaders/") + 8);
+					if (!absolute.equals(canonical)) {
+						throw new FileIncludeException("'" + next.getPathString() + "' doesn't exist, did you mean '" + canonical + "'?");
+					}
+				}
+				source = readFile(p);
 			} catch (IOException e) {
 				AbsolutePackPath src = cameFrom.get(next);
 
@@ -91,7 +103,10 @@ public class IncludeGraph {
 				String topLevelMessage;
 				String detailMessage;
 
-				if (e instanceof NoSuchFileException) {
+				if (e instanceof FileIncludeException) {
+					topLevelMessage = "failed to resolve #include directive\n" + e.getMessage();
+					detailMessage = "file not found";
+				} else if (e instanceof NoSuchFileException) {
 					topLevelMessage = "failed to resolve #include directive";
 					detailMessage = "file not found";
 				} else {
@@ -166,13 +181,18 @@ public class IncludeGraph {
 					FileNode lastFile = nodes.get(lastFilePath);
 					int lineNumber = -1;
 
-					for (Map.Entry<Integer, AbsolutePackPath> include : lastFile.getIncludes().entrySet()) {
-						if (include.getValue() == node) {
-							lineNumber = include.getKey() + 1;
+					if (lastFile != null) {
+						for (Map.Entry<Integer, AbsolutePackPath> include : lastFile.getIncludes().entrySet()) {
+							if (include.getValue().equals(node)) {
+								lineNumber = include.getKey() + 1;
+							}
 						}
 					}
 
-					String badLine = lastFile.getLines().get(lineNumber - 1);
+					String badLine = null;
+					if (lastFile != null) {
+						badLine = lastFile.getLines().get(lineNumber - 1);
+					}
 
 					String detailMessage = node.equals(start) ? "final #include in cycle" : "#include involved in cycle";
 
@@ -212,7 +232,7 @@ public class IncludeGraph {
 		path.add(frontier);
 		visited.add(frontier);
 
-		for (AbsolutePackPath included : nodes.get(frontier).getIncludes().values()) {
+		for (AbsolutePackPath included : Objects.requireNonNull(nodes.get(frontier)).getIncludes().values()) {
 			if (!nodes.containsKey(included)) {
 				// file that failed to load for another reason, error should already be reported
 				continue;
@@ -258,5 +278,12 @@ public class IncludeGraph {
 
 	public ImmutableMap<AbsolutePackPath, RusticError> getFailures() {
 		return failures;
+	}
+
+
+	private static class FileIncludeException extends IOException {
+		FileIncludeException(String message) {
+			super(message);
+		}
 	}
 }

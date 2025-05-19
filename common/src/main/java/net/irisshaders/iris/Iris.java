@@ -250,12 +250,14 @@ public class Iris {
 		}
 
 		Path shaderPackPath;
+		boolean isZip = false;
 
 		if (!Files.isDirectory(shaderPackRoot) && shaderPackRoot.toString().endsWith(".zip")) {
 			Optional<Path> optionalPath;
 
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+				isZip = true;
 			} catch (FileSystemNotFoundException | NoSuchFileException e) {
 				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
@@ -285,6 +287,7 @@ public class Iris {
 
 			// If it's a folder-based shaderpack, just use the shaders subdirectory
 			shaderPackPath = shaderPackRoot.resolve("shaders");
+			isZip = false;
 		}
 
 		if (!Files.exists(shaderPackPath)) {
@@ -305,7 +308,7 @@ public class Iris {
 		resetShaderPackOptions = false;
 
 		try {
-			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines());
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines(), isZip);
 
 			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
 
@@ -325,7 +328,7 @@ public class Iris {
 		fallback = false;
 		currentPackName = name;
 
-		logger.info("Using shaderpack: " + name);
+		logger.info("Using shaderpack: {}", name);
 
 		return true;
 	}
