@@ -30,7 +30,7 @@
     "MixinVertexSerializerCache",
     "MixinChunkShaderInterface",
     "MixinGlVertexFormatbuilder",
-    "MixinChunkVertexType",
+    //"MixinChunkVertexType",
     "EmbeddiumWorldRendererAssessor",
     "MixinMojangVertexConsumer",
 

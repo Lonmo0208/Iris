@@ -5,10 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumShader;
-import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.compat.ShaderTransformer;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisModelVertexFormats;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
@@ -29,6 +26,7 @@ import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisModelVertexFormats;
 import net.minecraft.resources.ResourceLocation;
 import org.embeddedt.embeddium.impl.gl.GlObject;
 import org.embeddedt.embeddium.impl.gl.shader.GlProgram;
@@ -38,9 +36,14 @@ import org.embeddedt.embeddium.impl.render.chunk.shader.ChunkShaderBindingPoints
 import org.embeddedt.embeddium.impl.render.chunk.shader.ChunkShaderInterface;
 import org.embeddedt.embeddium.impl.render.chunk.terrain.DefaultTerrainRenderPasses;
 import org.embeddedt.embeddium.impl.render.chunk.terrain.TerrainRenderPass;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexType;
 import org.lwjgl.opengl.GL43C;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class EmbeddiumPrograms {
@@ -78,7 +81,6 @@ public class EmbeddiumPrograms {
 		Iris.logger.info("Transforming Embeddium shaders completed in {}", stopwatch);
 
 		WorldRenderingSettings.INSTANCE.setVertexFormat(IrisModelVertexFormats.MODEL_VERTEX_XHFP);
-
 	}
 
 	private AlphaTest getAlphaTest(Pass pass, ProgramSource source) {
@@ -90,8 +92,6 @@ public class EmbeddiumPrograms {
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap = programSet.getPackDirectives().getTextureMap();
 
 		ChunkVertexType vertexType = IrisModelVertexFormats.MODEL_VERTEX_XHFP;
-
-		programSet.getPackDirectives().getTextureMap();
 
 		Map<PatchShaderType, String> transformedNew = ShaderTransformer.transform(
 			source.getName(),

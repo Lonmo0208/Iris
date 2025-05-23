@@ -41,7 +41,7 @@ public class EmbMixinPlugin implements IMixinConfigPlugin {
         if(mixinClassName.endsWith("FrustumSwapperMixin")) {
             targetClass.interfaces.removeIf(iface -> iface.startsWith("net/caffeinemc/mods/sodium"));
             // Remap sodium$createViewport to use our classname
-            var createViewportMethod = targetClass.methods.stream().filter(m -> m.name.equals("sodium$createViewport")).findFirst();
+            var createViewportMethod = targetClass.methods.stream().filter(m -> m.name.equals("createViewport")).findFirst();
             createViewportMethod.ifPresent(methodNode -> {
                 methodNode.desc = "()Lorg/embeddedt/embeddium/impl/render/viewport/Viewport;";
                 methodNode.instructions.forEach(insn -> {

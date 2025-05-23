@@ -9,7 +9,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.irisshaders.iris.compat.dh.DHCompat;
-import net.irisshaders.iris.compat.dh.DhFrameBufferWrapper;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -47,13 +46,12 @@ import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.texture.PBRTextureHolder;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pbr.texture.PBRType;
-import net.irisshaders.iris.pipeline.programs.EmbeddiumPrograms;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderCreator;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
-import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
+import net.irisshaders.iris.pipeline.programs.EmbeddiumPrograms;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
@@ -101,7 +99,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBClearTexture;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -175,7 +172,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final int stackSize = 0;
 	private final boolean skipAllRendering;
 	private final CloudSetting dhCloudSetting;
-	private final SodiumPrograms sodiumPrograms;
+	private final EmbeddiumPrograms embeddiumPrograms;
 	public boolean isBeforeTranslucent;
 	private boolean initializedBlockIds;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
@@ -455,7 +452,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
-		this.sodiumPrograms = new SodiumPrograms(this, programSet, resolver, renderTargets, shadowTargetsSupplier, customUniforms);
+		this.embeddiumPrograms = new EmbeddiumPrograms(this, programSet, resolver, renderTargets, shadowTargetsSupplier, customUniforms);
+		//this.embeddiumPrograms = new EmbeddiumPrograms(this, programSet, resolver, renderTargets, shadowTargetsSupplier, customUniforms);
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
 
@@ -1266,14 +1264,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return isRenderingWorld && isMainBound;
 	}
 
-	@Override
-	public SodiumPrograms getSodiumPrograms() {
-		return sodiumPrograms;
-	}
+	//@Override
+	//public EmbeddiumPrograms getSodiumPrograms() {
+		//return embeddiumPrograms;
+	//}
 
 	@Override
-	public EmbeddiumPrograms getEmbeddiumPrograms() {
-		return null;
+	 public EmbeddiumPrograms getEmbeddiumPrograms() {
+		return embeddiumPrograms;
 	}
 
 	@Override

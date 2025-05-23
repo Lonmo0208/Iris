@@ -4,12 +4,11 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.irisshaders.iris.compat.dh.DHCompat;
-import net.irisshaders.iris.pipeline.programs.EmbeddiumPrograms;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
-import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
+import net.irisshaders.iris.pipeline.programs.EmbeddiumPrograms;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
@@ -115,14 +114,13 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 		// stub: nothing to do here
 	}
 
-	@Override
-	public SodiumPrograms getSodiumPrograms() {
-		return null;
-	}
+	//@Override
+	//public EmbeddiumPrograms getSodiumPrograms() {
+		//return null;
+	//}
 
 	@Override
 	public EmbeddiumPrograms getEmbeddiumPrograms() {
-		// no shaders to override
 		return null;
 	}
 

@@ -2,10 +2,10 @@ package net.irisshaders.iris.compat.embeddium.mixin;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.EntityToTerrainVertexSerializer;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.GlyphExtVertexSerializer;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.IrisEntityToTerrainVertexSerializer;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.ModelToEntityVertexSerializer;
+import net.irisshaders.iris.vertices.embeddium.terrain.EntityToTerrainVertexSerializer;
+import net.irisshaders.iris.vertices.embeddium.terrain.GlyphExtVertexSerializer;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisEntityToTerrainVertexSerializer;
+import net.irisshaders.iris.vertices.embeddium.terrain.ModelToEntityVertexSerializer;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.embeddedt.embeddium.api.vertex.format.VertexFormatDescription;
 import org.embeddedt.embeddium.api.vertex.format.VertexFormatRegistry;

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumPatch;
+import net.irisshaders.iris.pipeline.transform.EmbeddiumPatch;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;

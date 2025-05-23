@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.platform.IrisForgeMod;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;

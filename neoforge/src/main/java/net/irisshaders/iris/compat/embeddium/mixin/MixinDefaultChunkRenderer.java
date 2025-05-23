@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisChunkMeshAttributes;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisModelVertexFormats;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisChunkMeshAttributes;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisModelVertexFormats;
 import org.embeddedt.embeddium.impl.gl.attribute.GlVertexAttributeBinding;
 import org.embeddedt.embeddium.impl.gl.attribute.GlVertexFormat;
 import org.embeddedt.embeddium.impl.gl.device.RenderDevice;

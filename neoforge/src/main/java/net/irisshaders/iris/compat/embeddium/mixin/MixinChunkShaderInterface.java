@@ -3,7 +3,7 @@ package net.irisshaders.iris.compat.embeddium.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumShader;
+import net.irisshaders.iris.pipeline.programs.EmbeddiumShader;
 import org.embeddedt.embeddium.impl.gl.shader.uniform.GlUniform;
 import org.embeddedt.embeddium.impl.render.chunk.shader.ChunkShaderInterface;
 import org.embeddedt.embeddium.impl.render.chunk.shader.ChunkShaderOptions;

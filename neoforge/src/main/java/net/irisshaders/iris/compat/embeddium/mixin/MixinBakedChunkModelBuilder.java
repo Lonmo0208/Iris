@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
-import net.irisshaders.iris.vertices.sodium.terrain.BlockContextHolder;
-import net.irisshaders.iris.vertices.sodium.terrain.VertexEncoderInterface;
+import net.irisshaders.iris.vertices.embeddium.terrain.BlockContextHolder;
+import net.irisshaders.iris.vertices.embeddium.terrain.VertexEncoderInterface;
 import org.embeddedt.embeddium.impl.render.chunk.compile.buffers.BakedChunkModelBuilder;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import org.spongepowered.asm.mixin.Mixin;

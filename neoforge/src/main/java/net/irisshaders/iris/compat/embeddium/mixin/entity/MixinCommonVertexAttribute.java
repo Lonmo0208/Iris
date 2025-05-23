@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.embeddium.mixin.entity;
 
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisCommonVertexAttributes;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisCommonVertexAttributes;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.apache.commons.lang3.ArrayUtils;
 import org.embeddedt.embeddium.api.vertex.attributes.CommonVertexAttribute;

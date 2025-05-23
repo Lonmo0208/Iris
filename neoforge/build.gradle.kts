@@ -131,7 +131,7 @@ dependencies {
     includeDep("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a3919")
     includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     includeDep("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
-    compileOnly (SODIUM_DEPENDENCY_NEO)
+    //compileOnly (SODIUM_DEPENDENCY_NEO)
     implementation(EMB_DEPENDENCY)
     //implementation(files(rootDir.resolve("sodium-api.jar")))
     includeAdditional("io.github.douira:glsl-transformer:2.0.1")

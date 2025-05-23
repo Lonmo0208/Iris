@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisChunkMeshAttributes;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisChunkMeshAttributes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshAttribute;
 import org.spongepowered.asm.mixin.Final;

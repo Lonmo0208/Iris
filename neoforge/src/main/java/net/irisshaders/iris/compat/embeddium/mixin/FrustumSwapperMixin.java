@@ -16,3 +16,4 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin({AdvancedShadowCullingFrustum.class, ReversedAdvancedShadowCullingFrustum.class, CullEverythingFrustum.class, BoxCullingFrustum.class, NonCullingFrustum.class})
 public abstract class FrustumSwapperMixin implements Frustum, ViewportProvider {
 }
+

@@ -1,9 +1,8 @@
 package net.irisshaders.iris.platform;
 
 import com.mojang.logging.LogUtils;
-import net.irisshaders.iris.compat.embeddium.impl.vertices.terrain.IrisModelVertexFormats;
 import net.irisshaders.iris.gui.screen.ScreenHandler;
-import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.vertices.embeddium.terrain.IrisModelVertexFormats;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -60,7 +59,6 @@ public class IrisForgeMod {
 	};
 
 	static {
-		// 静态初始化配置
 		try {
 			loadConfig();
 		} catch (IOException e) {
@@ -72,7 +70,6 @@ public class IrisForgeMod {
 	public IrisForgeMod(IEventBus bus, ModContainer modContainer) {
 		LOGGER.info("Loaded Iris (NeoForge) v{}", modContainer.getModInfo().getVersion());
 
-		// 原 IrisForgeMod 的功能
 		bus.addListener(this::registerKeys);
 		modContainer.registerExtensionPoint(IConfigScreenFactory.class, ScreenHandler::registerConfigScreen);
 

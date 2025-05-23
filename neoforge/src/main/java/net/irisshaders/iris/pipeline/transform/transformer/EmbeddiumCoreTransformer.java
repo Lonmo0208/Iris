@@ -2,10 +2,10 @@ package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumParameters;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.parameter.EmbeddiumParameters;
+import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
 
 public class EmbeddiumCoreTransformer {
 	public static void transform(
@@ -20,20 +20,23 @@ public class EmbeddiumCoreTransformer {
 		root.rename("projectionMatrixInverse", "iris_ProjectionMatrixInverse");
 		root.rename("normalMatrix", "iris_NormalMatrix");
 		root.rename("chunkOffset", "u_RegionOffset");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"uniform mat4 iris_LightmapTextureMatrix;");
 		if (parameters.type == PatchShaderType.VERTEX) {
+			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
 			root.replaceReferenceExpressions(t, "vaPosition", "_vert_position + _get_draw_translation(_draw_id)");
 			root.replaceReferenceExpressions(t, "vaColor", "_vert_color");
-			root.rename("vaNormal", "iris_Normal");
+			root.replaceReferenceExpressions(t, "vaNormal", "irs_Normal");
+			root.replaceReferenceExpressions(t, "at_tangent", "irs_Tangent");
+
 			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");
 			root.replaceReferenceExpressions(t, "vaUV1", "ivec2(0, 10)");
-			root.rename("vaUV2", "a_LightCoord");
+			root.replaceReferenceExpressions(t, "vaUV2", "a_LightAndData.xy");
 
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
+			EmbeddiumTransformer.replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
+			EmbeddiumTransformer.replaceMCEntity(t, tree, root);
 
-			EmbeddiumTransformer.injectVertInit(t, tree, root, parameters);
+			EmbeddiumTransformer.injectVertInit(t, tree, root, parameters, needsNormal);
 		}
 	}
 }

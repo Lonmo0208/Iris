@@ -1,13 +1,13 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
-import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
-import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
+import org.embeddedt.embeddium.impl.render.viewport.Viewport;
+import org.embeddedt.embeddium.impl.render.viewport.ViewportProvider;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
-public class NonCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
+public class NonCullingFrustum extends Frustum implements ViewportProvider, org.embeddedt.embeddium.impl.render.viewport.frustum.Frustum {
 	private final Vector3d position = new Vector3d();
 
 	public NonCullingFrustum() {

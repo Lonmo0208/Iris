@@ -1,10 +1,9 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumShader;
-import net.irisshaders.iris.compat.embeddium.impl.WorldRenderingPipelineExtension;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.programs.EmbeddiumShader;
 import org.embeddedt.embeddium.impl.gl.shader.GlProgram;
 import org.embeddedt.embeddium.impl.render.chunk.ShaderChunkRenderer;
 import org.embeddedt.embeddium.impl.render.chunk.shader.ChunkShaderInterface;
@@ -31,9 +30,9 @@ public abstract class MixinShaderChunkRenderer {
 
 		GlProgram<ChunkShaderInterface> program = null;
 
-		if (pipeline instanceof IrisRenderingPipeline && pipeline instanceof WorldRenderingPipelineExtension extension) {
-			extension.getEmbeddiumPrograms().getFramebuffer(pass).bind();
-			program = extension.getEmbeddiumPrograms().getProgram(pass);
+		if (pipeline instanceof IrisRenderingPipeline) {
+			pipeline.getEmbeddiumPrograms().getFramebuffer(pass).bind();
+			program = pipeline.getEmbeddiumPrograms().getProgram(pass);
 		}
 
 		if (program == null) {

@@ -4,7 +4,7 @@ import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
+import org.embeddedt.embeddium.api.vertex.serializer.VertexSerializerRegistry;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
@@ -12,7 +12,6 @@ import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.screen.ScreenHandler;
-import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
@@ -30,10 +29,6 @@ import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
-import net.irisshaders.iris.vertices.sodium.EntityToTerrainVertexSerializer;
-import net.irisshaders.iris.vertices.sodium.GlyphExtVertexSerializer;
-import net.irisshaders.iris.vertices.sodium.IrisEntityToTerrainVertexSerializer;
-import net.irisshaders.iris.vertices.sodium.ModelToEntityVertexSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -118,10 +113,10 @@ public class Iris {
 
 		PBRTextureManager.INSTANCE.init();
 
-		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.TERRAIN, new EntityToTerrainVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(IrisVertexFormats.ENTITY, IrisVertexFormats.TERRAIN, new IrisEntityToTerrainVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, IrisVertexFormats.GLYPH, new GlyphExtVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.ENTITY, new ModelToEntityVertexSerializer());
+		//VertexSerializerRegistry.instance().finalize(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.TERRAIN, null);
+		//VertexSerializerRegistry.instance().finalize(IrisVertexFormats.ENTITY, IrisVertexFormats.TERRAIN,null);
+		//VertexSerializerRegistry.instance().finalize(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, IrisVertexFormats.GLYPH, null);
+		//VertexSerializerRegistry.instance().finalize(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.ENTITY,null);
 
 		// Only load the shader pack when we can access OpenGL
 		if (!IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {

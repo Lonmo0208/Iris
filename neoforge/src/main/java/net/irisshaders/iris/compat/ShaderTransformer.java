@@ -4,14 +4,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.embeddium.TextureTransformer;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumParameters;
-import net.irisshaders.iris.compat.embeddium.impl.EmbeddiumPatch;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.parameter.EmbeddiumParameters;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.CommonToken;
@@ -381,56 +380,6 @@ public class ShaderTransformer {
 		addIfNotExists(transformer, "a_TexCoord", "in vec2 a_TexCoord;");
 		addIfNotExists(transformer, "a_Color", "in vec4 a_Color;");
 		addIfNotExists(transformer, "a_LightCoord", "in ivec2 a_LightCoord;");
-		transformer.prependMain("_vert_init();");
-	}
-
-
-	private static void injectXSFPVertInit(Transformer transformer, EmbeddiumParameters parameters) {
-		String separateAo = WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0f)";
-		transformer.injectVariable(
-			// translated from sodium's chunk_vertex.glsl
-			"vec3 _vert_position;");
-		transformer.injectVariable(
-			"vec2 _vert_tex_diffuse_coord;");
-		transformer.injectVariable(
-			"ivec2 _vert_tex_light_coord;");
-		transformer.injectVariable(
-			"vec4 _vert_color;");
-		transformer.injectVariable(
-			"uint _draw_id;");
-		transformer.injectFunction(
-			"const uint MATERIAL_USE_MIP_OFFSET = 0u;");
-
-		transformer.injectFunction(
-			"vec3 _get_draw_translation(uint pos) {\n" +
-				"    return _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
-				"}");
-
-		transformer.injectFunction(
-
-			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
-				"    // Packing scheme is defined by LocalSectionIndex\n" +
-				"    return uvec3(pos) >> uvec3(5u, 0u, 2u) & uvec3(7u, 3u, 7u);\n" +
-				"}");
-
-		transformer.injectFunction(
-			"void _vert_init() {" +
-				"uint packed_draw_params = (a_LightCoord & 0xFFFFu);" +
-				"_vert_position = vec3(a_PosId.xyz);" +
-				"_vert_tex_diffuse_coord = a_TexCoord;" +
-				"_vert_tex_light_coord = ivec2((uvec2((a_LightCoord >> 16) & 0xFFFFu) >> uvec2(0, 8)) & uvec2(0xFFu));" +
-				"_vert_color = " + separateAo + ";" +
-				"_draw_id = (packed_draw_params >> 8) & 0xFFu; }");
-
-		transformer.injectFunction(
-			"float _material_mip_bias(uint material) {\n" +
-				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
-				"}");
-
-		addIfNotExists(transformer, "a_PosId", "in vec3 a_PosId;");
-		addIfNotExists(transformer, "a_TexCoord", "in vec2 a_TexCoord;");
-		addIfNotExists(transformer, "a_Color", "in vec4 a_Color;");
-		addIfNotExists(transformer, "a_LightCoord", "in uint a_LightCoord;");
 		transformer.prependMain("_vert_init();");
 	}
 
