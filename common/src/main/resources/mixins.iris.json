@@ -51,6 +51,7 @@
     "MixinQuickPlayDev",
     "MixinRenderSystem",
     "MixinRenderTarget",
+    "MixinRenderType",
     "MixinScreenEffectRenderer",
     "MixinShaderInstance",
     "MixinSystemReport",

@@ -11,9 +11,7 @@ public class BufferSegmentRenderer {
 	 */
 	public void draw(BufferSegment segment) {
 		if (segment.meshData() != null) {
-			segment.type().setupRenderState();
-			drawInner(segment);
-			segment.type().clearRenderState();
+			segment.type().draw(segment.meshData());
 		}
 	}
 

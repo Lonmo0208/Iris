@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.irisshaders.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.irisshaders.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.irisshaders.iris.layer.WrappingMultiBufferSource;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -138,17 +139,22 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		for (RenderType type : renderOrder) {
 			if (!typeToSegment.containsKey(type)) continue;
 
-			type.setupRenderState();
-
+			var segments = typeToSegment.getOrDefault(type, Collections.emptyList());
 			renderTypes += 1;
 
-			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
-				segmentRenderer.drawInner(segment);
+
+			type.setupRenderState();
+			ImmediateState.mergeRendering = true;
+
+
+			for (BufferSegment segment : segments) {
+				segment.type().draw(segment.meshData());
 				drawCalls += 1;
 			}
 
 			type.clearRenderState();
 		}
+		ImmediateState.mergeRendering = false;
 
 		int targetClearTime = getTargetClearTime();
 
@@ -179,12 +185,18 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 			types.add(type);
 
-			type.setupRenderState();
+			if (!typeToSegment.containsKey(type)) continue;
 
+			var segments = typeToSegment.getOrDefault(type, Collections.emptyList());
 			renderTypes += 1;
 
-			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
-				segmentRenderer.drawInner(segment);
+
+			type.setupRenderState();
+			ImmediateState.mergeRendering = true;
+
+
+			for (BufferSegment segment : segments) {
+				segment.type().draw(segment.meshData());
 				drawCalls += 1;
 			}
 
@@ -192,6 +204,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 			type.clearRenderState();
 		}
+		ImmediateState.mergeRendering = false;
 
 		profiler.popPush("reset type " + transparencyType);
 
