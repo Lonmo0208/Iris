@@ -1,0 +1,33 @@
+# http://editorconfig.org
+root = true
+
+[*]
+tab_width = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[.editorconfig]
+indent_style = space
+indent_size = 4
+
+[brachyurabootstrapconf.txt]
+indent_style = tab
+tab_width = unset
+
+[*.java]
+indent_style = tab
+tab_width = unset
+ij_continuation_indent_size = 4
+ij_java_class_count_to_use_import_on_demand = 999
+ij_java_names_count_to_use_import_on_demand = 999
+ij_java_imports_layout = *,|,javax.**,java.**,|,$*
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.properties]
+indent_style = space
+indent_size = 2

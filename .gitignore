@@ -1,0 +1,46 @@
+# custom sodium versions
+custom_sodium/
+
+# gradle
+
+.gradle/
+build/
+out/
+classes/
+
+# brachyura
+.brachyura
+*.jfr
+
+# custom sodium
+/custom_sodium/
+
+# idea
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# eclipse
+
+*.launch
+
+# fabric
+
+run/
+/logs/latest.log
+
+# macOS
+
+.DS_Store
+.AppleDouble
+.LSOverride
