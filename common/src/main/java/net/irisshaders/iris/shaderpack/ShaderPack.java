@@ -120,10 +120,6 @@ public class ShaderPack {
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines, isZip);
-	}
-
 	/**
 	 * Reads a shader pack from the disk.
 	 *
