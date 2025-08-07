@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.13-Asycn" }
+val MOD_VERSION by extra { "1.8.13" }
 
 allprojects {
     apply(plugin = "java")
@@ -48,7 +48,7 @@ subprojects {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            //builder.append("-snapshot")
+            builder.append("-Asycn")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
