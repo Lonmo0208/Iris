@@ -5,9 +5,9 @@ plugins {
 }
 
 val MINECRAFT_VERSION by extra { "1.21.1" }
-val NEOFORGE_VERSION by extra { "21.1.173" }
-val FABRIC_LOADER_VERSION by extra { "0.16.10" }
-val FABRIC_API_VERSION by extra { "0.103.0+1.21.1" }
+val NEOFORGE_VERSION by extra { "21.1.197" }
+val FABRIC_LOADER_VERSION by extra { "0.17.1" }
+val FABRIC_API_VERSION by extra { "0.116.4+1.21.1" }
 
 val SODIUM_DEPENDENCY_FABRIC by extra { "maven.modrinth:sodium:26nVNc41"}
 val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
