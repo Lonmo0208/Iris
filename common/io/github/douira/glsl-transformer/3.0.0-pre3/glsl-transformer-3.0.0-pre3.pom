@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.douira</groupId>
+  <artifactId>glsl-transformer</artifactId>
+  <version>3.0.0-pre3</version>
+  <name>glsl-transformer</name>
+  <description>GLSL Parsing, Program Transformation and Printing with ANTLR4</description>
+  <url>https://github.com/IrisShaders/glsl-transformer</url>
+  <licenses>
+    <license>
+      <name>GNU Affero General Public License v3.0</name>
+      <url>https://www.gnu.org/licenses/agpl-3.0.en.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>douira</name>
+      <email>douira100@gmail.com</email>
+      <url>https://douira.github.io</url>
+    </developer>
+  </developers>
+  <scm>
+    <connection>git@github.com:IrisShaders/glsl-transformer.git</connection>
+    <developerConnection>git@github.com:IrisShaders/glsl-transformer.git</developerConnection>
+    <url>https://github.com/IrisShaders/glsl-transformer</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>4.13.1</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4</artifactId>
+      <version>4.13.1</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

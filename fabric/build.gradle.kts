@@ -12,6 +12,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    maven {url = uri("file://")}
     exclusiveContent {
         forRepository {
             maven {
@@ -66,7 +67,7 @@ dependencies {
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
-    implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
+    implementAndInclude("io.github.douira:glsl-transformer:3.0.0-pre3")
     implementAndInclude("org.anarres:jcpp:1.4.14")
 
     implementation(project.project(":common").sourceSets.getByName("vendored").output)
