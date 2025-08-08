@@ -5,7 +5,7 @@ license = "LGPLv3"
 [[mods]]
 modId = "iris"
 
-version = "1.8.0+mc1.20.1"
+version = "1.8.x-Async+mc1.20.1"
 displayName = "Iris"
 
 logoFile="assets/iris/iris-logo.png" #optional

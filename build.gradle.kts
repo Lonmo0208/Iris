@@ -5,12 +5,12 @@ plugins {
 }
 
 val MINECRAFT_VERSION by extra { "1.20.1" }
-val NEOFORGE_VERSION by extra { "47.4.0" }
-val FABRIC_LOADER_VERSION by extra { "0.16.10" }
-val FABRIC_API_VERSION by extra { "0.92.5+1.20.1" }
+val NEOFORGE_VERSION by extra { "47.4.6" }
+val FABRIC_LOADER_VERSION by extra { "0.17.2" }
+val FABRIC_API_VERSION by extra { "0.92.6+1.20.1" }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.0" }
+val MOD_VERSION by extra { "1.8.x" }
 
 allprojects {
     apply(plugin = "java")
@@ -37,7 +37,7 @@ subprojects {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-snapshot")
+            builder.append("-Async")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
@@ -46,7 +46,7 @@ subprojects {
             if (buildId != null) {
                 builder.append("-build.${buildId}")
             } else {
-                builder.append("-local")
+                //builder.append("-local")
             }
         }
 
