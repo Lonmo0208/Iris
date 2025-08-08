@@ -4,9 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
@@ -22,13 +20,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.lwjgl.opengl.KHRDebug;
 import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -36,9 +32,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Map;
 
-import static net.irisshaders.iris.compat.SkipList.*;
+import static net.irisshaders.iris.compat.SkipList.ALWAYS;
+import static net.irisshaders.iris.compat.SkipList.NONE;
 import static net.irisshaders.iris.compat.SkipList.shouldSkipList;
 
 @Mixin(ShaderInstance.class)

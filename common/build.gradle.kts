@@ -7,7 +7,7 @@ plugins {
 
 repositories {
     maven("https://maven.parchmentmc.org/")
-    maven {url = uri("file://")}
+    maven {url = uri("file://${projectDir}/libs")}
 
     exclusiveContent {
         forRepository {

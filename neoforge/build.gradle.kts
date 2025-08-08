@@ -18,12 +18,10 @@ sourceSets {
 }
 
 repositories {
-    //mavenLocal()
+    mavenLocal()
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
-    maven {
-            url = uri("file://")
-        }
+    maven {url = uri("file://${projectDir}/libs")}
     exclusiveContent {
         forRepository {
             maven {

@@ -12,7 +12,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
-    maven {url = uri("file://")}
+    maven {url = uri("file://${projectDir}/libs")}
     exclusiveContent {
         forRepository {
             maven {

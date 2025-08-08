@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin.forge;
 
-import net.irisshaders.iris.pipeline.programs.ShaderAccess;
 import net.irisshaders.iris.platform.Bypass;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
