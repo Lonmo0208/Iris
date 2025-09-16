@@ -36,7 +36,7 @@ public abstract class MixinCloudRenderer {
 	private static void writeIrisVertex(long buffer, float x, float y, float z, int color, CallbackInfoReturnable<Long> cir) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			CloudVertex.write(buffer, x, y, z, color);
-			cir.setReturnValue(buffer + 20L);
+			cir.setReturnValue(buffer + CloudVertex.STRIDE);
 		}
 	}
 
@@ -58,14 +58,16 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
-	private ShaderInstance changeShader(CloudRenderer instance) {
-		return getClouds();
-	}
+	//@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
+	//private ShaderInstance changeShader(CloudRenderer instance) {
+		//return getClouds();
+	//}
 
 	@ModifyArg(remap = false, method = "emitCellGeometry3D", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"))
 	private static int allocateNewSize(int size) {
-		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
+		return IrisApi.getInstance().isShaderPackInUse() ?
+			CloudVertex.FORMAT.stride() * 24 : // 6面 * 4顶点 = 24个顶点
+			size;
 	}
 
 	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 1)
@@ -84,7 +86,9 @@ public abstract class MixinCloudRenderer {
 
 	@ModifyArg(remap = false, method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"))
 	private static int allocateNewSize2D(int size) {
-		return IrisApi.getInstance().isShaderPackInUse() ? 80 : size;
+		return IrisApi.getInstance().isShaderPackInUse() ?
+			CloudVertex.FORMAT.stride() * 4 : // 4个顶点
+			size;
 	}
 
 	@ModifyArg(remap = false, method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILnet/caffeinemc/mods/sodium/api/vertex/format/VertexFormatDescription;)V"), index = 3)
