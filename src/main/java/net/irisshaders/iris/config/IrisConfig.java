@@ -1,6 +1,7 @@
 package net.irisshaders.iris.config;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.config.ShaderPackConfig;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 
@@ -35,6 +36,13 @@ public class IrisConfig {
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
+
+	/**
+	 * @return Whether to use the legacy (V1) shader pack implementation
+	 */
+	public boolean useLegacyShaderPack() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
+	}
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;

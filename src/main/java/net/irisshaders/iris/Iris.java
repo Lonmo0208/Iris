@@ -1,6 +1,7 @@
 package net.irisshaders.iris;
 
 import com.google.common.base.Throwables;
+import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.sun.jna.platform.unix.LibC;
@@ -80,6 +81,7 @@ public class Iris {
 	 */
 	public static final String MODNAME = "Oculus";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+	public static final Gson GSON = new Gson();
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.20.3";
@@ -129,6 +131,10 @@ public class Iris {
 	public static boolean isPackInUseQuick() {
 		return pipelineManager.getPipelineNullable() instanceof IrisRenderingPipeline;
 	}
+
+	public static Path getIrisDir() {
+		return FMLPaths.CONFIGDIR.get().resolve(MODID);
+    }
 
 	public void onKeyRegister(RegisterKeyMappingsEvent event) {
 		event.register(reloadKeybind);

@@ -4,6 +4,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.parsing.ComputeDirectiveParser;
@@ -67,11 +68,11 @@ public class ProgramSet implements ProgramSetInterface {
 	private final ProgramSource dhTerrain;
 	private final ProgramSource dhWater;
 	private final ProgramSource dhShadow;
-	private final ShaderPack pack;
+	private final ShaderPackInterface pack;
 	private final ProgramSource gbuffersDamagedBlock;
 
 	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
-					  ShaderProperties shaderProperties, ShaderPack pack) {
+				  ShaderProperties shaderProperties, ShaderPackInterface pack) {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
@@ -575,7 +576,7 @@ public class ProgramSet implements ProgramSetInterface {
 		return packDirectives;
 	}
 
-	public ShaderPack getPack() {
+	public ShaderPackInterface getPack() {
 		return pack;
 	}
 }

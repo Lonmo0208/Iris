@@ -206,6 +206,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			} else {
 				this.addRenderableWidget(shaderPackList);
 			}
+			
+			this.addRenderableWidget(Button.builder(Component.translatable("iris.shaderPackConfig.title"),
+							button -> this.minecraft.setScreen(new ShaderPackConfigScreen(this)))
+					.pos(bottomCenter + 208, this.height - 27) // 完成按钮右侧，与完成按钮在同一水平线上
+					.size(100, 20)
+					.build());
 
 			this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose()).bounds(bottomCenter + 104, this.height - 27, 100, 20
 			).build());
