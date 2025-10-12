@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.embeddium.mixin;
 
-import net.irisshaders.iris.Iris;
 import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -30,13 +29,9 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-
-		Iris.logger.debug("Applied mixin to " + targetClassName + " with mixin " + mixinClassName);
-
 		if (mixinClassName.endsWith(".copyEntity.ModelPartMixin") || mixinClassName.endsWith(".copyEntity.CuboidMixin")) {
 			return !isBendyLibLoaded;
 		}
-
 		return true;
 	}
 

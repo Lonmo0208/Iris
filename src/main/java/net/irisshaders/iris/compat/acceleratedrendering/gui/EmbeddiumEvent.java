@@ -1,7 +1,6 @@
 package net.irisshaders.iris.compat.acceleratedrendering.gui;
 
 
-import com.github.argon4w.acceleratedrendering.AcceleratedRenderingModEntry;
 import com.google.common.collect.ImmutableList;
 import net.irisshaders.iris.Iris;
 import net.minecraft.network.chat.Component;
@@ -29,48 +28,48 @@ public class EmbeddiumEvent {
                 .add(AROptions.corePooledElementBufferSize)
                 .add(AROptions.coreCachedImageSize)
                 .add(AROptions.coreForceTranslucentAcceleration)
-                .add(AROptions.coreCacheSamePose)
-                .setId(AcceleratedRenderingModEntry.location("configuration.core_settings"))
+                .add(AROptions.coreCacheIdenticalPose)
+                .setId(ARModInfo.location("configuration.core_settings"))
                 .build();
         OptionGroup entity = OptionGroup.createBuilder()
                 .add(AROptions.acceleratedEntityRenderingFeatureStatus)
                 .add(AROptions.acceleratedEntityRenderingDefaultPipeline)
                 .add(AROptions.acceleratedEntityRenderingMeshType)
-                .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_entity_rendering"))
+                .setId(ARModInfo.location("configuration.accelerated_entity_rendering"))
                 .build();
         OptionGroup blockEntity = OptionGroup.createBuilder()
                 .add(AROptions.acceleratedBlockEntityRenderingFeatureStatus)
                 .add(AROptions.acceleratedBlockEntityRenderingDefaultPipeline)
                 .add(AROptions.acceleratedBlockEntityRenderingMeshType)
-                .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_block_entity_rendering"))
+                .setId(ARModInfo.location("configuration.accelerated_block_entity_rendering"))
                 .build();
         OptionGroup text = OptionGroup.createBuilder()
                 .add(AROptions.acceleratedTextRenderingFeatureStatus)
                 .add(AROptions.acceleratedTextRenderingDefaultPipeline)
                 .add(AROptions.acceleratedTextRenderingMeshType)
-                .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_text_rendering"))
+                .setId(ARModInfo.location("configuration.accelerated_text_rendering"))
                 .build();
         OptionGroup item = OptionGroup.createBuilder()
                 .add(AROptions.acceleratedItemRenderingFeatureStatus)
                 .add(AROptions.acceleratedItemRenderingDefaultPipeline)
                 .add(AROptions.acceleratedItemRenderingMeshType)
                 .add(AROptions.acceleratedItemRenderingBakeMeshForQuads)
-                .setId(AcceleratedRenderingModEntry.location("configuration.accelerated_item_rendering"))
+                .setId(ARModInfo.location("configuration.accelerated_item_rendering"))
                 .build();
         OptionGroup culling = OptionGroup.createBuilder()
-                .add(AROptions.normalCullingFeatureStatus)
-                .add(AROptions.normalCullingDefaultCulling)
-                .add(AROptions.normalCullingIgnoreCullState)
-                .setId(AcceleratedRenderingModEntry.location("configuration.normal_culling"))
+                .add(AROptions.orientationCullingFeatureStatus)
+                .add(AROptions.orientationCullingDefaultCulling)
+                .add(AROptions.orientationCullingIgnoreCullState)
+                .setId(ARModInfo.location("configuration.orientation_culling"))
                 .build();
         OptionGroup compatibility = OptionGroup.createBuilder()
                 .add(AROptions.irisCompatFeatureStatus)
-                .add(AROptions.irisCompatNormalCullingCompat)
+                .add(AROptions.irisCompatOrientationCullingCompat)
                 .add(AROptions.irisCompatShadowCulling)
                 .add(AROptions.irisCompatEntitiesCompat)
                 .add(AROptions.irisCompatPolygonProcessing)
                 .add(AROptions.irisCompatFastRenderTypeCheck)
-                .setId(AcceleratedRenderingModEntry.location("configuration.iris_compatibility"))
+                .setId(ARModInfo.location("configuration.iris_compatibility"))
                 .build();
 
         page = new OptionPage(OptionIdentifier.create(ResourceLocation.fromNamespaceAndPath(Iris.MODID, "accelerated_rendering")),

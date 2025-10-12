@@ -1,8 +1,7 @@
 package net.irisshaders.iris.mixin;
 
-import com.github.argon4w.acceleratedrendering.AcceleratedRenderingModEntry;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.compat.acceleratedrendering.gui.AcceleratedRenderingModInfo;
+import net.irisshaders.iris.compat.acceleratedrendering.gui.ARModInfo;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.neoforged.fml.loading.LoadingModList;
@@ -70,7 +69,7 @@ public abstract class MixinDebugScreenOverlay {
 		messages.add("");
 		messages.add("[" + Iris.MODNAME + "] Version: " + Iris.getFormattedVersion());
 		if(LoadingModList.get().getModFileById("acceleratedrendering") != null)
-			messages.add("[" + AcceleratedRenderingModInfo.getArModName() + "] Version: " + AcceleratedRenderingModInfo.getFormattedArModVersion());
+			messages.add("[" + ARModInfo.getArModName() + "] Version: " + ARModInfo.getFormattedArModVersion());
 		messages.add("");
 
 		if (Iris.getIrisConfig().areShadersEnabled()) {

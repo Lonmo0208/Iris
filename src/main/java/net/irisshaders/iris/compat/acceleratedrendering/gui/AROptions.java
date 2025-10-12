@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.acceleratedrendering.gui;
 
-import com.github.argon4w.acceleratedrendering.AcceleratedRenderingModEntry;
 import com.github.argon4w.acceleratedrendering.configs.FeatureConfig;
 import com.github.argon4w.acceleratedrendering.configs.FeatureStatus;
 import com.github.argon4w.acceleratedrendering.configs.PipelineSetting;
@@ -22,7 +21,7 @@ public class AROptions {
     public static final Option<Integer> corePooledElementBufferSize;
     public static final Option<Integer> coreCachedImageSize;
     public static final Option<FeatureStatus> coreForceTranslucentAcceleration;
-    public static final Option<FeatureStatus> coreCacheSamePose;
+    public static final Option<FeatureStatus> coreCacheIdenticalPose;
     public static final Option<FeatureStatus> acceleratedEntityRenderingFeatureStatus;
     public static final Option<PipelineSetting> acceleratedEntityRenderingDefaultPipeline;
     public static final Option<MeshType> acceleratedEntityRenderingMeshType;
@@ -36,11 +35,11 @@ public class AROptions {
     public static final Option<FeatureStatus> acceleratedBlockEntityRenderingFeatureStatus;
     public static final Option<PipelineSetting> acceleratedBlockEntityRenderingDefaultPipeline;
     public static final Option<MeshType> acceleratedBlockEntityRenderingMeshType;
-    public static final Option<FeatureStatus> normalCullingFeatureStatus;
-    public static final Option<FeatureStatus> normalCullingDefaultCulling;
-    public static final Option<FeatureStatus> normalCullingIgnoreCullState;
+    public static final Option<FeatureStatus> orientationCullingFeatureStatus;
+    public static final Option<FeatureStatus> orientationCullingDefaultCulling;
+    public static final Option<FeatureStatus> orientationCullingIgnoreCullState;
     public static final Option<FeatureStatus> irisCompatFeatureStatus;
-    public static final Option<FeatureStatus> irisCompatNormalCullingCompat;
+    public static final Option<FeatureStatus> irisCompatOrientationCullingCompat;
     public static final Option<FeatureStatus> irisCompatShadowCulling;
     public static final Option<FeatureStatus> irisCompatEntitiesCompat;
     public static final Option<FeatureStatus> irisCompatPolygonProcessing;
@@ -65,7 +64,7 @@ public class AROptions {
 
     static {
         corePooledBufferSetSize = OptionImpl.createBuilder(Integer.TYPE,new ConfigValueStorage<>(FeatureConfig.CONFIG.corePooledBufferSetSize))
-                .setId(AcceleratedRenderingModEntry.location("core_settings.pooled_buffer_set_size"))
+                .setId(ARModInfo.location("core_settings.pooled_buffer_set_size"))
                 .setName(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_buffer_set_size"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_buffer_set_size.tooltip"))
                 .setControl(e->new SliderControl(e,1,16,1, ControlValueFormatter.number()))
@@ -73,7 +72,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         corePooledElementBufferSize = OptionImpl.createBuilder(Integer.TYPE,new ConfigValueStorage<>(FeatureConfig.CONFIG.corePooledElementBufferSize))
-                .setId(AcceleratedRenderingModEntry.location("core_settings.pooled_element_buffer_size"))
+                .setId(ARModInfo.location("core_settings.pooled_element_buffer_size"))
                 .setName(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_element_buffer_size"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.pooled_element_buffer_size.tooltip"))
                 .setControl(e->new SliderControl(e,1,256,1, ControlValueFormatter.number()))
@@ -81,7 +80,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         coreCachedImageSize = OptionImpl.createBuilder(Integer.TYPE,new ConfigValueStorage<>(FeatureConfig.CONFIG.coreCachedImageSize))
-                .setId(AcceleratedRenderingModEntry.location("core_settings.cached_image_size"))
+                .setId(ARModInfo.location("core_settings.cached_image_size"))
                 .setName(Component.translatable("acceleratedrendering.configuration.core_settings.cached_image_size"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.cached_image_size.tooltip"))
                 .setControl(e->new SliderControl(e,1,128,1, ControlValueFormatter.number()))
@@ -89,23 +88,23 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         coreForceTranslucentAcceleration = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.coreForceTranslucentAcceleration))
-                .setId(AcceleratedRenderingModEntry.location("core_settings.force_translucent_acceleration"))
+                .setId(ARModInfo.location("core_settings.force_translucent_acceleration"))
                 .setName(Component.translatable("acceleratedrendering.configuration.core_settings.force_translucent_acceleration"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.force_translucent_acceleration.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .setImpact(OptionImpact.HIGH)
                 .build();
-        coreCacheSamePose = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.coreCacheSamePose))
-                .setId(AcceleratedRenderingModEntry.location("core_settings.cache_same_pose"))
-                .setName(Component.translatable("acceleratedrendering.configuration.core_settings.cache_same_pose"))
-                .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.cache_same_pose.tooltip"))
+        coreCacheIdenticalPose = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.coreCacheIdenticalPose))
+                .setId(ARModInfo.location("core_settings.cache_identical_pose"))
+                .setName(Component.translatable("acceleratedrendering.configuration.core_settings.cache_identical_pose"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.core_settings.cache_identical_pose.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .setImpact(OptionImpact.MEDIUM)
                 .build();
         acceleratedEntityRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedEntityRenderingFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_entity_rendering.feature_status"))
+                .setId(ARModInfo.location("accelerated_entity_rendering.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.feature_status"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
@@ -113,14 +112,14 @@ public class AROptions {
                 .setImpact(OptionImpact.HIGH)
                 .build();
         acceleratedEntityRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedEntityRenderingDefaultPipeline))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_entity_rendering.default_pipeline"))
+                .setId(ARModInfo.location("accelerated_entity_rendering.default_pipeline"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.default_pipeline"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.default_pipeline.tooltip"))
                 .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
                 .setBinding(pipelineSettingBinding)
                 .build();
         acceleratedEntityRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedEntityRenderingMeshType))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_entity_rendering.mesh_type"))
+                .setId(ARModInfo.location("accelerated_entity_rendering.mesh_type"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.mesh_type"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_entity_rendering.mesh_type.tooltip"))
                 .setControl(e->new CyclingControl<>(e,MeshType.class))
@@ -128,7 +127,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         acceleratedTextRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedTextRenderingFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_text_rendering.feature_status"))
+                .setId(ARModInfo.location("accelerated_text_rendering.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.feature_status"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
@@ -136,14 +135,14 @@ public class AROptions {
                 .setImpact(OptionImpact.LOW)
                 .build();
         acceleratedTextRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedTextRenderingDefaultPipeline))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_text_rendering.default_pipeline"))
+                .setId(ARModInfo.location("accelerated_text_rendering.default_pipeline"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.default_pipeline"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.default_pipeline.tooltip"))
                 .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
                 .setBinding(pipelineSettingBinding)
                 .build();
         acceleratedTextRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedTextRenderingMeshType))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_text_rendering.mesh_type"))
+                .setId(ARModInfo.location("accelerated_text_rendering.mesh_type"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.mesh_type"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_text_rendering.mesh_type.tooltip"))
                 .setControl(e->new CyclingControl<>(e,MeshType.class))
@@ -151,7 +150,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         acceleratedItemRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.feature_status"))
+                .setId(ARModInfo.location("accelerated_item_rendering.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.feature_status"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
@@ -159,14 +158,14 @@ public class AROptions {
                 .setImpact(OptionImpact.LOW)
                 .build();
         acceleratedItemRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingDefaultPipeline))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.default_pipeline"))
+                .setId(ARModInfo.location("accelerated_item_rendering.default_pipeline"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.default_pipeline"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.default_pipeline.tooltip"))
                 .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
                 .setBinding(pipelineSettingBinding)
                 .build();
         acceleratedItemRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingMeshType))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.mesh_type"))
+                .setId(ARModInfo.location("accelerated_item_rendering.mesh_type"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.mesh_type"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.mesh_type.tooltip"))
                 .setControl(e->new CyclingControl<>(e,MeshType.class))
@@ -174,7 +173,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         acceleratedItemRenderingBakeMeshForQuads = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedItemRenderingBakeMeshForQuads))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_item_rendering.bake_mesh_for_quads"))
+                .setId(ARModInfo.location("accelerated_item_rendering.bake_mesh_for_quads"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.bake_mesh_for_quads"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_item_rendering.bake_mesh_for_quads.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
@@ -182,7 +181,7 @@ public class AROptions {
                 .setImpact(OptionImpact.VARIES)
                 .build();
         acceleratedBlockEntityRenderingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.feature_status"))
+                .setId(ARModInfo.location("accelerated_block_entity_rendering.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.feature_status"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
@@ -190,78 +189,78 @@ public class AROptions {
                 .setImpact(OptionImpact.LOW)
                 .build();
         acceleratedBlockEntityRenderingDefaultPipeline = OptionImpl.createBuilder(PipelineSetting.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingDefaultPipeline))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.default_pipeline"))
+                .setId(ARModInfo.location("accelerated_block_entity_rendering.default_pipeline"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.default_pipeline"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.default_pipeline.tooltip"))
                 .setControl(e->new CyclingControl<>(e,PipelineSetting.class))
                 .setBinding(pipelineSettingBinding)
                 .build();
         acceleratedBlockEntityRenderingMeshType = OptionImpl.createBuilder(MeshType.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.acceleratedBlockEntityRenderingMeshType))
-                .setId(AcceleratedRenderingModEntry.location("accelerated_block_entity_rendering.mesh_type"))
+                .setId(ARModInfo.location("accelerated_block_entity_rendering.mesh_type"))
                 .setName(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.mesh_type"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.accelerated_block_entity_rendering.mesh_type.tooltip"))
                 .setControl(e->new CyclingControl<>(e,MeshType.class))
                 .setBinding(meshTypeBinding)
                 .setImpact(OptionImpact.VARIES)
                 .build();
-        normalCullingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.normalCullingFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("normal_culling.feature_status"))
-                .setName(Component.translatable("acceleratedrendering.configuration.normal_culling.feature_status"))
-                .setTooltip(Component.translatable("acceleratedrendering.configuration.normal_culling.feature_status.tooltip"))
+        orientationCullingFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.orientationCullingFeatureStatus))
+                .setId(ARModInfo.location("orientation_culling.feature_status"))
+                .setName(Component.translatable("acceleratedrendering.configuration.orientation_culling.feature_status"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.orientation_culling.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
-        normalCullingDefaultCulling = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.normalCullingDefaultCulling))
-                .setId(AcceleratedRenderingModEntry.location("normal_culling.default_culling"))
-                .setName(Component.translatable("acceleratedrendering.configuration.normal_culling.default_culling"))
-                .setTooltip(Component.translatable("acceleratedrendering.configuration.normal_culling.default_culling.tooltip"))
+        orientationCullingDefaultCulling = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.orientationCullingDefaultCulling))
+                .setId(ARModInfo.location("orientation_culling.default_culling"))
+                .setName(Component.translatable("acceleratedrendering.configuration.orientation_culling.default_culling"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.orientation_culling.default_culling.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
-        normalCullingIgnoreCullState = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.normalCullingIgnoreCullState))
-                .setId(AcceleratedRenderingModEntry.location("normal_culling.ignore_cull_state"))
-                .setName(Component.translatable("acceleratedrendering.configuration.normal_culling.ignore_cull_state"))
-                .setTooltip(Component.translatable("acceleratedrendering.configuration.normal_culling.ignore_cull_state.tooltip"))
+        orientationCullingIgnoreCullState = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.orientationCullingIgnoreCullState))
+                .setId(ARModInfo.location("orientation_culling.ignore_cull_state"))
+                .setName(Component.translatable("acceleratedrendering.configuration.orientation_culling.ignore_cull_state"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.orientation_culling.ignore_cull_state.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
         irisCompatFeatureStatus = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatFeatureStatus))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatibility.feature_status"))
+                .setId(ARModInfo.location("iris_compatibility.feature_status"))
                 .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.feature_status"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.feature_status.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
-        irisCompatNormalCullingCompat = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatNormalCullingCompat))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatibility.normal_culling_compatibility"))
-                .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.normal_culling_compatibility"))
-                .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.normal_culling_compatibility.tooltip"))
+        irisCompatOrientationCullingCompat = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatOrientationCullingCompat))
+                .setId(ARModInfo.location("iris_compatibility.orientation_culling_compatibility"))
+                .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.orientation_culling_compatibility"))
+                .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.orientation_culling_compatibility.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
         irisCompatShadowCulling = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatShadowCulling))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatibility.shadow_culling"))
+                .setId(ARModInfo.location("iris_compatibility.shadow_culling"))
                 .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.shadow_culling"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.shadow_culling.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
         irisCompatEntitiesCompat = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatEntitiesCompat))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatibility.entities_compatibility"))
+                .setId(ARModInfo.location("iris_compatibility.entities_compatibility"))
                 .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.entities_compatibility"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.entities_compatibility.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
         irisCompatPolygonProcessing = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatPolygonProcessing))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatibility.polygon_processing"))
+                .setId(ARModInfo.location("iris_compatibility.polygon_processing"))
                 .setName(Component.translatable("acceleratedrendering.configuration.iris_compatibility.polygon_processing"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatibility.polygon_processing.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)
                 .setBinding(featureStatusBinding)
                 .build();
         irisCompatFastRenderTypeCheck = OptionImpl.createBuilder(FeatureStatus.class,new ConfigValueStorage<>(FeatureConfig.CONFIG.irisCompatFastRenderTypeCheck))
-                .setId(AcceleratedRenderingModEntry.location("iris_compatability.fast_render_type_check"))
+                .setId(ARModInfo.location("iris_compatability.fast_render_type_check"))
                 .setName(Component.translatable("acceleratedrendering.configuration.iris_compatability.fast_render_type_check"))
                 .setTooltip(Component.translatable("acceleratedrendering.configuration.iris_compatability.fast_render_type_check.tooltip"))
                 .setControl(FeatureStatusTickBoxControl::new)

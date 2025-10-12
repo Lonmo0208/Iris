@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.irisshaders.iris.compat.embeddium.impl.oculus.vertices.EntityToTerrainVertexSerializer;
 import net.irisshaders.iris.compat.embeddium.impl.oculus.vertices.GlyphExtVertexSerializer;
 import net.irisshaders.iris.compat.embeddium.impl.oculus.vertices.IrisEntityToTerrainVertexSerializer;
-import net.irisshaders.iris.vertices.sodium.ModelToEntityVertexSerializer;
+import net.irisshaders.iris.compat.embeddium.impl.oculus.vertices.ModelToEntityVertexSerializer;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.embeddedt.embeddium.api.vertex.format.VertexFormatDescription;

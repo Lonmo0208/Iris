@@ -362,16 +362,38 @@ public class ShaderTransformer {
 
         transformer.injectFunction(
                 "void _vert_init() {" +
-                        "_vert_position = (vec3(a_PosId.xyz) * 4.8828125E-4f + -8.0f"
-                        + ");" +
+                        "_vert_position = (vec3(a_PosId.xyz) * 4.8828125E-4f + -8.0f" +
+                        ");" +
                         "_vert_tex_diffuse_coord = (a_TexCoord * " + (1.0f / 32768.0f) + ");" +
                         "_vert_tex_light_coord = a_LightCoord;" +
                         "_vert_color = " + separateAo + ";" +
-                        "_draw_id = (a_PosId.w >> 8u) & 0xFFu; }");
+                        "_draw_id = (a_PosId.w >> 8u) & 0xFFu; " +
+                        "_vert_position = _apply_wind_animation(_vert_position);" +
+                        "}");
 
         transformer.injectFunction(
                 "float _material_mip_bias(uint material) {\n" +
                         "    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
+                        "}");
+
+        transformer.injectFunction(
+                "vec3 _apply_wind_animation(vec3 position) {\n" +
+                        "    bool isPlant = (_draw_id & 0xFFu) == 1u;\n" +
+                        "    if (!isPlant) return position;\n" +
+                        "    \n" +
+                        "    float swayAmount = iris_windStrength * iris_grassSwayMultiplier;\n" +
+                        "    if (swayAmount <= 0.0f) return position;\n" +
+                        "    \n" +
+                        "    float windTime = iris_windTime * 0.01f;\n" +
+                        "    float swayX = sin(windTime + position.x * 0.5f + position.z * 0.5f) * swayAmount;\n" +
+                        "    float swayZ = cos(windTime + position.x * 0.5f + position.z * 0.5f) * swayAmount;\n" +
+                        "    \n" +
+                        "    float heightFactor = (position.y + 8.0f) / 16.0f;\n" +
+                        "    heightFactor = heightFactor * heightFactor;\n" +
+                        "    \n" +
+                        "    vec3 sway = vec3(swayX, 0.0f, swayZ) * iris_windDirection;\n" +
+                        "    \n" +
+                        "    return position + sway * heightFactor;\n" +
                         "}");
 
         addIfNotExists(transformer, "a_PosId", "in uvec4 a_PosId;");
@@ -450,6 +472,13 @@ public class ShaderTransformer {
         transformer.injectVariable("uniform vec4 iris_FogColor;");
         transformer.injectFunction("struct iris_FogParameters {vec4 color;float density;float start;float end;float scale;};");
         transformer.injectFunction("iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0f / (iris_FogEnd - iris_FogStart));");
+
+        if (parameters.type.glShaderType == ShaderType.VERTEX) {
+            transformer.injectVariable("uniform float iris_windStrength;");
+            transformer.injectVariable("uniform float iris_windTime;");
+            transformer.injectVariable("uniform vec3 iris_windDirection;");
+            transformer.injectVariable("uniform float iris_grassSwayMultiplier;");
+        }
 
         transformer.renameFunctionCall("texture2D", "texture");
         transformer.renameFunctionCall("texture3D", "texture");

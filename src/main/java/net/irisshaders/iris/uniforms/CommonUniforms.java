@@ -34,12 +34,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
+import org.joml.*;
 import org.joml.Math;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3d;
-import org.joml.Vector4f;
-import org.joml.Vector4i;
 
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
@@ -167,9 +163,40 @@ public final class CommonUniforms {
 				.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 				.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
 				.uniform1f(PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
-				.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
+				.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance)
+				.uniform1f(PER_FRAME, "iris_windStrength", CommonUniforms::getWindStrength)
+				.uniform1f(PER_FRAME, "iris_windTime", CommonUniforms::getWindTime)
+				.uniform3f(PER_FRAME, "iris_windDirection", CommonUniforms::getWindDirection)
+				.uniform1f(PER_FRAME, "iris_grassSwayMultiplier", CommonUniforms::getGrassSwayMultiplier);
 	}
 
+	private static float getWindStrength() {
+		if (client.level != null) {
+			float rainStrength = getRainStrength();
+			return Math.max(0.02f, rainStrength * 0.1f);
+		}
+		return 0.02f;
+	}
+
+	private static float getWindTime() {
+		if (client.level != null) {
+			return client.level.getGameTime() + CapturedRenderingState.INSTANCE.getTickDelta();
+		}
+		return 0;
+	}
+
+	private static Vector3f getWindDirection() {
+		if (client.level != null) {
+			long time = client.level.getGameTime();
+			float angle = (float) Math.sin(time * 0.0001f) * (float) Math.PI;
+			return new Vector3f((float) Math.sin(angle), 0.0f, (float) Math.cos(angle));
+		}
+		return new Vector3f(0.0f, 0.0f, 1.0f);
+	}
+
+	private static float getGrassSwayMultiplier() {
+		return 0.05f;
+	}
 	private static boolean isOnGround() {
 		return client.player != null && client.player.onGround();
 	}
