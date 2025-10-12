@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "BufferSourceAccessor",
+    "ChunkBufferBuilderPackAccessor",
     "CompositeStateAccessor",
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
@@ -19,8 +20,7 @@
     "MixinSheets",
     "OutlineBufferSourceAccessor",
     "RenderStateShardAccessor",
-    "RenderTypeAccessor",
-    "ChunkBufferBuilderPackAccessor"
+    "RenderTypeAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -3,20 +3,10 @@ package net.irisshaders.iris.shaderpack.preprocessor;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
-import org.anarres.cpp.Feature;
-import org.anarres.cpp.LexerException;
-import org.anarres.cpp.Preprocessor;
-import org.anarres.cpp.PreprocessorCommand;
-import org.anarres.cpp.StringLexerSource;
-import org.anarres.cpp.Token;
+import org.anarres.cpp.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PropertiesPreprocessor {

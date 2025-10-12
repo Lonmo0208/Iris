@@ -1,7 +1,6 @@
 package net.irisshaders.iris.config;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.config.ShaderPackConfig;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 

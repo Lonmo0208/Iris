@@ -6,15 +6,7 @@
 package net.irisshaders.iris.gl;
 
 import net.irisshaders.iris.Iris;
-import org.lwjgl.opengl.AMDDebugOutput;
-import org.lwjgl.opengl.ARBDebugOutput;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL43C;
-import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.opengl.GLDebugMessageAMDCallback;
-import org.lwjgl.opengl.GLDebugMessageARBCallback;
-import org.lwjgl.opengl.GLDebugMessageCallback;
-import org.lwjgl.opengl.KHRDebug;
+import org.lwjgl.opengl.*;
 import org.lwjgl.system.APIUtil;
 
 import java.io.PrintStream;

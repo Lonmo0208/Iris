@@ -1,6 +1,5 @@
 package net.irisshaders.iris.config;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import net.irisshaders.iris.Iris;
 

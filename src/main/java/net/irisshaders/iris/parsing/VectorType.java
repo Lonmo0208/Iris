@@ -2,12 +2,7 @@ package net.irisshaders.iris.parsing;
 
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3f;
-import org.joml.Vector3i;
-import org.joml.Vector4f;
-import org.joml.Vector4i;
+import org.joml.*;
 
 import java.util.Arrays;
 import java.util.Objects;

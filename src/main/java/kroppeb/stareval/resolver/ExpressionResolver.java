@@ -12,18 +12,10 @@ import kroppeb.stareval.expression.CallExpression;
 import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.expression.VariableExpression;
-import kroppeb.stareval.function.FunctionContext;
-import kroppeb.stareval.function.FunctionResolver;
-import kroppeb.stareval.function.FunctionReturn;
-import kroppeb.stareval.function.Type;
-import kroppeb.stareval.function.TypedFunction;
+import kroppeb.stareval.function.*;
 import kroppeb.stareval.function.TypedFunction.Parameter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 

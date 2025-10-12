@@ -1,11 +1,7 @@
 package net.irisshaders.iris.pathways;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexBuffer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.VertexBufferHelper;
 

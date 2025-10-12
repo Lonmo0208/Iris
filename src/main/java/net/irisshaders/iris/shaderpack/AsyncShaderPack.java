@@ -16,7 +16,6 @@ import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
-import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.include.*;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.*;
@@ -46,8 +45,8 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ShaderPackV1 implements ShaderPackInterface {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ShaderPackV1.class);
+public class AsyncShaderPack implements ShaderPackInterface {
+	private static final Logger LOGGER = LoggerFactory.getLogger(AsyncShaderPack.class);
 	private static final Gson GSON = new Gson();
 	private static final int CORES = Runtime.getRuntime().availableProcessors();
 	private static final int PARALLELISM = Math.min(CORES * 8, 256);
@@ -98,7 +97,7 @@ public class ShaderPackV1 implements ShaderPackInterface {
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPackV1(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public AsyncShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
         Objects.requireNonNull(root);
 		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
 		envDefines1.addAll(IrisDefines.createIrisReplacements());

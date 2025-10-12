@@ -1,7 +1,6 @@
 package net.irisshaders.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
-import net.irisshaders.iris.config.ShaderPackConfig;
 import net.irisshaders.iris.helpers.StringPair;
 
 import java.io.IOException;

@@ -5,11 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
-import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.irisshaders.iris.gl.uniform.Uniform;
-import net.irisshaders.iris.gl.uniform.UniformHolder;
-import net.irisshaders.iris.gl.uniform.UniformType;
-import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.irisshaders.iris.gl.uniform.*;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
@@ -18,12 +14,7 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.OptionalInt;
+import java.util.*;
 
 public class ProgramUniforms {
 	private static ProgramUniforms active;

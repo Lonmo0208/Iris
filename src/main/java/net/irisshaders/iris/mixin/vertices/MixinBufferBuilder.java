@@ -1,22 +1,9 @@
 package net.irisshaders.iris.mixin.vertices;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferVertexConsumer;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.blaze3d.vertex.*;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
-import net.irisshaders.iris.vertices.BufferBuilderPolygonView;
-import net.irisshaders.iris.vertices.ExtendedDataHelper;
-import net.irisshaders.iris.vertices.ExtendingBufferBuilder;
-import net.irisshaders.iris.vertices.IrisExtendedBufferBuilder;
-import net.irisshaders.iris.vertices.IrisVertexFormats;
-import net.irisshaders.iris.vertices.NormI8;
-import net.irisshaders.iris.vertices.NormalHelper;
+import net.irisshaders.iris.vertices.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;

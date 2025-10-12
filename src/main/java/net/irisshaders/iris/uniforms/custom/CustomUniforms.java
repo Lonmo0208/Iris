@@ -1,12 +1,7 @@
 package net.irisshaders.iris.uniforms.custom;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.*;
 import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.expression.VariableExpression;
@@ -23,11 +18,7 @@ import net.irisshaders.iris.parsing.IrisOptions;
 import net.irisshaders.iris.parsing.VectorType;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 

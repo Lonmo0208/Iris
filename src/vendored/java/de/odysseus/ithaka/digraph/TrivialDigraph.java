@@ -15,12 +15,7 @@
  */
 package de.odysseus.ithaka.digraph;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.OptionalInt;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Convenience class representing a de.odysseus.ithaka.digraph with zero or one vertex and an optional loop edge.

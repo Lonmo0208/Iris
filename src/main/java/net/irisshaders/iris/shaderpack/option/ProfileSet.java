@@ -5,12 +5,7 @@ import net.irisshaders.iris.IrisLogging;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class ProfileSet {

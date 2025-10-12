@@ -1,5 +1,7 @@
 package net.irisshaders.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
@@ -9,8 +11,6 @@ import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 import java.util.EnumMap;
 import java.util.List;

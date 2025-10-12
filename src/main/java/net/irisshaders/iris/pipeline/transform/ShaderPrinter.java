@@ -1,6 +1,7 @@
 package net.irisshaders.iris.pipeline.transform;
 
 import net.irisshaders.iris.Iris;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
@@ -10,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * Static class that deals with printing the patched_shader folder.

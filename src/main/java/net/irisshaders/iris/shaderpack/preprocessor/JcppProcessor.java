@@ -1,11 +1,7 @@
 package net.irisshaders.iris.shaderpack.preprocessor;
 
 import net.irisshaders.iris.helpers.StringPair;
-import org.anarres.cpp.Feature;
-import org.anarres.cpp.LexerException;
-import org.anarres.cpp.Preprocessor;
-import org.anarres.cpp.StringLexerSource;
-import org.anarres.cpp.Token;
+import org.anarres.cpp.*;
 
 public class JcppProcessor {
 	// Derived from GlShader from Canvas, licenced under LGPL

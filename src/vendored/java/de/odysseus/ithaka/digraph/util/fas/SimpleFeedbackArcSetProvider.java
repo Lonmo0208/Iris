@@ -15,22 +15,9 @@
  */
 package de.odysseus.ithaka.digraph.util.fas;
 
-import de.odysseus.ithaka.digraph.Digraph;
-import de.odysseus.ithaka.digraph.DigraphFactory;
-import de.odysseus.ithaka.digraph.Digraphs;
-import de.odysseus.ithaka.digraph.EdgeWeights;
-import de.odysseus.ithaka.digraph.MapDigraph;
+import de.odysseus.ithaka.digraph.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple feedback arc set provider.

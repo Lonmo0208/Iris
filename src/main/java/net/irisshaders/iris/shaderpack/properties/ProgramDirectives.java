@@ -15,12 +15,7 @@ import net.irisshaders.iris.shaderpack.parsing.DispatchingDirectiveHolder;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;

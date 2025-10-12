@@ -1,11 +1,11 @@
 package net.irisshaders.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
-import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
@@ -14,8 +14,6 @@ import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,9 +27,9 @@ public class ShaderPack implements ShaderPackInterface {
 
 	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		if (Iris.getIrisConfig().useLegacyShaderPack()) {
-			this.implementation = new ShaderPackV1(root, changedConfigs, environmentDefines);
+			this.implementation = new AsyncShaderPack(root, changedConfigs, environmentDefines);
 		} else {
-			this.implementation = new ShaderPackV2(root, changedConfigs, environmentDefines);
+			this.implementation = new DefltShaderPack(root, changedConfigs, environmentDefines);
 		}
 	}
 

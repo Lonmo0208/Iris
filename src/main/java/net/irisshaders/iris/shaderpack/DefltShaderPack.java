@@ -17,7 +17,6 @@ import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
-import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
@@ -56,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ShaderPackV2 implements ShaderPackInterface {
+public class DefltShaderPack implements ShaderPackInterface {
 	private static final Gson GSON = new Gson();
 	private static final int STRING_BUILDER_INITIAL_CAPACITY = 2048;
 
@@ -89,7 +88,7 @@ public class ShaderPackV2 implements ShaderPackInterface {
 	private static final ThreadLocal<StringBuilder> STRING_BUILDER_POOL =
 			ThreadLocal.withInitial(() -> new StringBuilder(STRING_BUILDER_INITIAL_CAPACITY));
 
-	public ShaderPackV2(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public DefltShaderPack(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
@@ -101,7 +100,7 @@ public class ShaderPackV2 implements ShaderPackInterface {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPackV2(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public DefltShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
         // A null path is not allowed.
 		Objects.requireNonNull(root);
 
