@@ -19,8 +19,7 @@ public class ShaderPackConfig {
 
     public enum ShaderPackVersion {
         V1("iris.shaderPackConfig.version.v1"),
-        V2("iris.shaderPackConfig.version.v2"),
-        V3("iris.shaderPackConfig.version.v3");
+        V2("iris.shaderPackConfig.version.v2");
 
         private final String translationKey;
 

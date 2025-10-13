@@ -14,9 +14,6 @@ import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
-import net.irisshaders.iris.shaderpack.OldAsyncShaderPack;
-import net.irisshaders.iris.shaderpack.AsyncShaderPack;
-import net.irisshaders.iris.shaderpack.DefltShaderPack;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 
 import java.io.IOException;
@@ -35,8 +32,6 @@ public class ShaderPack implements ShaderPackInterface {
 			this.implementation = new AsyncShaderPack(root, changedConfigs, environmentDefines, isZip);
 		} else if (config.isShaderPackVersion2()) {
 			this.implementation = new DefltShaderPack(root, changedConfigs, environmentDefines, isZip);
-		} else if (config.isShaderPackVersion3()) {
-			this.implementation = new OldAsyncShaderPack(root, changedConfigs, environmentDefines, isZip);
 		} else {
 			// Default to version 1 if unknown
 			this.implementation = new AsyncShaderPack(root, changedConfigs, environmentDefines, isZip);

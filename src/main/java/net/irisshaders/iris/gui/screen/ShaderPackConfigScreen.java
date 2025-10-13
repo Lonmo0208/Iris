@@ -74,12 +74,6 @@ public class ShaderPackConfigScreen extends Screen {
 			Component version2Point3 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version2.point3").getString());
 			Component version2Point4 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version2.point4").getString());
 
-			Component version3Title = Component.literal("§e").append(Component.translatable("iris.shaderPackConfig.version3.title")).append("§r");
-			Component version3Point1 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version3.point1").getString());
-			Component version3Point2 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version3.point2").getString());
-			Component version3Point3 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version3.point3").getString());
-			Component version3Point4 = Component.literal("• " + Component.translatable("iris.shaderPackConfig.version3.point4").getString());
-
 			Component message = version1Title
 					.append("\n")
 					.append(version1Point1)
@@ -98,17 +92,7 @@ public class ShaderPackConfigScreen extends Screen {
 					.append("\n")
 					.append(version2Point3)
 					.append("\n")
-					.append(version2Point4)
-					.append("\n\n")
-					.append(version3Title)
-					.append("\n")
-					.append(version3Point1)
-					.append("\n")
-					.append(version3Point2)
-					.append("\n")
-					.append(version3Point3)
-					.append("\n")
-					.append(version3Point4);
+					.append(version2Point4);
 
         this.minecraft.setScreen(new SimpleMessageScreen(this,
                 Component.translatable("iris.shaderPackConfig.versionInfo.title"),

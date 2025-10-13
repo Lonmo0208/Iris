@@ -1,12 +1,20 @@
 package net.irisshaders.iris.shaderpack;
 
-import com.google.common.cache.*;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
@@ -16,41 +24,52 @@ import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
-import net.irisshaders.iris.shaderpack.include.*;
+import net.irisshaders.iris.shaderpack.error.RusticError;
+import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
+import net.irisshaders.iris.shaderpack.include.IncludeGraph;
+import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
+import net.irisshaders.iris.shaderpack.include.ShaderPackSourceNames;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
-import net.irisshaders.iris.shaderpack.option.*;
+import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
+import net.irisshaders.iris.shaderpack.option.ProfileSet;
+import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
-import net.irisshaders.iris.shaderpack.option.values.*;
+import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
+import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.parsing.BooleanParser;
-import net.irisshaders.iris.shaderpack.preprocessor.*;
-import net.irisshaders.iris.shaderpack.programs.*;
+import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
+import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
+import net.irisshaders.iris.shaderpack.programs.ProgramSet;
+import net.irisshaders.iris.shaderpack.programs.ProgramSetInterface;
 import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
-import net.irisshaders.iris.shaderpack.texture.*;
+import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
+import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
+import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class AsyncShaderPack implements ShaderPackInterface {
-	private static final Logger LOGGER = LoggerFactory.getLogger(AsyncShaderPack.class);
 	private static final Gson GSON = new Gson();
+	private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 	private static final int CORES = Runtime.getRuntime().availableProcessors();
-	private static final int PARALLELISM = Math.min(CORES * 8, 256);
-	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(PARALLELISM, ForkJoinPool.defaultForkJoinWorkerThreadFactory, (t, e) -> LOGGER.error("Texture loader thread failed", e), true);
+	private static final int PARALLELISM = Math.min(Runtime.getRuntime().availableProcessors() * 8, 256);
+	private static final ForkJoinPool TEXTURE_LOAD_EXECUTOR = new ForkJoinPool(PARALLELISM, ForkJoinPool.defaultForkJoinWorkerThreadFactory, (t, e) -> Iris.logger.error("Texture loader thread failed", e), true);
 	private static final int MAX_CONCURRENT_LOADS = Math.min(Integer.MAX_VALUE, CORES * 4);
 	private static final int LOAD_TIMEOUT = 2;
 
@@ -97,15 +116,30 @@ public class AsyncShaderPack implements ShaderPackInterface {
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
 
+	public AsyncShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+		this(root, Collections.emptyMap(), environmentDefines, isZip);
+	}
+
+	/**
+	 * Reads a shader pack from the disk.
+	 *
+	 * @param root The path to the "shaders" directory within the shader pack. The created ShaderPack will not retain
+	 *             this path in any form; once the constructor exits, all disk I/O needed to load this shader pack will
+	 *             have completed, and there is no need to hold on to the path for that reason.
+	 * @throws IOException if there are any IO errors during shader pack loading.
+	 */
 	public AsyncShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-        Objects.requireNonNull(root);
+		// A null path is not allowed.
+		Objects.requireNonNull(root);
+
 		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
 		envDefines1.addAll(IrisDefines.createIrisReplacements());
 		environmentDefines = ImmutableList.copyOf(envDefines1);
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
-		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"), potentialFileNames);
+		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
+				potentialFileNames);
 
 		dimensionIds = new ArrayList<>();
 		bufferObjects = new Int2ObjectArrayMap<>();
@@ -137,25 +171,31 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		}
 
 		for (String id : dimensionIdCreator) {
-			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id), potentialFileNames)) {
+			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
+					potentialFileNames)) {
 				dimensionIds.add(id);
 			}
 		}
 
+		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build(), isZip);
+
 		if (!graph.getFailures().isEmpty()) {
-			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(Object::toString).toArray(String[]::new)));
+			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
 		}
 
 		this.languageMap = new LanguageMap(root.resolve("lang"));
+
+		// Discover, merge, and apply shader pack options
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
 		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
 		for (FeatureFlags flag : FeatureFlags.values()) {
-			if (flag.isUsable()) finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
+			if (flag.isUsable()) {
+				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
+			}
 		}
-
 		this.shaderProperties = loadPropertiesAsString(root, "shaders.properties", environmentDefines)
 				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
@@ -167,14 +207,20 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			} else {
 				String path = info.name();
 				try {
-					path = path.startsWith("/") ? path.substring(1) : path;
+					if (path.startsWith("/")) {
+						// NB: This does not guarantee the resulting path is in the shaderpack as a double slash could be used,
+						// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
+						path = path.substring(1);
+					}
+
+					if (path.startsWith("/")) path = path.substring(1);
 					byte[] data = Files.readAllBytes(root.resolve(path));
 					if (data.length > info.size()) {
 						throw new IllegalStateException("Buffer size too small for " + path);
 					}
 					bufferObjects.put(entry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
 				} catch (IOException e) {
-					LOGGER.error("Failed to load SSBO {}", path, e);
+					Iris.logger.error("Failed to load SSBO " + path, e);
 				}
 			}
 		}
@@ -231,7 +277,9 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
+		// Get programs that should be disabled from the detected profile
 		List<String> disabledPrograms = new ArrayList<>();
+		// Add programs that are disabled by shader options
 		this.profile.current.ifPresent(p -> disabledPrograms.addAll(p.disabledPrograms));
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, option) -> {
 			if (!BooleanParser.parse(option, this.shaderPackOptions.getOptionValues())) {
@@ -249,18 +297,29 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 		this.profileInfo = String.format("Profile: %s (+%d %s changed)",
 				profileName, userOptionsChanged, (userOptionsChanged == 1 ? "option" : "options"));
-		LOGGER.info("[Iris] {}", this.profileInfo);
+		Iris.logger.info(this.profileInfo);
 
+		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
+		// Set up our source provider for creating ProgramSets
 		Iterable<StringPair> finalEnvironmentDefines1 = environmentDefines;
 		this.sourceProvider = path -> {
 			String pathString = path.getPathString();
+			// Removes the first "/" in the path if present, and the file
+			// extension in order to represent the path as its program name
+			// Return an empty program source if the program is disabled by the current profile
 			String programString = pathString.substring(pathString.startsWith("/") ? 1 : 0, pathString.lastIndexOf('.'));
 			if (disabledPrograms.contains(programString)) return null;
 
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 			if (lines == null) return null;
 
+			// Apply GLSL preprocessor to source, while making environment defines available.
+			//
+			// This uses similar techniques to the *.properties preprocessor to avoid actually putting
+			// #define statements in the actual source - instead, we tell the preprocessor about them
+			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
+			// though there exist many more (such as relocating all #extension directives and similar things)
 			return JcppProcessor.glslPreprocessSource(String.join("\n", lines), finalEnvironmentDefines1);
 		};
 
@@ -280,7 +339,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 				.orElseGet(() -> CompletableFuture.completedFuture(null));
 
 		this.customNoiseTexture = noiseFuture.exceptionally(ex -> {
-			LOGGER.error("Failed to load noise texture", ex);
+			Iris.logger.error("Failed to load noise texture", ex);
 			return createFallbackTexture(new TextureDefinition.PNGDefinition("noise.png"));
 		}).join();
 
@@ -289,7 +348,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			textures.forEach((name, def) -> {
 				CompletableFuture<CustomTextureData> future = readTextureAsync(root, def)
 						.exceptionally(ex -> {
-							LOGGER.error("Failed to load texture {}: {}", name, def.getName(), ex);
+							Iris.logger.error("Failed to load texture {}: {}", name, def.getName(), ex);
 							return createFallbackTexture(def);
 						})
 						.completeOnTimeout(createFallbackTexture(def), LOAD_TIMEOUT, TimeUnit.SECONDS);
@@ -306,7 +365,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		shaderProperties.getIrisCustomTextures().forEach((name, def) -> {
 			CompletableFuture<CustomTextureData> future = readTextureAsync(root, def)
 					.exceptionally(ex -> {
-						LOGGER.error("Failed to load Iris texture {}: {}", name, def.getName(), ex);
+						Iris.logger.error("Failed to load Iris texture {}: {}", name, def.getName(), ex);
 						return createFallbackTexture(def);
 					})
 					.completeOnTimeout(createFallbackTexture(def), LOAD_TIMEOUT, TimeUnit.SECONDS);
@@ -317,6 +376,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		this.customUniforms = shaderProperties.getCustomUniforms();
 	}
 
+	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private CompletableFuture<CustomTextureData> readTextureAsync(Path root, TextureDefinition definition) {
 		return textureCache.computeIfAbsent(definition, def ->
 				CompletableFuture.supplyAsync(() -> {
@@ -330,36 +390,57 @@ public class AsyncShaderPack implements ShaderPackInterface {
 							}
 						}, TEXTURE_LOAD_EXECUTOR)
 						.exceptionally(ex -> {
-							LOGGER.error("Failed to load texture: {}", def.getName(), ex);
+							Iris.logger.error("Failed to load texture: {}", def.getName(), ex);
 							return createFallbackTexture(def);
 						})
 						.completeOnTimeout(createFallbackTexture(def), LOAD_TIMEOUT, TimeUnit.SECONDS)
 		);
 	}
 
+	/**
+	 * Loads properties from a properties file in a shaderpack path
+	 */
 	private CustomTextureData loadTextureSync(Path root, TextureDefinition definition) throws IOException {
 		String path = definition.getName();
 		if (path.contains(":")) {
 			return handleResourceLocation(path);
 		}
 
-		path = path.startsWith("/") ? path.substring(1) : path;
-		Path resolvedPath = root.resolve(path);
+		// Note: ordering of properties is significant
+		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
+		// BlockMaterialMapping
+		Path resolvedPath = root.resolve(normalizePath(path));
 		TextureFilteringData filtering = resolveFilteringData(root, path, definition);
-		byte[] data = Files.readAllBytes(resolvedPath);
+		ByteBuf buffer = null;
+		try {
+			byte[] content = Files.readAllBytes(resolvedPath);
+			buffer = ALLOC.buffer(content.length);
+			buffer.writeBytes(content);
 
-		return createTextureData(definition, filtering, data);
+			byte[] data = new byte[buffer.readableBytes()];
+			buffer.getBytes(buffer.readerIndex(), data);
+
+			return createTextureData(definition, filtering, data);
+		} finally {
+			if (buffer != null) {
+				buffer.release();
+			}
+		}
 	}
 
 	private CustomTextureData handleResourceLocation(String path) {
 		String[] parts = path.split(":");
 		if (parts.length > 2) {
-			LOGGER.warn("Invalid resource location: {}", path);
+			Iris.logger.warn("Invalid resource location: {}", path);
 		}
-		if ("minecraft".equals(parts[0]) && (parts[1].equals("dynamic/lightmap_1") || parts[1].equals("dynamic/light_map_1"))) {
+		if ("minecraft".equals(parts[0]) && (parts[1].equals("dynamic/lightmap_1") || parts[1].equals("dynamic/light_map_1"))){
 			return new CustomTextureData.LightmapMarker();
 		}
 		return new CustomTextureData.ResourceData(parts[0], parts[1]);
+	}
+
+	private String normalizePath(String path) {
+		return path.startsWith("/") ? path.substring(1) : path;
 	}
 
 	private TextureFilteringData resolveFilteringData(Path root, String path, TextureDefinition def) {
@@ -376,7 +457,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 					clamp = textureMeta.has("clamp") ? textureMeta.get("clamp").getAsBoolean() : clamp;
 				}
 			} catch (Exception e) {
-				LOGGER.error("Failed to read texture metadata: {}", metaPath, e);
+				Iris.logger.error("Failed to read texture metadata: {}", metaPath, e);
 			}
 		}
 		return new TextureFilteringData(blur, clamp);
@@ -419,7 +500,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			try {
 				props.load(new StringReader(content));
 			} catch (IOException e) {
-				LOGGER.error("Error loading properties", e);
+				Iris.logger.error("Error loading properties", e);
 			}
 			return props;
 		});
@@ -432,8 +513,31 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		} catch (NoSuchFileException e) {
 			return Optional.empty();
 		} catch (IOException e) {
-			LOGGER.error("IO error reading properties", e);
+			Iris.logger.error("IO error reading properties", e);
 			return Optional.empty();
+		}
+	}
+
+	private record PreprocessKey(@NotNull String content, @NotNull ImmutableList<StringPair> defines) {
+		private static final Map<String, String> CONTENT_CACHE =
+				Collections.synchronizedMap(new WeakHashMap<>());
+
+		public PreprocessKey {
+			content = CONTENT_CACHE.computeIfAbsent(content, k -> k);
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof PreprocessKey that)) return false;
+			return content.equals(that.content) && defines.equals(that.defines);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = content.hashCode();
+			result = 31 * result + defines.hashCode();
+			return result;
 		}
 	}
 
@@ -441,6 +545,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		return profileInfo;
 	}
 
+	// TODO: Implement raw texture data types
 	public String getCurrentProfileName() {
 		return profile.current.map(p -> p.name).orElse("Custom");
 	}
@@ -452,12 +557,20 @@ public class AsyncShaderPack implements ShaderPackInterface {
 				if (dimensionIds.contains(name)) {
 					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
 				} else {
-					LOGGER.error("Missing dimension folder: {}", name);
+					Iris.logger.error("Missing dimension folder: {}", name);
 					return ProgramSetInterface.Empty.INSTANCE;
 				}
 			}
 			return ProgramSetInterface.Empty.INSTANCE;
 		});
+		// NB: If a dimension overrides directory is present, none of the files from the parent directory are "merged"
+		//     into the override. Rather, we act as if the overrides directory contains a completely different set of
+		//     shader programs unrelated to that of the base shader pack.
+		//
+		//     This makes sense because if base defined a composite pass and the override didn't, it would make it
+		//     impossible to "un-define" the composite pass. It also removes a lot of complexity related to "merging"
+		//     program sets. At the same time, this might be desired behavior by shader pack authors. It could make
+		//     sense to bring it back as a configurable option, and have a more maintainable set of code backing it.
 		return (override instanceof ProgramSet) ? (ProgramSet) override : base;
 	}
 
@@ -501,27 +614,4 @@ public class AsyncShaderPack implements ShaderPackInterface {
 				.map(key -> key.substring(keyPrefix.length()))
 				.collect(Collectors.toList());
 	}
-
-	private record PreprocessKey(@NotNull String content, @NotNull ImmutableList<StringPair> defines) {
-		private static final Map<String, String> CONTENT_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
-
-		public PreprocessKey {
-			content = CONTENT_CACHE.computeIfAbsent(content, k -> k);
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof PreprocessKey that)) return false;
-			return content.equals(that.content) && defines.equals(that.defines);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = content.hashCode();
-			result = 31 * result + defines.hashCode();
-			return result;
-		}
-	}
-
 }

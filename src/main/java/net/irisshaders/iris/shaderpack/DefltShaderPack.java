@@ -6,17 +6,21 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
+import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
+import net.irisshaders.iris.shaderpack.error.RusticError;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
@@ -28,6 +32,7 @@ import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.parsing.BooleanParser;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
@@ -41,6 +46,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.lang3.SystemUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,22 +56,29 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DefltShaderPack implements ShaderPackInterface {
 	private static final Gson GSON = new Gson();
-	private static final int STRING_BUILDER_INITIAL_CAPACITY = 2048;
-
 	public final CustomUniforms.Builder customUniforms;
 	private final ProgramSet base;
 	private final Map<NamespacedId, ProgramSetInterface> overrides;
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
 	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
-	private final Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap = new Object2ObjectArrayMap<>();
+	private final Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
@@ -76,17 +89,8 @@ public class DefltShaderPack implements ShaderPackInterface {
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
-	private Map<NamespacedId, String> dimensionMap;
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
-
-	private final Map<AbsolutePackPath, String> sourceCache = new ConcurrentHashMap<>();
-	private final Map<Path, Optional<String>> propertiesStringCache = new ConcurrentHashMap<>();
-	private final Map<TextureDefinition, Optional<CustomTextureData>> textureCache = new ConcurrentHashMap<>();
-	private final Set<String> disabledProgramsSet = Collections.synchronizedSet(new HashSet<>());
-	private final Set<String> dimensionIdsSet = Collections.synchronizedSet(new HashSet<>());
-
-	private static final ThreadLocal<StringBuilder> STRING_BUILDER_POOL =
-			ThreadLocal.withInitial(() -> new StringBuilder(STRING_BUILDER_INITIAL_CAPACITY));
+	private Map<NamespacedId, String> dimensionMap;
 
 	public DefltShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines, isZip);
@@ -101,13 +105,12 @@ public class DefltShaderPack implements ShaderPackInterface {
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
 	public DefltShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-        // A null path is not allowed.
+		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
 		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
 		envDefines1.addAll(IrisDefines.createIrisReplacements());
 		environmentDefines = ImmutableList.copyOf(envDefines1);
-
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
@@ -117,10 +120,10 @@ public class DefltShaderPack implements ShaderPackInterface {
 		dimensionIds = new ArrayList<>();
 		bufferObjects = new Int2ObjectArrayMap<>();
 
-		final boolean[] hasDimensionIds = {false};
+		final boolean[] hasDimensionIds = {false}; // Thanks Java
 
-		Optional<Properties> dimensionPropertiesOpt = loadProperties(root, "dimension.properties", environmentDefines);
-		List<String> dimensionIdCreator = dimensionPropertiesOpt.map(dimensionProperties -> {
+		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
+		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {
 			hasDimensionIds[0] = !dimensionProperties.isEmpty();
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
 			return parseDimensionIds(dimensionProperties, "dimension.");
@@ -144,7 +147,6 @@ public class DefltShaderPack implements ShaderPackInterface {
 			}
 		}
 
-		dimensionIdsSet.addAll(dimensionIdCreator);
 		for (String id : dimensionIdCreator) {
 			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
 					potentialFileNames)) {
@@ -156,11 +158,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 		IncludeGraph graph = new IncludeGraph(root, starts.build(), isZip);
 
 		if (!graph.getFailures().isEmpty()) {
-			graph.getFailures().forEach((path, error) -> {
-				Iris.logger.error("{}", error.toString());
-			});
-
-			throw new IOException("Failed to resolve some #include directives, see previous messages for details");
+			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
 		}
 
 		this.languageMap = new LanguageMap(root.resolve("lang"));
@@ -172,25 +170,47 @@ public class DefltShaderPack implements ShaderPackInterface {
 		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
 		for (FeatureFlags flag : FeatureFlags.values()) {
 			if (flag.isUsable()) {
-				if (flag == FeatureFlags.TESSELLATION_SHADERS) {
-					finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_TESSELATION_SHADERS", ""));
-				}
 				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
 			}
 		}
-
 		this.shaderProperties = loadProperties(root, "shaders.properties")
 				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
-		activeFeatures = new HashSet<>();
-		List<String> requiredFlags = shaderProperties.getRequiredFeatureFlags();
-		for (int i = 0; i < requiredFlags.size(); i++) {
-			activeFeatures.add(FeatureFlags.getValue(requiredFlags.get(i)));
+		for (Int2ObjectMap.Entry<ShaderStorageInfo> shaderStorageInfoEntry : shaderProperties.getBufferObjects().int2ObjectEntrySet()) {
+			ShaderStorageInfo info = shaderStorageInfoEntry.getValue();
+
+			if (info.name() == null) {
+				bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
+			} else {
+				String path = info.name();
+
+				try {
+					if (path.startsWith("/")) {
+						// NB: This does not guarantee the resulting path is in the shaderpack as a double slash could be used,
+						// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
+						path = path.substring(1);
+					}
+
+					byte[] data = Files.readAllBytes(root.resolve(path));
+
+					if (data.length > info.size()) {
+						throw new IllegalStateException("Tried to load a shader storage file with no space in the buffer! Increase the buffer size.");
+					}
+
+					bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
+				} catch (IOException e) {
+					Iris.logger.error("Shader storage buffer with index " + shaderStorageInfoEntry.getIntKey() + " and path " + path + " could not be read.", e);
+				}
+			}
 		}
-		List<String> optionalFlags = shaderProperties.getOptionalFeatureFlags();
-		for (int i = 0; i < optionalFlags.size(); i++) {
-			activeFeatures.add(FeatureFlags.getValue(optionalFlags.get(i)));
+
+		activeFeatures = new HashSet<>();
+		for (int i = 0; i < shaderProperties.getRequiredFeatureFlags().size(); i++) {
+			activeFeatures.add(FeatureFlags.getValue(shaderProperties.getRequiredFeatureFlags().get(i)));
+		}
+		for (int i = 0; i < shaderProperties.getOptionalFeatureFlags().size(); i++) {
+			activeFeatures.add(FeatureFlags.getValue(shaderProperties.getOptionalFeatureFlags().get(i)));
 		}
 
 		if (!activeFeatures.contains(FeatureFlags.SSBO) && !shaderProperties.getBufferObjects().isEmpty()) {
@@ -201,28 +221,20 @@ public class DefltShaderPack implements ShaderPackInterface {
 			throw new IllegalStateException("Custom images are being used, but the feature flag for custom images hasn't been set! Please set either a requirement or check for custom images' feature flag using \"iris.features.required/optional = CUSTOM_IMAGES\".");
 		}
 
-		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream()
-				.filter(FeatureFlags::isInvalid)
-				.map(FeatureFlags::getValue)
-				.collect(Collectors.toList());
-		List<String> invalidFeatureFlags = invalidFlagList.stream()
-				.map(FeatureFlags::getHumanReadableName)
-				.collect(Collectors.toList());
+		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid).map(FeatureFlags::getValue).collect(Collectors.toList());
+		List<String> invalidFeatureFlags = invalidFlagList.stream().map(FeatureFlags::getHumanReadableName).toList();
 
 		if (!invalidFeatureFlags.isEmpty()) {
 			if (Minecraft.getInstance().screen instanceof ShaderPackScreen) {
-				MutableComponent component = Component.translatable("iris.unsupported.pack.description",
-						FeatureFlags.getInvalidStatus(invalidFlagList),
-						invalidFeatureFlags.stream().collect(Collectors.joining(", ", ": ", ".")));
+				MutableComponent component = Component.translatable("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
+						.collect(Collectors.joining(", ", ": ", ".")));
 				if (SystemUtils.IS_OS_MAC) {
 					component = component.append(Component.translatable("iris.unsupported.pack.macos"));
 				}
-				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen,
-						Component.translatable("iris.unsupported.pack"), component));
+				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen, Component.translatable("iris.unsupported.pack"), component));
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
-
 		List<StringPair> newEnvDefines = new ArrayList<>(environmentDefines);
 
 		if (shaderProperties.supportsColorCorrection().orElse(false)) {
@@ -231,12 +243,9 @@ public class DefltShaderPack implements ShaderPackInterface {
 			}
 		}
 
-		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream()
-				.filter(flag -> !FeatureFlags.isInvalid(flag))
-				.collect(Collectors.toList());
+		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).toList();
 
 		if (!optionalFeatureFlags.isEmpty()) {
-			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 		}
 
@@ -250,14 +259,10 @@ public class DefltShaderPack implements ShaderPackInterface {
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 		// Add programs that are disabled by shader options
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
-			if ("true".equals(shaderOption)) return;
-
-			if ("false".equals(shaderOption) || !this.shaderPackOptions.getOptionValues().getBooleanValueOrDefault(shaderOption)) {
+			if (!BooleanParser.parse(shaderOption, this.shaderPackOptions.getOptionValues())) {
 				disabledPrograms.add(program);
 			}
 		});
-
-		disabledProgramsSet.addAll(disabledPrograms);
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
@@ -268,7 +273,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 
 			int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 
-			this.profileInfo = buildProfileInfo(profileName, userOptionsChanged);
+			this.profileInfo = "Profile: " + profileName + " (+" + userOptionsChanged + " option" + (userOptionsChanged == 1 ? "" : "s") + " changed by user)";
 		}
 
 		Iris.logger.info(this.profileInfo);
@@ -276,114 +281,87 @@ public class DefltShaderPack implements ShaderPackInterface {
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
-		// Set up our source provider for creating ProgramSets with caching
+		// Set up our source provider for creating ProgramSets
 		Iterable<StringPair> finalEnvironmentDefines1 = environmentDefines;
-		this.sourceProvider = path -> getCachedSource(path, includeProcessor, finalEnvironmentDefines1, disabledProgramsSet);
+		this.sourceProvider = (path) -> {
+			String pathString = path.getPathString();
+			// Removes the first "/" in the path if present, and the file
+			// extension in order to represent the path as its program name
+			String programString = pathString.substring(pathString.indexOf("/") == 0 ? 1 : 0, pathString.lastIndexOf("."));
 
-		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")),
-				sourceProvider, shaderProperties, this);
+			// Return an empty program source if the program is disabled by the current profile
+			if (disabledPrograms.contains(programString)) {
+				return null;
+			}
 
-		this.overrides = new ConcurrentHashMap<>();
+			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
+
+			if (lines == null) {
+				return null;
+			}
+
+			StringBuilder builder = new StringBuilder();
+
+			for (String line : lines) {
+				builder.append(line);
+				builder.append('\n');
+			}
+
+			// Apply GLSL preprocessor to source, while making environment defines available.
+			//
+			// This uses similar techniques to the *.properties preprocessor to avoid actually putting
+			// #define statements in the actual source - instead, we tell the preprocessor about them
+			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
+			// though there exist many more (such as relocating all #extension directives and similar things)
+			String source = builder.toString();
+			source = JcppProcessor.glslPreprocessSource(source, finalEnvironmentDefines1);
+
+			return source;
+		};
+
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")), sourceProvider, shaderProperties, this);
+
+		this.overrides = new HashMap<>();
 
 		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
-				return readTextureCached(root, new TextureDefinition.PNGDefinition(path));
+				return readTexture(root, new TextureDefinition.PNGDefinition(path));
 			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path, e);
+
 				return null;
 			}
 		}).orElse(null);
 
-		loadCustomTexturesInParallel(root);
+		shaderProperties.getCustomTextures().forEach((textureStage, customTexturePropertiesMap) -> {
+			Object2ObjectMap<String, CustomTextureData> innerCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
+			customTexturePropertiesMap.forEach((samplerName, path) -> {
+				try {
+					innerCustomTextureDataMap.put(samplerName, readTexture(root, path));
+				} catch (IOException e) {
+					Iris.logger.error("Unable to read the custom texture at " + path, e);
+				}
+			});
+
+			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
+		});
 
 		this.irisCustomImages = shaderProperties.getIrisCustomImages();
 
 		this.customUniforms = shaderProperties.getCustomUniforms();
 
-		loadIrisCustomTexturesInParallel(root);
-	}
-
-	private String getCachedSource(AbsolutePackPath path, IncludeProcessor includeProcessor,
-								   Iterable<StringPair> environmentDefines, Set<String> disabledPrograms) {
-		return sourceCache.computeIfAbsent(path, p -> loadAndProcessSource(p, includeProcessor, environmentDefines, disabledPrograms));
-	}
-
-	private String loadAndProcessSource(AbsolutePackPath path, IncludeProcessor includeProcessor,
-										Iterable<StringPair> environmentDefines, Set<String> disabledPrograms) {
-		String pathString = path.getPathString();
-		String programString = extractProgramString(pathString);
-
-		if (disabledPrograms.contains(programString)) {
-			return null;
-		}
-
-		ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
-		if (lines == null) {
-			return null;
-		}
-
-		StringBuilder builder = STRING_BUILDER_POOL.get();
-		builder.setLength(0);
-
-		builder.ensureCapacity(lines.size() * 80);
-
-		for (String line : lines) {
-			builder.append(line).append('\n');
-		}
-
-		return JcppProcessor.glslPreprocessSource(builder.toString(), environmentDefines);
-	}
-
-	private String extractProgramString(String pathString) {
-		int startIndex = pathString.startsWith("/") ? 1 : 0;
-		int endIndex = pathString.lastIndexOf('.');
-		return (endIndex > startIndex) ? pathString.substring(startIndex, endIndex) : "";
-	}
-
-	private void loadCustomTexturesInParallel(Path root) {
-		shaderProperties.getCustomTextures().entrySet().parallelStream().forEach(entry -> {
-			TextureStage stage = entry.getKey();
-			Object2ObjectMap<String, CustomTextureData> innerMap = new Object2ObjectArrayMap<>();
-
-			entry.getValue().forEach((samplerName, path) -> {
-				try {
-					innerMap.put(samplerName, readTextureCached(root, path));
-				} catch (IOException e) {
-					Iris.logger.error("Unable to read custom texture: {}", path.getName(), e);
-				}
-			});
-
-			customTextureDataMap.put(stage, innerMap);
-		});
-	}
-
-	private void loadIrisCustomTexturesInParallel(Path root) {
-		shaderProperties.getIrisCustomTextures().entrySet().parallelStream().forEach(entry -> {
+		shaderProperties.getIrisCustomTextures().forEach((name, texture) -> {
 			try {
-				irisCustomTextureDataMap.put(entry.getKey(), readTextureCached(root, entry.getValue()));
+				irisCustomTextureDataMap.put(name, readTexture(root, texture));
 			} catch (IOException e) {
-				Iris.logger.error("Unable to read Iris custom texture: {}", entry.getValue().getName(), e);
+				Iris.logger.error("Unable to read the custom texture at " + texture.getName(), e);
 			}
 		});
 	}
 
-	private CustomTextureData readTextureCached(Path root, TextureDefinition definition) throws IOException {
-		return textureCache.computeIfAbsent(definition, def -> {
-			try {
-				return Optional.ofNullable(readTextureInternal(root, def));
-			} catch (IOException e) {
-				Iris.logger.error("Unable to read texture: {}", def.getName(), e);
-				return Optional.empty();
-			}
-		}).orElse(null);
-	}
-
-	private String buildProfileInfo(String profileName, int userOptionsChanged) {
-		return String.format("Profile: %s (+%d option%s changed by user)",
-				profileName, userOptionsChanged, userOptionsChanged == 1 ? "" : "s");
-	}
+	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 
 	/**
 	 * Loads properties from a properties file in a shaderpack path
@@ -439,6 +417,16 @@ public class DefltShaderPack implements ShaderPackInterface {
 		return overrides;
 	}
 
+	@Nullable
+	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
+											ShaderProperties shaderProperties, ShaderPack pack) {
+		if (has) {
+			return new ProgramSet(path, sourceProvider, shaderProperties, pack);
+		}
+
+		return null;
+	}
+
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
@@ -491,8 +479,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 	}
 
 	// TODO: Implement raw texture data types
-
-	private CustomTextureData readTextureInternal(Path root, TextureDefinition definition) throws IOException {
+	public CustomTextureData readTexture(Path root, TextureDefinition definition) throws IOException {
 		CustomTextureData customTextureData;
 		String path = definition.getName();
 		if (path.contains(":")) {
@@ -551,7 +538,6 @@ public class DefltShaderPack implements ShaderPackInterface {
 							new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 					case TEXTURE_RECTANGLE ->
 							new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-					default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
 				};
 			} else {
 				customTextureData = null;
@@ -568,26 +554,34 @@ public class DefltShaderPack implements ShaderPackInterface {
 	}
 
 	public ProgramSet getProgramSet(NamespacedId dimension) {
-		ProgramSetInterface overrides = this.overrides.computeIfAbsent(dimension, this::createProgramSetForDimension);
+		ProgramSetInterface overrides;
 
+		overrides = this.overrides.computeIfAbsent(dimension, dim -> {
+			if (dimensionMap.containsKey(dimension)) {
+				String name = dimensionMap.get(dimension);
+				if (dimensionIds.contains(name)) {
+					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
+				} else {
+					Iris.logger.error("Attempted to load dimension folder " + name + " for dimension " + dimension + ", but it does not exist!");
+					return ProgramSetInterface.Empty.INSTANCE;
+				}
+			} else {
+				return ProgramSetInterface.Empty.INSTANCE;
+			}
+		});
+
+		// NB: If a dimension overrides directory is present, none of the files from the parent directory are "merged"
+		//     into the override. Rather, we act as if the overrides directory contains a completely different set of
+		//     shader programs unrelated to that of the base shader pack.
+		//
+		//     This makes sense because if base defined a composite pass and the override didn't, it would make it
+		//     impossible to "un-define" the composite pass. It also removes a lot of complexity related to "merging"
+		//     program sets. At the same time, this might be desired behavior by shader pack authors. It could make
+		//     sense to bring it back as a configurable option, and have a more maintainable set of code backing it.
 		if (overrides instanceof ProgramSet) {
 			return (ProgramSet) overrides;
 		} else {
 			return base;
-		}
-	}
-
-	private ProgramSetInterface createProgramSetForDimension(NamespacedId dimension) {
-		if (dimensionMap.containsKey(dimension)) {
-			String name = dimensionMap.get(dimension);
-			if (dimensionIdsSet.contains(name)) {
-				return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
-			} else {
-				Iris.logger.error("Attempted to load dimension folder {} for dimension {}, but it does not exist!", name, dimension);
-				return ProgramSetInterface.Empty.INSTANCE;
-			}
-		} else {
-			return ProgramSetInterface.Empty.INSTANCE;
 		}
 	}
 
@@ -627,7 +621,6 @@ public class DefltShaderPack implements ShaderPackInterface {
 		return activeFeatures.contains(feature);
 	}
 
-	@Override
 	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
 		return bufferObjects;
 	}
@@ -635,5 +628,9 @@ public class DefltShaderPack implements ShaderPackInterface {
 	@Override
 	public CustomUniforms.Builder getCustomUniforms() {
 		return customUniforms;
+	}
+
+	public Map<NamespacedId, String> getDimensionMap() {
+		return dimensionMap;
 	}
 }

@@ -33,6 +33,6 @@ public class SimpleMessageScreen extends Screen {
         this.renderBackground(guiGraphics, mouseX, mouseY, delta);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
         message.renderCentered(guiGraphics, this.width / 2, 40, 9, 0xFFFFFF);
-        super.render(guiGraphics, mouseX, mouseY, delta);
+        this.renderables.forEach(widget -> widget.render(guiGraphics, mouseX, mouseY, delta));
     }
 }

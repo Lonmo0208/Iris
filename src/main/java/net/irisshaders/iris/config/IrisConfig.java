@@ -176,8 +176,4 @@ public class IrisConfig {
 	public boolean isShaderPackVersion2() {
 		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V2;
 	}
-
-	public boolean isShaderPackVersion3() {
-		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V3;
-	}
 }
