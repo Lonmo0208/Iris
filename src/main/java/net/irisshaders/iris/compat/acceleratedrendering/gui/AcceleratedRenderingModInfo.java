@@ -7,9 +7,9 @@ import net.neoforged.fml.loading.FMLLoader;
 
 public class AcceleratedRenderingModInfo {
 
-    private static final String AR_MOD_NAME = FMLLoader.getLoadingModList().getModFileById(AcceleratedRenderingModEntry.MODID).getMods().getFirst().getDisplayName();
+    private static final String AR_MOD_NAME = FMLLoader.getLoadingModList().getModFileById(AcceleratedRenderingModEntry.MOD_ID).getMods().getFirst().getDisplayName();
 
-    private static final String AR_MOD_VERSION = FMLLoader.getLoadingModList().getModFileById(AcceleratedRenderingModEntry.MODID).versionString();
+    private static final String AR_MOD_VERSION = FMLLoader.getLoadingModList().getModFileById(AcceleratedRenderingModEntry.MOD_ID).versionString();
 
     public static String getArModName(){
         return AR_MOD_NAME;

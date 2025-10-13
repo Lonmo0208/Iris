@@ -7,6 +7,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -40,11 +41,13 @@ public class EmbeddiumWorldRendererMixin {
         } else {
             BlockPos blockPos = pBlockEntity.getBlockPos();
             MultiBufferSource bufferSource = CoreBuffers.CORE;
-            SortedSet<BlockDestructionProgress> destructionProgresses = (SortedSet)blockBreakingProgressions.get(blockPos.asLong());
+            SortedSet<BlockDestructionProgress> destructionProgresses = blockBreakingProgressions.get(blockPos.asLong());
             if (destructionProgresses != null && !destructionProgresses.isEmpty()) {
-                int progress = ((BlockDestructionProgress)destructionProgresses.last()).getProgress();
+                int progress = destructionProgresses.last().getProgress();
                 if (progress >= 0) {
-                    bufferSource = new SimpleCrumblingBufferSource(bufferSource, (RenderType) ModelBakery.DESTROY_TYPES.get(progress), pPoseStack, 1.0F);
+                    RenderType renderType = ModelBakery.DESTROY_TYPES.get(progress);
+                    VertexConsumer vertexConsumer = bufferSource.getBuffer(renderType);
+                    bufferSource = new SimpleCrumblingBufferSource(bufferSource, vertexConsumer, pPoseStack.last(), 1.0F);
                 }
 
                 original.call(instance, pBlockEntity, pPartialTick, pPoseStack, bufferSource);
