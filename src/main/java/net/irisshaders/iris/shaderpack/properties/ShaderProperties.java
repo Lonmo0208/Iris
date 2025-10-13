@@ -460,15 +460,30 @@ public class ShaderProperties {
 					if (parts.length == 6) {
 						// 1D texture handling
 						type = TextureType.TEXTURE_1D;
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimension");
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else if (parts.length == 7) {
 						// 2D texture handling
 						type = TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT));
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimensions");
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 1, 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else if (parts.length == 8) {
 						// 3D texture handling
 						type = TextureType.TEXTURE_3D;
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimensions");
+							irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 1, 1, PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else {
 						Iris.logger.warn("Unknown texture directive for " + key + ": " + value);
 					}
@@ -490,13 +505,28 @@ public class ShaderProperties {
 					// Raw texture handling
 					if (parts.length == 6) {
 						// 1D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimension");
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else if (parts.length == 7) {
 						// 2D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimensions");
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 1, 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else if (parts.length == 8) {
 						// 3D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						try {
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in customTexture directive for " + key + ": " + value + ", using default dimensions");
+							irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), 1, 1, 1, PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						}
 					} else {
 						Iris.logger.warn("Unknown texture directive for " + key + ": " + value);
 					}
@@ -535,27 +565,53 @@ public class ShaderProperties {
 				boolean relative = Boolean.parseBoolean(parts[5]);
 
 				if (relative) { // Is relative?
-					float relativeWidth = Float.parseFloat(parts[6]);
-					float relativeHeight = Float.parseFloat(parts[7]);
+					float relativeWidth;
+					float relativeHeight;
+					try {
+						relativeWidth = Float.parseFloat(parts[6]);
+						relativeHeight = Float.parseFloat(parts[7]);
+					} catch (NumberFormatException e) {
+						Iris.logger.warn("Invalid number format in relative image directive for " + key2 + ": " + value + ", using default dimensions");
+						relativeWidth = 1.0f;
+						relativeHeight = 1.0f;
+					}
 					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, clear, true, relativeWidth, relativeHeight);
 				} else {
 					TextureType type;
 					int width, height, depth;
 					if (parts.length == 7) {
 						type = TextureType.TEXTURE_1D;
-						width = Integer.parseInt(parts[6]);
+						try {
+							width = Integer.parseInt(parts[6]);
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in image directive for " + key2 + ": " + value + ", using default dimensions");
+							width = 1;
+						}
 						height = 0;
 						depth = 0;
 					} else if (parts.length == 8) {
 						type = TextureType.TEXTURE_2D;
-						width = Integer.parseInt(parts[6]);
-						height = Integer.parseInt(parts[7]);
+						try {
+							width = Integer.parseInt(parts[6]);
+							height = Integer.parseInt(parts[7]);
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in image directive for " + key2 + ": " + value + ", using default dimensions");
+							width = 1;
+							height = 1;
+						}
 						depth = 0;
 					} else if (parts.length == 9) {
 						type = TextureType.TEXTURE_3D;
-						width = Integer.parseInt(parts[6]);
-						height = Integer.parseInt(parts[7]);
-						depth = Integer.parseInt(parts[8]);
+						try {
+							width = Integer.parseInt(parts[6]);
+							height = Integer.parseInt(parts[7]);
+							depth = Integer.parseInt(parts[8]);
+						} catch (NumberFormatException e) {
+							Iris.logger.warn("Invalid number format in image directive for " + key2 + ": " + value + ", using default dimensions");
+							width = 1;
+							height = 1;
+							depth = 1;
+						}
 					} else {
 						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
 						return;

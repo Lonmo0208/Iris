@@ -163,9 +163,21 @@ public class IrisConfig {
 		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
-		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
+
 		try (OutputStream os = Files.newOutputStream(propertiesPath)) {
 			properties.store(os, COMMENT);
 		}
+	}
+
+	public boolean isShaderPackVersion1() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
+	}
+
+	public boolean isShaderPackVersion2() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V2;
+	}
+
+	public boolean isShaderPackVersion3() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V3;
 	}
 }

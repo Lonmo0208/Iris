@@ -1,6 +1,7 @@
 package net.irisshaders.iris;
 
 import com.google.common.base.Throwables;
+import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.irisshaders.iris.compat.dh.DHCompat;
@@ -15,8 +16,7 @@ import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.shaderpack.DimensionId;
-import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.*;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.OptionSet;
@@ -69,6 +69,7 @@ public class Iris {
 	 */
 	public static final String MODNAME = "NeOculus";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+	public static final Gson GSON = new Gson();
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.21";
@@ -117,6 +118,10 @@ public class Iris {
 
 	public static boolean isPackInUseQuick() {
 		return pipelineManager.getPipelineNullable() instanceof IrisRenderingPipeline;
+	}
+
+	public static Path getIrisDir() {
+		return FMLPaths.CONFIGDIR.get().resolve(MODID);
 	}
 
 	public void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -334,8 +339,6 @@ public class Iris {
 		resetShaderPackOptions = false;
 
 		try {
-			//currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines());
-
 			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines(), isZip);
 
 			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();

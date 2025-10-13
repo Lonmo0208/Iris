@@ -78,12 +78,16 @@ public final class GLDebug {
 		if (caps.OpenGL43) {
 			Iris.logger.info("[GL] Using OpenGL 4.3 for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
+				String msg = GLDebugMessageCallback.getMessage(length, message);
+				if (msg.contains("No detailed debug message due to a non-debug context")) {
+					return;
+				}
 				stream.println("[LWJGL] OpenGL debug message");
 				printDetail(stream, "ID", String.format("0x%X", id));
 				printDetail(stream, "Source", getDebugSource(source));
 				printDetail(stream, "Type", getDebugType(type));
 				printDetail(stream, "Severity", getDebugSeverity(severity));
-				printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
+				printDetail(stream, "Message", msg);
 				printTrace(stream);
 			});
 			GL43C.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[]) null, true);
@@ -100,12 +104,17 @@ public final class GLDebug {
 		} else if (caps.GL_KHR_debug) {
 			Iris.logger.info("[GL] Using KHR_debug for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
+				// 过滤掉"No detailed debug message due to a non-debug context"这个消息
+				String msg = GLDebugMessageCallback.getMessage(length, message);
+				if (msg.contains("No detailed debug message due to a non-debug context")) {
+					return;
+				}
 				stream.println("[LWJGL] OpenGL debug message");
 				printDetail(stream, "ID", String.format("0x%X", id));
 				printDetail(stream, "Source", getDebugSource(source));
 				printDetail(stream, "Type", getDebugType(type));
 				printDetail(stream, "Severity", getDebugSeverity(severity));
-				printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
+				printDetail(stream, "Message", msg);
 				printTrace(stream);
 			});
 			KHRDebug.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[]) null, true);
@@ -122,12 +131,17 @@ public final class GLDebug {
 		} else if (caps.GL_ARB_debug_output) {
 			Iris.logger.info("[GL] Using ARB_debug_output for error logging.");
 			GLDebugMessageARBCallback proc = GLDebugMessageARBCallback.create((source, type, id, severity, length, message, userParam) -> {
+				// 过滤掉"No detailed debug message due to a non-debug context"这个消息
+				String msg = GLDebugMessageARBCallback.getMessage(length, message);
+				if (msg.contains("No detailed debug message due to a non-debug context")) {
+					return;
+				}
 				stream.println("[LWJGL] ARB_debug_output message");
 				printDetail(stream, "ID", String.format("0x%X", id));
 				printDetail(stream, "Source", getSourceARB(source));
 				printDetail(stream, "Type", getTypeARB(type));
 				printDetail(stream, "Severity", getSeverityARB(severity));
-				printDetail(stream, "Message", GLDebugMessageARBCallback.getMessage(length, message));
+				printDetail(stream, "Message", msg);
 				printTrace(stream);
 			});
 			ARBDebugOutput.glDebugMessageControlARB(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[]) null, true);
@@ -139,11 +153,16 @@ public final class GLDebug {
 		} else if (caps.GL_AMD_debug_output) {
 			Iris.logger.info("[GL] Using AMD_debug_output for error logging.");
 			GLDebugMessageAMDCallback proc = GLDebugMessageAMDCallback.create((id, category, severity, length, message, userParam) -> {
+				// 过滤掉"No detailed debug message due to a non-debug context"这个消息
+				String msg = GLDebugMessageAMDCallback.getMessage(length, message);
+				if (msg.contains("No detailed debug message due to a non-debug context")) {
+					return;
+				}
 				stream.println("[LWJGL] AMD_debug_output message");
 				printDetail(stream, "ID", String.format("0x%X", id));
 				printDetail(stream, "Category", getCategoryAMD(category));
 				printDetail(stream, "Severity", getSeverityAMD(severity));
-				printDetail(stream, "Message", GLDebugMessageAMDCallback.getMessage(length, message));
+				printDetail(stream, "Message", msg);
 				printTrace(stream);
 			});
 			AMDDebugOutput.glDebugMessageEnableAMD(0, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[]) null, true);

@@ -107,10 +107,16 @@ public class ShaderTransformer {
 
                 ShaderTransformer.patchCore(translationUnit, parameters);
             } else {
-                if (Integer.parseInt(versionString) < 330) {
+                try {
+                    int versionNum = Integer.parseInt(versionString);
+                    if (versionNum < 330) {
+                        profileString = "#version 330 core";
+                    } else {
+                        profileString = "#version " + versionString + " core";
+                    }
+                } catch (NumberFormatException e) {
+                    Iris.logger.warn("Invalid GLSL version string in shader transformation: {}", versionString);
                     profileString = "#version 330 core";
-                } else {
-                    profileString = "#version " + versionString + " core";
                 }
                 ShaderTransformer.patch(translationUnit, parameters);
             }

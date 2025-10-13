@@ -89,7 +89,12 @@ public class TransformPatcher {
 					throw new IllegalArgumentException(
 							"No #version directive found in source code! See debugging.md for more information.");
 				}
-				transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+				try {
+					transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+				} catch (NumberFormatException e) {
+					LOGGER.warn("Invalid GLSL version number in shader: {}", matcher.group(1), e);
+					transformer.getLexer().version = Version.GLSL33; // Default to GLSL 330
+				}
 
 				return super.parseTranslationUnit(rootInstance, input);
 			}

@@ -55,7 +55,7 @@ import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.shaderpack.ImageInformation;
-import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
@@ -163,7 +163,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final PackDirectives packDirectives;
 	private final Set<GlImage> customImages;
 	private final GlImage[] clearImages;
-	private final ShaderPack pack;
+	private final ShaderPackInterface pack;
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
 	private final int stackSize = 0;
@@ -273,7 +273,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
 
-		this.customUniforms = programSet.getPack().customUniforms.build(
+		this.customUniforms = programSet.getPack().getCustomUniforms().build(
 				holder -> CommonUniforms.addNonDynamicUniforms(holder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), this.updateNotifier)
 		);
 

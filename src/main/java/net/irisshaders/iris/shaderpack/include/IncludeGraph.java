@@ -58,8 +58,8 @@ public class IncludeGraph {
 	private final ImmutableMap<AbsolutePackPath, FileNode> nodes;
 	private final ImmutableMap<AbsolutePackPath, RusticError> failures;
 
-	private IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes,
-						 ImmutableMap<AbsolutePackPath, RusticError> failures) {
+	public IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes,
+                        ImmutableMap<AbsolutePackPath, RusticError> failures) {
 		this.nodes = nodes;
 		this.failures = failures;
 	}
