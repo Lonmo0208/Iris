@@ -4,6 +4,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
@@ -35,14 +36,14 @@ public class ProgramSet implements ProgramSetInterface {
 
 	private final ComputeSource[] setup;
 
-	private final ShaderPack pack;
+	private final ShaderPackInterface pack;
 
 	private final EnumMap<ProgramId, ProgramSource> gbufferPrograms = new EnumMap<>(ProgramId.class);
 	private final EnumMap<ProgramArrayId, ProgramSource[]> compositePrograms = new EnumMap<>(ProgramArrayId.class);
 	private final EnumMap<ProgramArrayId, ComputeSource[][]> computePrograms = new EnumMap<>(ProgramArrayId.class);
 
 	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
-					  ShaderProperties shaderProperties, ShaderPack pack) {
+					  ShaderProperties shaderProperties, ShaderPackInterface pack) {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
@@ -297,7 +298,7 @@ public class ProgramSet implements ProgramSetInterface {
 		return packDirectives;
 	}
 
-	public ShaderPack getPack() {
+	public ShaderPackInterface getPack() {
 		return pack;
 	}
 

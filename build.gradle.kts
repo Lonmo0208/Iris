@@ -5,9 +5,9 @@ plugins {
 }
 
 val MINECRAFT_VERSION by extra { "1.21.1" }
-val NEOFORGE_VERSION by extra { "21.1.197" }
-val FABRIC_LOADER_VERSION by extra { "0.17.1" }
-val FABRIC_API_VERSION by extra { "0.116.4+1.21.1" }
+val NEOFORGE_VERSION by extra { "21.1.211" }
+val FABRIC_LOADER_VERSION by extra { "0.17.3" }
+val FABRIC_API_VERSION by extra { "0.116.7+1.21.1" }
 
 val SODIUM_DEPENDENCY_FABRIC by extra { "maven.modrinth:sodium:26nVNc41"}
 val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.14" }
+val MOD_VERSION by extra { "1.8.15" }
 
 allprojects {
     apply(plugin = "java")

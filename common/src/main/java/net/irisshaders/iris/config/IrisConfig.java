@@ -51,6 +51,12 @@ public class IrisConfig {
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
+	/**
+	 * @return Whether to use the legacy (V1) shader pack implementation
+	 */
+	public boolean useLegacyShaderPack() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
+	}
 
 	public IrisConfig(Path propertiesPath, Path excluded) {
 		shaderPackName = null;

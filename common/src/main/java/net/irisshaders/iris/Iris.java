@@ -20,8 +20,11 @@ import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
+import net.irisshaders.iris.shaderpack.AsyncShaderPack;
+import net.irisshaders.iris.shaderpack.DefltShaderPack;
 import net.irisshaders.iris.shaderpack.DimensionId;
 import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.OptionSet;
@@ -47,6 +50,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +80,7 @@ public class Iris {
 	 */
 	public static final String MODNAME = "Iris";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+	public static final Gson GSON = new Gson();
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.21";
@@ -755,6 +760,10 @@ public class Iris {
 
 	public static void loadShaderpackWhenPossible() {
 		loadShaderPackWhenPossible = true;
+	}
+
+    public static Path getIrisDir() {
+		return IrisPlatformHelpers.getInstance().getConfigDir();
 	}
 
 	/**

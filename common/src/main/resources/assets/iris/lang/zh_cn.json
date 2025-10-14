@@ -65,5 +65,20 @@
   "pack.iris.configure.title": "配置",
   "pack.iris.list.label": "+ 拖放光影包至此以添加",
   "label.iris.true": "开",
-  "label.iris.false": "关"
+  "label.iris.false": "关",
+  "iris.shaderPackConfig.title": "ShaderPack配置",
+  "iris.shaderPackConfig.version": "ShaderPack代码版本",
+  "iris.shaderPackConfig.version.v1": "代码1 - 异步加载版本",
+  "iris.shaderPackConfig.version.v2": "代码2 - 优化缓存版本",
+  "iris.shaderPackConfig.versionInfo.title": "版本差异说明",
+  "iris.shaderPackConfig.version1.title": "代码1 - 异步加载版本",
+  "iris.shaderPackConfig.version1.point1": "使用线程池异步加载纹理",
+  "iris.shaderPackConfig.version1.point2": "支持超时和错误处理",
+  "iris.shaderPackConfig.version1.point3": "更复杂但功能完整",
+  "iris.shaderPackConfig.version1.point4": "异步版本 性能提升显著 兼容性一般{默认启用}",
+  "iris.shaderPackConfig.version2.title": "代码2 - 优化缓存版本",
+  "iris.shaderPackConfig.version2.point1": "使用并行流和缓存优化",
+  "iris.shaderPackConfig.version2.point2": "更简洁的代码结构",
+  "iris.shaderPackConfig.version2.point3": "更好的内存管理",
+  "iris.shaderPackConfig.version2.point4": "并行版本 兼容性最佳 若光影无法打开请使用此版本"
 }
