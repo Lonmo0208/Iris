@@ -622,4 +622,8 @@ public class ShaderPack {
 			.map(key -> key.substring(keyPrefix.length()))
 			.collect(Collectors.toList());
 	}
+
+	public Map<NamespacedId, String> getDimensionMap() {
+		return dimensionMap;
+	}
 }
