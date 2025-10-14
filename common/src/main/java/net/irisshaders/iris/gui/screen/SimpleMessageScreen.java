@@ -1,6 +1,5 @@
 package net.irisshaders.iris.gui.screen;
 
-import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineLabel;
@@ -32,8 +31,8 @@ public class SimpleMessageScreen extends Screen {
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
 		this.renderBackground(guiGraphics, mouseX, mouseY, delta);
+		super.render(guiGraphics, mouseX, mouseY, delta);
 		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
 		message.renderCentered(guiGraphics, this.width / 2, 40, 9, 0xFFFFFF);
-		super.render(guiGraphics, mouseX, mouseY, delta);
 	}
 }

@@ -70,6 +70,7 @@
   "iris.shaderPackConfig.version": "ShaderPack代码版本",
   "iris.shaderPackConfig.version.v1": "代码1 - 异步加载版本",
   "iris.shaderPackConfig.version.v2": "代码2 - 优化缓存版本",
+  "iris.shaderPackConfig.versionInfo": "版本信息",
   "iris.shaderPackConfig.versionInfo.title": "版本差异说明",
   "iris.shaderPackConfig.version1.title": "代码1 - 异步加载版本",
   "iris.shaderPackConfig.version1.point1": "使用线程池异步加载纹理",
