@@ -38,6 +38,7 @@ import net.irisshaders.iris.mixin.LevelRendererAccessor;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.HorizonRenderer;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
+import net.irisshaders.iris.pathways.colorspace.ColorSpaceComputeConverter;
 import net.irisshaders.iris.pathways.colorspace.ColorSpaceConverter;
 import net.irisshaders.iris.pathways.colorspace.ColorSpaceFragmentConverter;
 import net.irisshaders.iris.pbr.TextureInfoCache;
@@ -60,7 +61,6 @@ import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.shaderpack.ImageInformation;
 import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.shaderpack.ShaderPackInterface;
 import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
@@ -167,7 +167,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final PackDirectives packDirectives;
 	private final Set<GlImage> customImages;
 	private final GlImage[] clearImages;
-	private final ShaderPackInterface pack;
+	private final ShaderPack pack;
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
 	private final int stackSize = 0;
@@ -194,6 +194,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private GlFramebuffer defaultFB;
 	private GlFramebuffer defaultFBAlt;
 	private GlFramebuffer defaultFBShadow;
+	private boolean fullClearRequired = false;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -207,15 +208,15 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.customTextureMap = programSet.getPackDirectives().getTextureMap();
 		this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
 		this.shadowDirectives = packDirectives.getShadowDirectives();
-		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
+		this.cloudSetting = IrisVideoSettings.enableClouds ? programSet.getPackDirectives().getCloudSetting() : CloudSetting.OFF;
 		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderWeather = programSet.getPackDirectives().shouldRenderWeather();
-		this.shouldRenderWeatherParticles = programSet.getPackDirectives().shouldRenderWeatherParticles();
+		this.shouldRenderWeatherParticles = programSet.getPackDirectives().shouldRenderWeatherParticles() && IrisVideoSettings.particleQuality != IrisVideoSettings.ParticleQuality.OFF && IrisVideoSettings.particleQuality != IrisVideoSettings.ParticleQuality.LOW;
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.shouldRenderStars = programSet.getPackDirectives().shouldRenderStars();
 		this.shouldRenderSkyDisc = programSet.getPackDirectives().shouldRenderSkyDisc();
-		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+		this.allowConcurrentCompute = IrisVideoSettings.allowConcurrentCompute && programSet.getPackDirectives().getConcurrentCompute();
 		this.skipAllRendering = programSet.getPackDirectives().skipAllRendering();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
 		this.occlusionCulling = programSet.getPackDirectives().shouldUseOcclusionCulling();
@@ -252,13 +253,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
 
-		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
-			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
+		ParticleRenderingSettings particleSetting = programSet.getPackDirectives().getParticleRenderingSettings();
+		if (particleSetting != ParticleRenderingSettings.UNSET) {
+			this.particleRenderingSettings = particleSetting;
 		} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
 			this.particleRenderingSettings = ParticleRenderingSettings.AFTER;
 		} else {
 			this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
 		}
+
+
 
 
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
@@ -294,7 +298,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.centerDepthSampler = new CenterDepthSampler(() -> renderTargets.getDepthTexture(), programSet.getPackDirectives().getCenterDepthHalfLife());
 
-		this.shadowMapResolution = programSet.getPackDirectives().getShadowDirectives().getResolution();
+		int baseShadowResolution = programSet.getPackDirectives().getShadowDirectives().getResolution();
+		this.shadowMapResolution = (int) Math.max(16, baseShadowResolution * IrisVideoSettings.textureResolutionScale / 100.0);
 
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
@@ -459,30 +464,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		// first optimization pass
 		this.customUniforms.optimise();
-		boolean hasRun = false;
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 			programSet.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 			programSet.getPackDirectives().getRenderTargetDirectives());
 
-		for (ComputeProgram program : setup) {
-			if (program != null) {
-				if (!hasRun) {
-					hasRun = true;
-					renderTargets.onFullClear();
-					Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
-
-					// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
-					//     will give you pink reflections and other weirdness if this is zero.
-					Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
-
-					clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
-				}
-				program.use();
-				program.dispatch(1, 1);
-			}
-		}
+		// Execute setup compute programs with initial clear
+		boolean hasRun = executeSetupComputePrograms(setup, true);
 
 		if (hasRun) {
 			ComputeProgram.unbind();
@@ -501,12 +490,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				}
 			};
 		} else {
-			// TODO: Fix grid appearing on some devices with compute converter
-			//if (IrisRenderSystem.supportsCompute()) {
-			//	colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			//} else {
-			colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			//}
+			if (IrisRenderSystem.supportsCompute()) {
+				colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			} else {
+				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			}
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
@@ -865,7 +853,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 
 		if (shadowRenderTargets != null) {
-			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
+			if (!IrisVideoSettings.enableShadows || packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
 				if (shadowRenderTargets.isFullClearRequired()) {
 					this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 					this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
@@ -931,13 +919,37 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 			customImages.forEach(image -> image.updateNewSize(main.width, main.height));
 
-			this.clearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
-			this.clearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+			this.fullClearRequired = true;
 
+			ImmutableList<ClearPass> oldClearPassesFull = this.clearPassesFull;
+			ImmutableList<ClearPass> oldClearPasses = this.clearPasses;
+			GlFramebuffer oldDefaultFB = this.defaultFB;
+			GlFramebuffer oldDefaultFBAlt = this.defaultFBAlt;
 			this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				packDirectives.getRenderTargetDirectives());
 			this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				packDirectives.getRenderTargetDirectives());
+
+			int defaultTex = packDirectives.getFallbackTex();
+			this.defaultFB = flippedAfterPrepare.contains(defaultTex) ? renderTargets.createFramebufferWritingToAlt(new int[] { defaultTex }) : renderTargets.createFramebufferWritingToMain(new int[] { defaultTex });
+			this.defaultFBAlt = flippedAfterTranslucent.contains(defaultTex) ? renderTargets.createFramebufferWritingToAlt(new int[] { defaultTex }) : renderTargets.createFramebufferWritingToMain(new int[] { defaultTex });
+
+			if ((!oldClearPassesFull.isEmpty() || !oldClearPasses.isEmpty()) || oldDefaultFB != null || oldDefaultFBAlt != null) {
+				Minecraft.getInstance().tell(() -> {
+					if (!oldClearPassesFull.isEmpty()) {
+						oldClearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+					}
+					if (!oldClearPasses.isEmpty()) {
+						oldClearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+					}
+					if (oldDefaultFB != null) {
+						renderTargets.destroyFramebuffer(oldDefaultFB);
+					}
+					if (oldDefaultFBAlt != null) {
+						renderTargets.destroyFramebuffer(oldDefaultFBAlt);
+					}
+				});
+			}
 		}
 
 		if (changed || IrisVideoSettings.colorSpace != currentColorSpace) {
@@ -947,7 +959,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		final ImmutableList<ClearPass> passes;
 
-		if (renderTargets.isFullClearRequired()) {
+		if (fullClearRequired) {
+			fullClearRequired = false;
 			renderTargets.onFullClear();
 			passes = clearPassesFull;
 		} else {
@@ -977,13 +990,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		if (changed) {
 			boolean hasRun = false;
 
-			for (ComputeProgram program : setup) {
-				if (program != null) {
-					hasRun = true;
-					program.use();
-					program.dispatch(1, 1);
+				if (setup.length > 0) {
+					hasRun = executeSetupComputePrograms(setup, false);
 				}
-			}
 
 			if (hasRun) {
 				ComputeProgram.unbind();
@@ -1102,6 +1111,25 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public boolean shouldRenderUnderwaterOverlay() {
 		return shouldRenderUnderwaterOverlay;
+	}
+
+	public boolean shouldRenderHighQualityReflections() {
+		return IrisVideoSettings.reflectionQuality != IrisVideoSettings.ReflectionQuality.OFF &&
+			IrisVideoSettings.reflectionQuality != IrisVideoSettings.ReflectionQuality.LOW;
+	}
+
+	public float getReflectionDistanceMultiplier() {
+		switch (IrisVideoSettings.reflectionQuality) {
+			case OFF:
+				return 0.0f;
+			case LOW:
+				return 0.25f;
+			case MEDIUM:
+				return 0.5f;
+			case HIGH:
+			default:
+				return 1.0f;
+		}
 	}
 
 	@Override
@@ -1357,5 +1385,47 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	public void bindDefaultShadow() {
 		defaultFBShadow.bind();
+	}
+
+	private boolean executeSetupComputePrograms(ComputeProgram[] programs, boolean performInitialClear) {
+		boolean hasRun = false;
+		if (programs.length == 0) {
+			return false;
+		}
+
+		ComputeProgram lastProgram = null;
+		boolean needsMemoryBarrier = false;
+		boolean anyProgramUsed = false;
+
+		for (ComputeProgram program : programs) {
+			if (program != null) {
+				if (!hasRun) {
+					hasRun = true;
+					if (performInitialClear) {
+						renderTargets.onFullClear();
+						Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+
+						// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
+						//     will give you pink reflections and other weirdness if this is zero.
+						Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
+						clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
+					}
+				}
+
+				if (lastProgram != program) {
+					if (lastProgram != null && needsMemoryBarrier) {
+						IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
+					}
+					program.use();
+					lastProgram = program;
+					anyProgramUsed = true;
+				}
+
+				program.dispatch(1, 1);
+				needsMemoryBarrier = true;
+			}
+		}
+		return hasRun;
 	}
 }

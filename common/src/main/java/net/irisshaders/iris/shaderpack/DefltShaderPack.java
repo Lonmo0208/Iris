@@ -70,7 +70,22 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DefltShaderPack implements ShaderPackInterface {
+public class DefltShaderPack implements AutoCloseable {
+	/**
+	 * Cleans up resources held by this DefltShaderPack instance.
+	 */
+	@Override
+	public void close() {
+		// Clear texture data maps to free memory
+		customTextureDataMap.clear();
+		irisCustomTextureDataMap.clear();
+		
+		// Clear other resources
+		overrides.clear();
+		dimensionIds.clear();
+		bufferObjects.clear();
+		dimensionMap.clear();
+	}
 	private static final Gson GSON = new Gson();
 	public final CustomUniforms.Builder customUniforms;
 	private final ProgramSet base;
@@ -91,10 +106,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 	private final List<String> dimensionIds;
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
-
-	public DefltShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines, isZip);
-	}
+	private final ShaderPack shaderPack;
 
 	/**
 	 * Reads a shader pack from the disk.
@@ -104,9 +116,10 @@ public class DefltShaderPack implements ShaderPackInterface {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public DefltShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+	public DefltShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip, @Nullable ShaderPack shaderPack) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
+		this.shaderPack = shaderPack;
 
 		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
 		envDefines1.addAll(IrisDefines.createIrisReplacements());
@@ -319,7 +332,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 			return source;
 		};
 
-		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")), sourceProvider, shaderProperties, this);
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")), sourceProvider, shaderProperties, shaderPack);
 
 		this.overrides = new HashMap<>();
 
@@ -560,7 +573,7 @@ public class DefltShaderPack implements ShaderPackInterface {
 			if (dimensionMap.containsKey(dimension)) {
 				String name = dimensionMap.get(dimension);
 				if (dimensionIds.contains(name)) {
-					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
+					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, shaderPack);
 				} else {
 					Iris.logger.error("Attempted to load dimension folder " + name + " for dimension " + dimension + ", but it does not exist!");
 					return ProgramSetInterface.Empty.INSTANCE;
@@ -625,7 +638,6 @@ public class DefltShaderPack implements ShaderPackInterface {
 		return bufferObjects;
 	}
 
-	@Override
 	public CustomUniforms.Builder getCustomUniforms() {
 		return customUniforms;
 	}

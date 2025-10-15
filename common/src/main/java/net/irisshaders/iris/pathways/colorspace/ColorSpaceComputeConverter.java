@@ -64,7 +64,9 @@ public class ColorSpaceComputeConverter implements ColorSpaceConverter {
 
 		this.target = targetImage;
 		program.use();
-		IrisRenderSystem.dispatchCompute(width / 8, height / 8, 1);
+		int workGroupsX = (width + 7) / 8;
+		int workGroupsY = (height + 7) / 8;
+		IrisRenderSystem.dispatchCompute(workGroupsX, workGroupsY, 1);
 		IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT);
 		ComputeProgram.unbind();
 	}

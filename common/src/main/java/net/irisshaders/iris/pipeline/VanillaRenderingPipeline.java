@@ -226,4 +226,14 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	public void setIsMainBound(boolean mainBound) {
 
 	}
+	
+	@Override
+	public boolean shouldRenderHighQualityReflections() {
+		return true;
+	}
+	
+	@Override
+	public float getReflectionDistanceMultiplier() {
+		return 1.0f;
+	}
 }

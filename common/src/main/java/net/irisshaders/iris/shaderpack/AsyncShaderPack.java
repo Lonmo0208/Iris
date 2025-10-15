@@ -32,6 +32,10 @@ import net.irisshaders.iris.shaderpack.include.ShaderPackSourceNames;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ProfileSet;
+
+import java.util.LinkedHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
@@ -44,6 +48,7 @@ import net.irisshaders.iris.shaderpack.programs.ProgramSetInterface;
 import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
+import javax.annotation.Nullable;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
@@ -81,7 +86,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class AsyncShaderPack implements ShaderPackInterface {
+public class AsyncShaderPack implements AutoCloseable {
 	private static final Gson GSON = new Gson();
 	private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 	private static final int CORES = Runtime.getRuntime().availableProcessors();
@@ -92,6 +97,8 @@ public class AsyncShaderPack implements ShaderPackInterface {
 
 	private static final LoadingCache<PreprocessKey, String> PREPROCESS_CACHE = CacheBuilder.newBuilder()
 		.maximumSize(1000)
+		.expireAfterAccess(10, TimeUnit.MINUTES)
+		.recordStats()
 		.build(new CacheLoader<PreprocessKey, String>() {
 			public @NotNull String load(@NotNull PreprocessKey key) {
 				return PropertiesPreprocessor.preprocessSource(key.content, key.defines);
@@ -110,8 +117,19 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		}));
 	}
 
-	private final Map<TextureDefinition, CompletableFuture<CustomTextureData>> textureCache = new ConcurrentHashMap<>();
+	private final Map<TextureDefinition, CompletableFuture<CustomTextureData>> textureCache = new LinkedHashMap<TextureDefinition, CompletableFuture<CustomTextureData>>(16, 0.75f, true) {
+		private static final int MAX_CACHE_SIZE = 1000;
+
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<TextureDefinition, CompletableFuture<CustomTextureData>> eldest) {
+			return size() > MAX_CACHE_SIZE;
+		}
+	};
+
+	private final ReadWriteLock textureCacheLock = new ReentrantReadWriteLock();
 	private final Semaphore textureLoadSemaphore = new Semaphore(MAX_CONCURRENT_LOADS);
+
+	private final ShaderPack shaderPack;
 
 	public final CustomUniforms.Builder customUniforms;
 	private final ProgramSet base;
@@ -141,9 +159,10 @@ public class AsyncShaderPack implements ShaderPackInterface {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public AsyncShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+	public AsyncShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip, @Nullable ShaderPack shaderPack) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
+		this.shaderPack = shaderPack;
 
 		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
 		envDefines1.addAll(IrisDefines.createIrisReplacements());
@@ -341,7 +360,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			AbsolutePackPath.fromAbsolutePath("/" + defaultDimensionPath),
 			sourceProvider,
 			shaderProperties,
-			this
+			shaderPack
 		);
 
 		this.overrides = new ConcurrentHashMap<>();
@@ -375,6 +394,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			});
 		});
 
+		List<CompletableFuture<Void>> irisTextureFutures = new ArrayList<>();
 		shaderProperties.getIrisCustomTextures().forEach((name, def) -> {
 			CompletableFuture<CustomTextureData> future = readTextureAsync(root, def)
 				.exceptionally(ex -> {
@@ -382,8 +402,13 @@ public class AsyncShaderPack implements ShaderPackInterface {
 					return createFallbackTexture(def);
 				})
 				.completeOnTimeout(createFallbackTexture(def), LOAD_TIMEOUT, TimeUnit.SECONDS);
-			irisCustomTextureDataMap.put(name, future.join());
+
+			irisTextureFutures.add(future.thenAccept(textureData ->
+				irisCustomTextureDataMap.put(name, textureData)
+			));
 		});
+
+		CompletableFuture.allOf(irisTextureFutures.toArray(new CompletableFuture[0])).join();
 
 		this.irisCustomImages = shaderProperties.getIrisCustomImages();
 		this.customUniforms = shaderProperties.getCustomUniforms();
@@ -391,23 +416,46 @@ public class AsyncShaderPack implements ShaderPackInterface {
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private CompletableFuture<CustomTextureData> readTextureAsync(Path root, TextureDefinition definition) {
-		return textureCache.computeIfAbsent(definition, def ->
-			CompletableFuture.supplyAsync(() -> {
-					try {
-						textureLoadSemaphore.acquire();
-						return loadTextureSync(root, def);
-					} catch (IOException | InterruptedException e) {
-						throw new CompletionException(e);
-					} finally {
-						textureLoadSemaphore.release();
-					}
-				}, TEXTURE_LOAD_EXECUTOR)
-				.exceptionally(ex -> {
-					Iris.logger.error("Failed to load texture: {}", def.getName(), ex);
-					return createFallbackTexture(def);
-				})
-				.completeOnTimeout(createFallbackTexture(def), LOAD_TIMEOUT, TimeUnit.SECONDS)
-		);
+		textureCacheLock.readLock().lock();
+		try {
+			CompletableFuture<CustomTextureData> cached = textureCache.get(definition);
+			if (cached != null) {
+				if (cached.isDone() && !cached.isCompletedExceptionally()) {
+					return cached;
+				}
+			}
+		} finally {
+			textureCacheLock.readLock().unlock();
+		}
+
+		textureCacheLock.writeLock().lock();
+		try {
+			CompletableFuture<CustomTextureData> cached = textureCache.get(definition);
+			if (cached != null) {
+				return cached;
+			}
+
+			CompletableFuture<CustomTextureData> future = CompletableFuture.supplyAsync(() -> {
+				try {
+					textureLoadSemaphore.acquire();
+					return loadTextureSync(root, definition);
+				} catch (IOException | InterruptedException e) {
+					throw new CompletionException(e);
+				} finally {
+					textureLoadSemaphore.release();
+				}
+			}, TEXTURE_LOAD_EXECUTOR)
+			.exceptionally(ex -> {
+				Iris.logger.error("Failed to load texture: {}", definition.getName(), ex);
+				return createFallbackTexture(definition);
+			})
+			.completeOnTimeout(createFallbackTexture(definition), LOAD_TIMEOUT, TimeUnit.SECONDS);
+
+			textureCache.put(definition, future);
+			return future;
+		} finally {
+			textureCacheLock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -424,21 +472,9 @@ public class AsyncShaderPack implements ShaderPackInterface {
 		// BlockMaterialMapping
 		Path resolvedPath = root.resolve(normalizePath(path));
 		TextureFilteringData filtering = resolveFilteringData(root, path, definition);
-		ByteBuf buffer = null;
-		try {
-			byte[] content = Files.readAllBytes(resolvedPath);
-			buffer = ALLOC.buffer(content.length);
-			buffer.writeBytes(content);
 
-			byte[] data = new byte[buffer.readableBytes()];
-			buffer.getBytes(buffer.readerIndex(), data);
-
-			return createTextureData(definition, filtering, data);
-		} finally {
-			if (buffer != null) {
-				buffer.release();
-			}
-		}
+		byte[] data = Files.readAllBytes(resolvedPath);
+		return createTextureData(definition, filtering, data);
 	}
 
 	private CustomTextureData handleResourceLocation(String path) {
@@ -568,7 +604,7 @@ public class AsyncShaderPack implements ShaderPackInterface {
 			if (dimensionMap.containsKey(dim)) {
 				String name = dimensionMap.get(dim);
 				if (dimensionIds.contains(name)) {
-					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
+					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, shaderPack);
 				} else {
 					Iris.logger.error("Missing dimension folder: {}", name);
 					return ProgramSetInterface.Empty.INSTANCE;
@@ -598,7 +634,6 @@ public class AsyncShaderPack implements ShaderPackInterface {
 	public boolean hasFeature(FeatureFlags feature) { return activeFeatures.contains(feature); }
 	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() { return bufferObjects; }
 
-	@Override
 	public CustomUniforms.Builder getCustomUniforms() {
 		return customUniforms;
 	}
@@ -630,5 +665,33 @@ public class AsyncShaderPack implements ShaderPackInterface {
 
 	public Map<NamespacedId, String> getDimensionMap() {
 		return dimensionMap;
+	}
+
+	/**
+	 * Cleans up resources held by this AsyncShaderPack instance.
+	 * This method is called automatically when using try-with-resources statement.
+	 * Should be called explicitly when the shader pack is no longer needed.
+	 */
+	@Override
+	public void close() {
+		// Clear texture cache to free memory
+		textureCacheLock.writeLock().lock();
+	
+try {
+			textureCache.clear();
+		} finally {
+			textureCacheLock.writeLock().unlock();
+		}
+
+		// Clear other caches and resources
+		customTextureDataMap.clear();
+		irisCustomTextureDataMap.clear();
+		overrides.clear();
+		dimensionIds.clear();
+		bufferObjects.clear();
+		dimensionMap.clear();
+
+		// Note: TEXTURE_LOAD_EXECUTOR and PREPROCESS_CACHE are static resources
+		// and are handled by the JVM shutdown hook
 	}
 }
