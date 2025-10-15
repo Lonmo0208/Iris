@@ -79,30 +79,44 @@ public class ShaderPack implements AutoCloseable {
 	}
 
 	public LanguageMap getLanguageMap() {
-		return useLegacyShaderPack ? asyncImplementation.getLanguageMap() : defaultImplementation.getLanguageMap();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getLanguageMap() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getLanguageMap() : null);
 	}
 
 	public ShaderPackOptions getShaderPackOptions() {
-		return useLegacyShaderPack ? asyncImplementation.getShaderPackOptions() : defaultImplementation.getShaderPackOptions();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getShaderPackOptions() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getShaderPackOptions() : null);
 	}
 
 	public OptionMenuContainer getMenuContainer() {
-		return useLegacyShaderPack ? asyncImplementation.getMenuContainer() : defaultImplementation.getMenuContainer();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getMenuContainer() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getMenuContainer() : null);
 	}
 
 	public boolean hasFeature(FeatureFlags feature) {
-		return useLegacyShaderPack ? asyncImplementation.hasFeature(feature) : defaultImplementation.hasFeature(feature);
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.hasFeature(feature) : false) : 
+			(defaultImplementation != null ? defaultImplementation.hasFeature(feature) : false);
 	}
 
 	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
-		return useLegacyShaderPack ? asyncImplementation.getBufferObjects() : defaultImplementation.getBufferObjects();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getBufferObjects() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getBufferObjects() : null);
 	}
 
 	public CustomUniforms.Builder getCustomUniforms() {
-		return useLegacyShaderPack ? asyncImplementation.getCustomUniforms() : defaultImplementation.getCustomUniforms();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getCustomUniforms() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getCustomUniforms() : null);
 	}
 
 	public Map<NamespacedId, String> getDimensionMap() {
-		return useLegacyShaderPack ? asyncImplementation.getDimensionMap() : defaultImplementation.getDimensionMap();
+		return useLegacyShaderPack ? 
+			(asyncImplementation != null ? asyncImplementation.getDimensionMap() : null) : 
+			(defaultImplementation != null ? defaultImplementation.getDimensionMap() : null);
 	}
 }

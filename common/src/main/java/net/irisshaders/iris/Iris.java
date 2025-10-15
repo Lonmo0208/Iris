@@ -205,6 +205,17 @@ public class Iris {
 						ShaderPackConfig.ShaderPackVersion.V2 : ShaderPackConfig.ShaderPackVersion.V1;
 				config.setShaderPackVersion(newVersion);
 
+				// Close the current shader pack first to prevent access to null implementation during reload
+				if (currentPack instanceof AutoCloseable closeable) {
+					try {
+						closeable.close();
+					} catch (Exception e) {
+						logger.error("Failed to close shader pack resources during implementation toggle", e);
+					}
+				}
+				// Clear currentPack reference to avoid using old instance
+				currentPack = null;
+
 				// Reload the shader pack with the new implementation
 				Iris.reload();
 
