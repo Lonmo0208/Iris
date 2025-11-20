@@ -180,7 +180,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		protected final PBRType pbrType;
 
 		public PBRSpriteContents(Identifier name, FrameSize size, NativeImage image, ResourceMetadata metadata, PBRType pbrType) {
-			super(name, size, image, metadata.getSection(AnimationMetadataSection.TYPE), List.of(), MipmapStrategy.AUTO);
+			super(name, size, image, metadata.getSection(AnimationMetadataSection.TYPE), List.of(), Optional.empty());
 			this.pbrType = pbrType;
 		}
 

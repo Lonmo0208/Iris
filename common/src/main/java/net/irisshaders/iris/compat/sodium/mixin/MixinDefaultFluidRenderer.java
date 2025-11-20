@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFl
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.sodium.terrain.ChunkVertexExtension;
 import net.irisshaders.iris.vertices.sodium.terrain.VertexEncoderInterface;

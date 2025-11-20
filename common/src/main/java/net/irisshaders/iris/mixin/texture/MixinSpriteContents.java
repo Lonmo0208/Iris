@@ -18,8 +18,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SpriteContents.class)
 public class MixinSpriteContents implements SpriteContentsExtension {
-	@Redirect(method = "increaseMipLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lnet/minecraft/resources/Identifier;[Lcom/mojang/blaze3d/platform/NativeImage;ILnet/minecraft/client/renderer/texture/MipmapStrategy;)[Lcom/mojang/blaze3d/platform/NativeImage;"))
-	private NativeImage[] iris$redirectMipmapGeneration(Identifier id, NativeImage[] nativeImages, int mipLevel, MipmapStrategy strategy) {
+	@Redirect(
+		method = "increaseMipLevel",
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lnet/minecraft/resources/Identifier;[Lcom/mojang/blaze3d/platform/NativeImage;ILnet/minecraft/client/renderer/texture/MipmapStrategy;F)[Lcom/mojang/blaze3d/platform/NativeImage;"
+		)
+	)
+	private NativeImage[] iris$redirectMipmapGeneration(Identifier id, NativeImage[] nativeImages, int mipLevel, MipmapStrategy strategy, float alphaCutoffBias) {
 		if (this instanceof CustomMipmapGenerator.Provider provider) {
 			CustomMipmapGenerator generator = provider.getMipmapGenerator();
 			if (generator != null) {
@@ -30,6 +36,6 @@ public class MixinSpriteContents implements SpriteContentsExtension {
 				}
 			}
 		}
-		return MipmapGenerator.generateMipLevels(id, nativeImages, mipLevel, strategy);
+		return MipmapGenerator.generateMipLevels(id, nativeImages, mipLevel, strategy, alphaCutoffBias);
 	}
 }

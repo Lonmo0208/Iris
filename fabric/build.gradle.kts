@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.13.3")
+    id("fabric-loom") version ("1.14.0-alpha.26")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -41,12 +41,12 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addRuntimeFabricModule(name: String) {
-        val module = fabricApi.module(name, FABRIC_API_VERSION)
+        val module = fabricApi.module(name, "0.138.3+1.21.11")
         modRuntimeOnly(module)
     }
 
     fun addEmbeddedFabricModule(name: String) {
-        val module = fabricApi.module(name, FABRIC_API_VERSION)
+        val module = fabricApi.module(name, "0.138.3+1.21.11")
         modImplementation(module)
         include(module)
     }
