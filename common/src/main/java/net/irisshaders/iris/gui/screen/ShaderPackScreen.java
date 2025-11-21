@@ -286,6 +286,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			).build();
 			this.addRenderableWidget(openFolderButton);
 
+			this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("iris.shaderPackConfig.title"),
+					button -> this.minecraft.setScreen(new ShaderPackConfigScreen(this)), buttonTransition)
+				.bounds(bottomCenter + 208, this.height - 27, 100, 20)
+				.build());
+
 			this.screenSwitchButton = this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("options.iris.shaderPackList"), button -> {
 					this.optionMenuOpen = !this.optionMenuOpen;
 
