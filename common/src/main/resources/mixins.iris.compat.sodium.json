@@ -21,9 +21,7 @@
     "MixinRenderSectionManager",
     "MixinRenderSectionManagerShadow",
     "MixinShaderChunkRenderer",
-    "MixinSodiumGameOptionPages",
     "MixinSodiumGameOptions",
-    "MixinSodiumOptionsGUI",
     "MixinSodiumWorldRenderer"
   ],
   "injectors": {

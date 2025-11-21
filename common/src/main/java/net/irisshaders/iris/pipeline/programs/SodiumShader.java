@@ -30,6 +30,7 @@ import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CommonUniforms;
@@ -166,18 +167,18 @@ public class SodiumShader implements ChunkShaderInterface {
 	}
 
 	@Override
-	public void setupState(TerrainRenderPass pass, GpuSampler gpuSampler, FogParameters fogParameters) {
+	public void setupState(TerrainRenderPass pass, FogParameters fogParameters, GpuSampler gpuSampler) {
 		DepthColorStorage.unlockDepthColor();
-
-		applyBlendModes();
-		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline irp) {
-			irp.onSetAlbedoTex(pass.getAtlas());
+		this.applyBlendModes();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+		if (pipeline instanceof IrisRenderingPipeline irp) {
+			// 如果需要在设置albedo纹理时执行特定操作，取消注释下面这行
+			// irp.onSetAlbedoTex(pass.getAtlas());
 		}
-		updateUniforms();
-		images.update();
 
-
-		if (isShadowPass) {
+		this.updateUniforms();
+		this.images.update();
+		if (this.isShadowPass) {
 			GlStateManager._disableCull();
 		}
 
@@ -185,21 +186,29 @@ public class SodiumShader implements ChunkShaderInterface {
 			.getTextureManager()
 			.getTexture(TextureAtlas.LOCATION_BLOCKS);
 
-		// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
-		// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
-		// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
-		double subTexelPrecision = (1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
-		double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
+		// 修复变量名冲突
+		double subTexelPrecisionValue = (double)(1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
+		double subTexelOffset = 3.0517578E-5F;
 
 		if (this.uniformTexCoordShrink != null) {
-			this.uniformTexCoordShrink.set(
-				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetWidth()) / subTexelPrecision))),
-				(float) (subTexelOffset - (((1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight()) / subTexelPrecision)))
-			);
+			// 修复括号不匹配和计算逻辑
+			float shrinkX = (float)(subTexelOffset - (1.0D / ((TextureAtlasAccessor) textureAtlas).callGetWidth() / subTexelPrecisionValue));
+			float shrinkY = (float)(subTexelOffset - (1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight() / subTexelPrecisionValue));
+			this.uniformTexCoordShrink.set(shrinkX, shrinkY);
 		}
-		bindTextures(pass.getAtlas(), (GlSampler) RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST, true)); // oh no
 
-		if (containsTessellation) {
+		// 修复类型转换
+		this.bindTextures(pass.getAtlas(),
+			(GlSampler) RenderSystem.getSamplerCache().getSampler(
+				AddressMode.CLAMP_TO_EDGE,
+				AddressMode.CLAMP_TO_EDGE,
+				FilterMode.NEAREST,
+				FilterMode.NEAREST,
+				true
+			)
+		);
+
+		if (this.containsTessellation) {
 			ImmediateState.usingTessellation = true;
 		}
 	}

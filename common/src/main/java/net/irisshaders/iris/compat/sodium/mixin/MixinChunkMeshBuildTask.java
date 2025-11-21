@@ -36,7 +36,7 @@ public class MixinChunkMeshBuildTask {
 		if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
 
 		if (WorldRenderingSettings.INSTANCE.shouldVoxelizeLightBlocks() && blockState.getBlock() instanceof LightBlock) {
-			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT);
+			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT_MIPPED);
 			int id = WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(blockState);
 			for (int i = 0; i < 4; i++) {
 				// TODO: Add ignoreMidBlock support
@@ -51,7 +51,7 @@ public class MixinChunkMeshBuildTask {
 				vertices[i].color = 0;
 				vertices[i].light = blockState.getLightEmission() << 4 | blockState.getLightEmission() << 20;
 			}
-			buildBuffers.getVertexBuffer(ModelQuadFacing.UNASSIGNED).push(vertices, DefaultMaterials.CUTOUT);
+			buildBuffers.getVertexBuffer(ModelQuadFacing.UNASSIGNED).push(vertices, DefaultMaterials.CUTOUT_MIPPED);
 			//((BlockSensitiveBufferBuilder) buffers).ignoreMidBlock(false);
 		}
 	}

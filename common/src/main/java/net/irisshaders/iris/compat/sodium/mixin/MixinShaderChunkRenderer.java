@@ -31,7 +31,7 @@ public abstract class MixinShaderChunkRenderer {
 	protected abstract GlProgram<ChunkShaderInterface> compileProgram(ChunkShaderOptions options);
 
 	@Inject(method = "begin", at = @At("HEAD"))
-	private void iris$resetState(TerrainRenderPass pass, GpuSampler sampler, FogParameters parameters, CallbackInfo ci) {
+	private void iris$resetState(TerrainRenderPass pass, FogParameters parameters, GpuSampler terrainSampler, CallbackInfo ci) {
 		BlendModeOverride.restore();
 	}
 
