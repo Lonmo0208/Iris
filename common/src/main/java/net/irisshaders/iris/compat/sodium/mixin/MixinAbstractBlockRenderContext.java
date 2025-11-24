@@ -34,18 +34,9 @@ public class MixinAbstractBlockRenderContext {
 
 	@Inject(method = "bufferDefaultModel", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelAccess;getQuads(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/client/renderer/block/model/BlockModelPart;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/util/RandomSource;Lnet/minecraft/client/renderer/chunk/ChunkSectionLayer;)Ljava/util/List;"))
 	private void checkDirectionNeo(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter, CallbackInfo ci, @Local Direction cullFace) {
-		if ((Object) this instanceof BlockRenderer r && WorldRenderingSettings.INSTANCE.getBlockStateIds() != null && cullFace != null) {
-			BlockState override = IrisModSupport.INSTANCE.getModelPartState(part);
-			if (override != null) {
-				//((BlockSensitiveBufferBuilder) ((BlockRendererAccessor) r)).overrideBlock(WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(override));
-			}
-		}
 	}
 
 	@Inject(method = "bufferDefaultModel", at = @At(value = "TAIL"))
 	private void checkDirectionNeo(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter, CallbackInfo ci) {
-		if ((Object) this instanceof BlockRenderer r && WorldRenderingSettings.INSTANCE.getBlockStateIds() != null) {
-			//((BlockSensitiveBufferBuilder) ((BlockRendererAccessor) r).getBuffers()).restoreBlock();
-		}
 	}
 }

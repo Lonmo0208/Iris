@@ -5,8 +5,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRend
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(BlockRenderer.class)
+@Mixin({BlockRenderer.class})
 public interface BlockRendererAccessor {
-	@Accessor
+	@Accessor("buffers")
 	ChunkBuildBuffers getBuffers();
 }

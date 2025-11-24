@@ -21,6 +21,9 @@
   "entrypoints": {
     "modmenu": [
       "net.irisshaders.iris.compat.modmenu.ModMenuIntegration"
+    ],
+    "sodium:config_api_user": [
+      "net.irisshaders.iris.compat.sodium.config.IrisConfig"
     ]
   },
   "mixins": [

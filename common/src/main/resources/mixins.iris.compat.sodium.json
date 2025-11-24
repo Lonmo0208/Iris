@@ -8,6 +8,7 @@
   "client": [
     "BlockRendererAccessor",
     "MixinAbstractBlockRenderContext",
+    "MixinSodiumOptions",
     "MixinBlockRenderer",
     "MixinChunkVertexConsumer",
     "MixinChunkMeshBuildTask",
