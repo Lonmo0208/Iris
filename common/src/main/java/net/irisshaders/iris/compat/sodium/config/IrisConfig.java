@@ -17,13 +17,17 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.client.Minecraft;
 
 public class IrisConfig implements ConfigEntryPoint {
+	public static final Identifier MONO = Identifier.fromNamespaceAndPath("iris", "textures/gui/config-icon-mono.png");
+	public static final Identifier COLOR = Identifier.fromNamespaceAndPath("iris", "textures/gui/iris-logo.png");
+
 	public IrisConfig() {
 	}
 
 	public void registerConfigLate(ConfigBuilder builder) {
 		builder.registerOwnModOptions()
 			.setName("Iris")
-			.setIcon(Identifier.fromNamespaceAndPath("iris", "textures/gui/iris-logo.png"))
+			.setIcon(MONO)
+			.setColorTheme(builder.createColorTheme().setBaseThemeRGB(-698654))
 			.addPage(builder.createExternalPage()
 				.setName(Component.translatable("options.iris.shaderPackSelection.title"))
 				.setScreenProvider((i) -> Minecraft.getInstance().setScreen(new ShaderPackScreen(i))))
