@@ -41,12 +41,12 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addRuntimeFabricModule(name: String) {
-        val module = fabricApi.module(name, "0.138.3+1.21.11")
+        val module = fabricApi.module(name, FABRIC_API_VERSION)
         modRuntimeOnly(module)
     }
 
     fun addEmbeddedFabricModule(name: String) {
-        val module = fabricApi.module(name, "0.138.3+1.21.11")
+        val module = fabricApi.module(name, FABRIC_API_VERSION)
         modImplementation(module)
         include(module)
     }
@@ -63,7 +63,7 @@ dependencies {
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
     addRuntimeFabricModule("fabric-lifecycle-events-v1")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
+    //addRuntimeFabricModule("fabric-renderer-api-v1")
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
