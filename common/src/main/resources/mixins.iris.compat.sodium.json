@@ -8,6 +8,8 @@
   "client": [
     "BlockRendererAccessor",
     "MixinAbstractBlockRenderContext",
+    "EnumOptionBuilderImplAccessor",
+    "IntegerOptionBuilderImplAccessor",
     "MixinSodiumOptions",
     "MixinBlockRenderer",
     "MixinChunkVertexConsumer",

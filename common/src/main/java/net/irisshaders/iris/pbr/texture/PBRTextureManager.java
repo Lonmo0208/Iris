@@ -4,7 +4,9 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
@@ -29,7 +31,7 @@ public class PBRTextureManager {
 	private static Runnable normalTextureChangeListener;
 	private static Runnable specularTextureChangeListener;
 
-	private final IntList toLoadNextFrame = new IntArrayList();
+	private final IntSet toLoadNextFrame = new IntArraySet();
 
 	static {
 		StateUpdateNotifiers.normalTextureChangeNotifier = listener -> normalTextureChangeListener = listener;
@@ -75,8 +77,9 @@ public class PBRTextureManager {
 
 	public void onNewFrame() {
 		if (!toLoadNextFrame.isEmpty()) {
-			for (int i = 0; i < toLoadNextFrame.size(); i++) {
-				int id = toLoadNextFrame.getInt(i);
+			var it = toLoadNextFrame.iterator();
+			while (it.hasNext()) {
+				int id = it.nextInt();
 				PBRTextureHolder holder = loadHolder(id);
 				holders.put(id, holder);
 			}

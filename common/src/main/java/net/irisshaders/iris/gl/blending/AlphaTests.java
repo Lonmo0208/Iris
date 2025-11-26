@@ -1,11 +1,10 @@
 package net.irisshaders.iris.gl.blending;
 
 public class AlphaTests {
-	public static final AlphaTest OFF;
-	public static final AlphaTest NON_ZERO_ALPHA;
-	public static final AlphaTest ONE_TENTH_ALPHA;
-	public static final AlphaTest HALF_ALPHA;
-	public static final AlphaTest VERTEX_ALPHA;
+	public static final AlphaTest OFF = AlphaTest.ALWAYS;
+	public static final AlphaTest NON_ZERO_ALPHA = new AlphaTest(AlphaTestFunction.GREATER, 0.0001F);
+	public static final AlphaTest ONE_TENTH_ALPHA = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+	public static final AlphaTest HALF_ALPHA = new AlphaTest(AlphaTestFunction.GREATER, 0.5F);
 
 	public AlphaTests() {
 	}

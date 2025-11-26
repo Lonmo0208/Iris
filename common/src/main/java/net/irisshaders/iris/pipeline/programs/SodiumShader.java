@@ -11,8 +11,12 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBool;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
@@ -20,6 +24,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -69,13 +74,19 @@ public class SodiumShader implements ChunkShaderInterface {
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final float alphaTest;
 	private final boolean containsTessellation;
+	private final boolean anisotropySupported;
 	private boolean isShadowPass;
+	private final GlUniformFloat2v uniformTexelSize;
+	private final GlUniformInt uniformCurrentTime;
+
+	private final GlUniformBlock uniformChunkData;
 
 	public SodiumShader(IrisRenderingPipeline pipeline, SodiumPrograms.Pass pass, ShaderBindingContext context,
 						int handle, BlendModeOverride blendModeOverride,
 						List<BufferBlendOverride> bufferBlendOverrides,
 						CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState, float alphaTest,
 						boolean containsTessellation) {
+		this.anisotropySupported = pipeline.hasFeature(FeatureFlags.TEXTURE_FILTERING);
 		this.uniformModelViewMatrix = context.bindUniformOptional("iris_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewMatrixInv = context.bindUniformOptional("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = context.bindUniformOptional("iris_NormalMatrix", GlUniformMatrix3f::new);
@@ -83,6 +94,11 @@ public class SodiumShader implements ChunkShaderInterface {
 		this.uniformProjectionMatrixInv = context.bindUniformOptional("iris_ProjectionMatrixInv", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformTexCoordShrink = context.bindUniformOptional("u_TexCoordShrink", GlUniformFloat2v::new);
+
+		this.uniformCurrentTime = context.bindUniformOptional("iris_CurrentTime", GlUniformInt::new);
+		this.uniformTexelSize = context.bindUniformOptional("iris_TexelSize", GlUniformFloat2v::new);
+
+		this.uniformChunkData = context.bindUniformBlockOptional("iris_ChunkData", 0);
 
 		this.alphaTest = alphaTest;
 		this.containsTessellation = containsTessellation;
@@ -131,8 +147,9 @@ public class SodiumShader implements ChunkShaderInterface {
 	}
 
 	@Override
-	public void setChunkData(net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer glBuffer, int i) {
-
+	public void setChunkData(net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer data, int time) {
+		if (uniformChunkData != null) uniformChunkData.bindBuffer(data);
+		if (uniformCurrentTime != null) uniformCurrentTime.set(time);
 	}
 
 	@Override
@@ -196,6 +213,15 @@ public class SodiumShader implements ChunkShaderInterface {
 			float shrinkY = (float)(subTexelOffset - (1.0D / ((TextureAtlasAccessor) textureAtlas).callGetHeight() / subTexelPrecisionValue));
 			this.uniformTexCoordShrink.set(shrinkX, shrinkY);
 		}
+
+		if (uniformTexelSize != null) {
+			this.uniformTexelSize.set(
+				(float) (1.0d / textureAtlas.getTexture().getWidth(0)),
+				(float) (1.0d / textureAtlas.getTexture().getHeight(0))
+			);
+		}
+
+		bindTextures(pass.getAtlas(), anisotropySupported ? (GlSampler) gpuSampler : (GlSampler) RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST, true)); // oh no
 
 		// 修复类型转换
 		this.bindTextures(pass.getAtlas(),

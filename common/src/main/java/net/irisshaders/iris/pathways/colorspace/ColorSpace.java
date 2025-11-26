@@ -11,11 +11,11 @@ public enum ColorSpace {
 
 	private final String name;
 
-	private ColorSpace(String name) {
+	ColorSpace(String name) {
 		this.name = name;
 	}
 
-    public Component getName() {
-		return Component.translatable(this.name);
+	public Component getName() {
+		return Component.literal(name);
 	}
 }

@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -32,11 +33,4 @@ public class MixinAbstractBlockRenderContext {
 	@Shadow
 	protected BlockAndTintGetter level;
 
-	@Inject(method = "bufferDefaultModel", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelAccess;getQuads(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/client/renderer/block/model/BlockModelPart;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/util/RandomSource;Lnet/minecraft/client/renderer/chunk/ChunkSectionLayer;)Ljava/util/List;"))
-	private void checkDirectionNeo(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter, CallbackInfo ci, @Local Direction cullFace) {
-	}
-
-	@Inject(method = "bufferDefaultModel", at = @At(value = "TAIL"))
-	private void checkDirectionNeo(BlockModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter, CallbackInfo ci) {
-	}
 }

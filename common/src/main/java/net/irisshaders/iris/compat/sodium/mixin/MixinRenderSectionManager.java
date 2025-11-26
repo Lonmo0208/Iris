@@ -30,11 +30,11 @@ public class MixinRenderSectionManager {
 		at = @At(value = "FIELD",
 			target = "Lnet/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings;useFogOcclusion:Z",
 			remap = false))
-	private boolean iris$disableFogOcclusion(SodiumOptions.PerformanceSettings settings) {
+	private boolean iris$disableFogOcclusion(SodiumOptions.PerformanceSettings instance) {
 		if (Iris.getCurrentPack().isPresent()) {
 			return false;
 		} else {
-			return settings.useFogOcclusion;
+			return instance.useFogOcclusion;
 		}
 	}
 }
