@@ -13,11 +13,9 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollection;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
-import net.minecraft.client.renderer.feature.CustomFeatureRenderer;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.feature.ModelPartFeatureRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -33,7 +31,7 @@ public class MixinModelStorageTrigger {
 	}
 
 	@WrapMethod(method = "submitModel")
-	private <S> void iris$changeRenderType(Model<? super S> model, S object, PoseStack poseStack, RenderType renderType, int i, int j, int k, @Nullable TextureAtlasSprite textureAtlasSprite, int l, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay, Operation<Void> original) {
+	private <S> void iris$changeRenderType(Model<? super S> model, S object, PoseStack poseStack, RenderType renderType, int i, int j, int k, @org.jspecify.annotations.Nullable TextureAtlasSprite textureAtlasSprite, int l, ModelFeatureRenderer.@org.jspecify.annotations.Nullable CrumblingOverlay crumblingOverlay, Operation<Void> original) {
 		if (ImmediateState.isRenderingBEs) {
 			renderType = OuterWrappedRenderType.wrapExactlyOnce("iris:block_entity", renderType, BlockEntityRenderStateShard.INSTANCE);
 		}

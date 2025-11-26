@@ -49,7 +49,7 @@ public class MixinTheEndPortalRenderer {
 	}
 
 	@Inject(method = "renderType", at = @At("HEAD"), cancellable = true)
-	private static void iris$renderType(CallbackInfoReturnable<RenderType> cir) {
+	private void iris$renderType(CallbackInfoReturnable<RenderType> cir) {
 		if (Iris.getCurrentPack().isPresent()) {
 			cir.setReturnValue(RenderTypes.entitySolid(TheEndPortalRenderer.END_PORTAL_LOCATION));
 		}

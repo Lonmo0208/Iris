@@ -46,7 +46,7 @@ public class MixinEntityRenderDispatcher {
 	private static int cachedId;
 
 	@WrapWithCondition(method = "submit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitShadow(Lcom/mojang/blaze3d/vertex/PoseStack;FLjava/util/List;)V"))
-	private static boolean iris$maybeSuppressEntityShadow(SubmitNodeCollector instance, PoseStack poseStack, float v, List<EntityRenderState.ShadowPiece> shadowPieces) {
+	private boolean iris$maybeSuppressEntityShadow(SubmitNodeCollector instance, PoseStack poseStack, float v, List<EntityRenderState.ShadowPiece> shadowPieces) {
 		return !iris$maybeSuppressShadow();
 	}
 

@@ -223,4 +223,8 @@ public class IrisConfig {
 		this.allowUnknownShaders = b;
 		save();
 	}
+
+	public boolean useLegacyShaderPack() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
+	}
 }

@@ -66,9 +66,8 @@ public class MixinGameRenderer {
 	@ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;update(IIDJLnet/minecraft/client/DeltaTracker;ILnet/minecraft/client/Camera;Z)V"))
 	private void iris$modifyBlur(Args args) {
 		if (this.minecraft.screen instanceof ShaderPackScreen sps) {
-			// TODO 1.21.6
 			float f = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), sps.blurTransition.getAsFloat());
-			args.set(5, (int) f); // TODO what?
+			args.set(5, (int) f);
 		}
 	}
 

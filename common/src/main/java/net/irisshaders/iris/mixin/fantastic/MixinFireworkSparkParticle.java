@@ -5,6 +5,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SimpleAnimatedParticle;
 import net.minecraft.client.particle.SpriteSet;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(targets = "net.minecraft.client.particle.FireworkParticles$SparkParticle")
@@ -14,7 +15,7 @@ public class MixinFireworkSparkParticle extends SimpleAnimatedParticle {
 	}
 
 	@Override
-	public Layer getLayer() {
+	public @NotNull Layer getLayer() {
 		return Iris.IS_FOOL ? Layer.TERRAIN : Layer.OPAQUE;
 	}
 }

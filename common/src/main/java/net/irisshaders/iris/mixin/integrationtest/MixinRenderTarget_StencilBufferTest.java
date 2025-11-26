@@ -37,14 +37,12 @@ public class MixinRenderTarget_StencilBufferTest {
 
 	@ModifyArgs(method = "createBuffers",
 		at = @At(value = "INVOKE",
-			target = "Lcom/mojang/blaze3d/systems/GpuDevice;createTexture(Ljava/util/function/Supplier;Lcom/mojang/blaze3d/textures/TextureFormat;III)Lcom/mojang/blaze3d/textures/GpuTexture;",
+			target = "Lcom/mojang/blaze3d/systems/GpuDevice;createTexture(Ljava/util/function/Supplier;ILcom/mojang/blaze3d/textures/TextureFormat;IIII)Lcom/mojang/blaze3d/textures/GpuTexture;",
 			remap = false,
 			ordinal = 0))
 	public void init(Args args) {
 		if (STENCIL) {
-			// internalformat
-			// NB: The original Gist sets this to 3, but that is incorrect. Arguments are zero-indexed.
-			args.set(1, IrisPlatformHelpers.getInstance().mojangDepthFormat(DepthBufferFormat.DEPTH_STENCIL));
+			args.set(2, IrisPlatformHelpers.getInstance().mojangDepthFormat(DepthBufferFormat.DEPTH_STENCIL));
 		}
 	}
 

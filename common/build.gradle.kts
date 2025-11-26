@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.13.3"
+    id("fabric-loom") version "1.14.0-alpha.26"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
