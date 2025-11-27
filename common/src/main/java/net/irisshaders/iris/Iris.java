@@ -23,8 +23,6 @@ import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
-import net.irisshaders.iris.shaderpack.AsyncShaderPack;
-import net.irisshaders.iris.shaderpack.DefltShaderPack;
 import net.irisshaders.iris.shaderpack.DimensionId;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
@@ -820,11 +818,11 @@ public class Iris {
 		loadShaderPackWhenPossible = true;
 	}
 
-	public static Path getIrisDir() {
+    public static Path getIrisDir() {
 		return IrisPlatformHelpers.getInstance().getConfigDir();
 	}
 
-	/**
+    /**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *

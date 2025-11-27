@@ -38,8 +38,6 @@ public class MixinSodiumWorldRenderer {
 	@Unique
 	private float lastSunAngle;
 
-	public MixinSodiumWorldRenderer() {
-	}
 
 	@Redirect(method = "setupTerrain", remap = false,
 		at = @At(value = "INVOKE",

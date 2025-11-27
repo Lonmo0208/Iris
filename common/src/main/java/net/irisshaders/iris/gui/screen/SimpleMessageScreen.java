@@ -1,12 +1,13 @@
 package net.irisshaders.iris.gui.screen;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.irisshaders.iris.gui.element.screen.IrisButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,14 +52,14 @@ public class SimpleMessageScreen extends Screen {
 		addInfoButton(centerX - buttonWidth / 2, startY + 10 * (buttonHeight + spacing), buttonWidth, buttonHeight,
 			Component.literal("• ").append(Component.translatable("iris.shaderPackConfig.version2.point4")));
 
-		this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK,
-				button -> this.minecraft.setScreen(parent))
+		this.addRenderableWidget(IrisButton.iris$builder(CommonComponents.GUI_BACK,
+				button -> this.minecraft.setScreen(parent), () -> 1.0F)
 			.bounds(centerX - 100, this.height - 30, 200, 20)
 			.build());
 	}
 
 	private void addInfoButton(int x, int y, int width, int height, Component text) {
-		Button button = Button.builder(text, btn -> {})
+		IrisButton button = IrisButton.iris$builder(text, btn -> {}, () -> 1.0F)
 			.pos(x, y)
 			.size(width, height)
 			.build();
@@ -67,8 +68,12 @@ public class SimpleMessageScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+	public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
 		super.render(guiGraphics, mouseX, mouseY, delta);
 		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+	}
+
+	public List<AbstractWidget> getInfoWidgets() {
+		return infoWidgets;
 	}
 }

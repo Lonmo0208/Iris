@@ -42,7 +42,9 @@ public class MixinRenderTarget_StencilBufferTest {
 			ordinal = 0))
 	public void init(Args args) {
 		if (STENCIL) {
-			args.set(2, IrisPlatformHelpers.getInstance().mojangDepthFormat(DepthBufferFormat.DEPTH_STENCIL));
+			// internalformat
+			// NB: The original Gist sets this to 3, but that is incorrect. Arguments are zero-indexed.
+			args.set(1, IrisPlatformHelpers.getInstance().mojangDepthFormat(DepthBufferFormat.DEPTH_STENCIL));
 		}
 	}
 

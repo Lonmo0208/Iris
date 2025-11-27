@@ -27,6 +27,9 @@ public abstract class MixinBufferBuilder_SeparateAo implements VertexConsumer {
 	public void putBulkData(PoseStack.Pose matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
 							float blue, float alpha, int[] lights, int overlay) {
 		if (WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+			float[] brightnesses1 = brightnesses;
+			int brightnessIndex = 0;
+
 			brightnesses = new float[brightnesses.length];
 			Arrays.fill(brightnesses, 1.0f);
 		}
