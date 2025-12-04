@@ -1,23 +1,23 @@
 
 plugins {
     id("java")
-    id("fabric-loom") version("1.14.0-alpha.26") apply(false)
+    id("fabric-loom") version("1.14.1") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "1.21.11-pre3" }
-val NEOFORGE_VERSION by extra { "21.11.0-alpha.1.21.11-pre3.20251126.164358" }
+val MINECRAFT_VERSION by extra { "1.21.11-pre5" }
+val NEOFORGE_VERSION by extra { "21.11.0-alpha.1.21.11-pre3.20251201.145838" }
 val FABRIC_LOADER_VERSION by extra { "0.18.1" }
-val FABRIC_API_VERSION by extra { "0.139.2+1.21.11" }
+val FABRIC_API_VERSION by extra { "0.139.4+1.21.11" }
 
-val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.7.3-snapshot+mc1.21.11-pre3-local.jar"))}
-val SODIUM_DEPENDENCY_NEO by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-0.7.3-snapshot+mc1.21.11-pre3-local.jar"))}
+val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.8.0-SNAPSHOT+mc1.21.11-pre5-local.jar"))}
+val SODIUM_DEPENDENCY_NEO by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-0.8.0-SNAPSHOT+mc1.21.11-pre5-local-mod.jar"))}
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.9.6" }
+val MOD_VERSION by extra { "1.10.0-beta" }
 
 allprojects {
     apply(plugin = "java")

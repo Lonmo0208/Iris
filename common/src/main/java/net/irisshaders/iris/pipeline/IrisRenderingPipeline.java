@@ -22,6 +22,7 @@ import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.GlImage;
+import net.irisshaders.iris.gl.image.ImageClearPass;
 import net.irisshaders.iris.gl.image.ImageHolder;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
@@ -171,7 +172,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ParticleRenderingSettings particleRenderingSettings;
 	private final PackDirectives packDirectives;
 	private final Set<GlImage> customImages;
-	private final GlImage[] clearImages;
+	private final ImmutableList<ImageClearPass> clearImages;
 	private final ShaderPack pack;
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
@@ -260,7 +261,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		}
 
-		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
+		this.clearImages = customImages.stream().filter(GlImage::shouldClear).map(ImageClearPass::create).collect(ImmutableList.toImmutableList());
 
 		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
 			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
@@ -878,9 +879,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		GLDebug.pushGroup(100, "Clear textures");
 
-		for (GlImage image : clearImages) {
-			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
-		}
+		clearImages.forEach(ImageClearPass::execute);
 
 		if (shadowRenderTargets != null) {
 			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
@@ -1232,6 +1231,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		dhCompat.clearPipeline();
 
 		customImages.forEach(GlImage::destroy);
+		clearImages.forEach(ImageClearPass::destroy);
 
 		if (shadowRenderTargets != null) {
 			shadowRenderTargets.destroy();

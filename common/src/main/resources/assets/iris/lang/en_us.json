@@ -71,6 +71,7 @@
   "options.iris.colorSpace.sodium_tooltip": "The color space to transform the screen to. Works on top of shader packs. Use SRGB if unsure.",
   "options.iris.gui.hide": "Hide GUI",
   "options.iris.gui.show": "Show GUI",
+  "options.iris.settings": "Settings",
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",
   "pack.iris.list.label": "+ Drag and Drop Shader Packs to add",
