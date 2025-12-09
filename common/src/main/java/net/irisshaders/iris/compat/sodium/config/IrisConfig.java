@@ -23,9 +23,9 @@ public class IrisConfig implements ConfigEntryPoint {
 	@Override
 	public void registerConfigLate(ConfigBuilder builder) {
 		builder.registerOwnModOptions().setName("Iris").setIcon(MONO).setColorTheme(builder.createColorTheme().setBaseThemeRGB(0xFFf556e2))
-			.addPage(builder.createExternalPage().setName(Component.translatable("options.iris.shaderPackSelection.title")).setScreenProvider(i -> Minecraft.getInstance().setScreen(new ShaderPackScreen(i))))
+			.addPage(builder.createExternalPage().setName(Component.translatable("options.iris.shaderPackSelection.title")).setScreenConsumer(i -> Minecraft.getInstance().setScreen(new ShaderPackScreen(i))))
 			.addPage(builder.createOptionPage().setName(Component.translatable("options.iris.settings")).addOptionGroup(builder.createOptionGroup().addOption(builder.createExternalButtonOption(Identifier.fromNamespaceAndPath("iris", "settings")).setTooltip(Component.translatable("options.iris.shaderPackList.sodium_tooltip"))
-						.setName(Component.translatable("options.iris.shaderPackList")).setScreenProvider(i -> Minecraft.getInstance().setScreen(new ShaderPackScreen(i)))).addOption(builder.createExternalButtonOption(Identifier.fromNamespaceAndPath("iris", "shaderPackConfig")).setTooltip(Component.translatable("options.iris.shaderPackConfig.sodium_tooltip")).setName(Component.translatable("iris.shaderPackConfig.title")).setScreenProvider(i -> Minecraft.getInstance().setScreen(new ShaderPackConfigScreen(i)))))
+						.setName(Component.translatable("options.iris.shaderPackList")).setScreenConsumer(i -> Minecraft.getInstance().setScreen(new ShaderPackScreen(i)))).addOption(builder.createExternalButtonOption(Identifier.fromNamespaceAndPath("iris", "shaderPackConfig")).setTooltip(Component.translatable("options.iris.shaderPackConfig.sodium_tooltip")).setName(Component.translatable("iris.shaderPackConfig.title")).setScreenConsumer(i -> Minecraft.getInstance().setScreen(new ShaderPackConfigScreen(i)))))
 				.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("iris", "colorSpace"), ColorSpace.class)
 					.setBinding(i -> {
 						IrisVideoSettings.colorSpace = i;

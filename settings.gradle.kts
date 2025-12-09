@@ -10,6 +10,6 @@ pluginManagement {
 
 include(
 "common"
-, "fabric"
+,"fabric"
 //,"neoforge"
 )
