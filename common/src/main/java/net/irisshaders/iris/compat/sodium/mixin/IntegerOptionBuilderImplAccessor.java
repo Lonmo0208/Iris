@@ -7,5 +7,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(targets = "net.caffeinemc.mods.sodium.client.config.builder.IntegerOptionBuilderImpl")
 public interface IntegerOptionBuilderImplAccessor {
 	@Accessor("valueFormatter")
-	ControlValueFormatter getValueFormatter();
+	ControlValueFormatter iris$getValueFormatter();
 }

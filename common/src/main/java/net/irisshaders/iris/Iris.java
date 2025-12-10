@@ -817,8 +817,12 @@ public class Iris {
 	public static void loadShaderpackWhenPossible() {
 		loadShaderPackWhenPossible = true;
 	}
-
-    public static Path getIrisDir() {
+  
+	public static String getVersionSimple() {
+		return getVersion().split("\\+")[0];
+	}
+  
+  public static Path getIrisDir() {
 		return IrisPlatformHelpers.getInstance().getConfigDir();
 	}
 

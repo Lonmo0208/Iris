@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.14.1")
+    id("fabric-loom") version ("1.14.4")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -110,7 +110,7 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-            environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            environmentVariable("LD_PRELOAD", "/home/ims/renderdoc/build/lib/librenderdoc.so")
             vmArgs("-DMC_DEBUG_ENABLED=true", "-DMC_DEBUG_DUMP_TEXTURE_ATLAS=true")
             programArgs("--renderDebugLabels")
         }
