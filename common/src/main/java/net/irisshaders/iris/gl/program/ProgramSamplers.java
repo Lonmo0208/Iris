@@ -15,7 +15,7 @@ import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
-import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +78,7 @@ public class ProgramSamplers {
 			samplerBinding.update();
 		}
 
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + activeTexture);
 	}
 
 	public void removeListeners() {

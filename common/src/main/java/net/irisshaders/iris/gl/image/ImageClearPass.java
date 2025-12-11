@@ -2,7 +2,7 @@ package net.irisshaders.iris.gl.image;
 
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 
 public abstract class ImageClearPass {
 	protected final GlFramebuffer framebuffer;
@@ -33,7 +33,7 @@ public abstract class ImageClearPass {
 
 		@Override
 		public void execute() {
-			IrisRenderSystem.clearBufferfv(this.framebuffer.getId(), GL30C.GL_COLOR, 0, new float[]{0.0f, 0.0f, 0.0f, 0.0f});
+			IrisRenderSystem.clearBufferfv(this.framebuffer.getId(), GL46C.GL_COLOR, 0, new float[]{0.0f, 0.0f, 0.0f, 0.0f});
 		}
 	}
 
@@ -44,7 +44,7 @@ public abstract class ImageClearPass {
 
 		@Override
 		public void execute() {
-			IrisRenderSystem.clearBufferiv(this.framebuffer.getId(), GL30C.GL_COLOR, 0, new int[]{0, 0, 0, 0});
+			IrisRenderSystem.clearBufferiv(this.framebuffer.getId(), GL46C.GL_COLOR, 0, new int[]{0, 0, 0, 0});
 		}
 	}
 
@@ -55,7 +55,7 @@ public abstract class ImageClearPass {
 
 		@Override
 		public void execute() {
-			IrisRenderSystem.clearBufferuiv(this.framebuffer.getId(), GL30C.GL_COLOR, 0, new int[]{0, 0, 0, 0});
+			IrisRenderSystem.clearBufferuiv(this.framebuffer.getId(), GL46C.GL_COLOR, 0, new int[]{0, 0, 0, 0});
 		}
 	}
 }

@@ -17,19 +17,7 @@ import net.minecraft.client.renderer.PerspectiveProjectionMatrixBuffer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3i;
-import org.lwjgl.opengl.ARBDirectStateAccess;
-import org.lwjgl.opengl.ARBDrawBuffersBlend;
-import org.lwjgl.opengl.ARBTextureSwizzle;
-import org.lwjgl.opengl.EXTShaderImageLoadStore;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL33C;
-import org.lwjgl.opengl.GL42C;
-import org.lwjgl.opengl.GL43C;
-import org.lwjgl.opengl.GL45C;
-import org.lwjgl.opengl.GL46C;
-import org.lwjgl.opengl.NVXGPUMemoryInfo;
+import org.lwjgl.opengl.*;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -48,13 +36,13 @@ public class IrisRenderSystem {
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
 	private static boolean supportsTesselation;
-	private static int polygonMode = GL43C.GL_FILL;
-	private static int backupPolygonMode = GL43C.GL_FILL;
+	private static int polygonMode = GL46C.GL_FILL;
+	private static int backupPolygonMode = GL46C.GL_FILL;
 	private static int[] samplers;
 	private static final IntList textureToUnswizzle = new IntArrayList();
 
 	public static void initRenderer() {
-		if (GL.getCapabilities().OpenGL45) {
+		if (GL.getCapabilities().OpenGL46) {
 			dsaState = new DSACore();
 			Iris.logger.info("OpenGL 4.5 detected, enabling DSA.");
 		} else if (GL.getCapabilities().GL_ARB_direct_state_access) {
@@ -65,23 +53,23 @@ public class IrisRenderSystem {
 			Iris.logger.info("DSA support not detected.");
 		}
 
-		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
+		hasMultibind = GL.getCapabilities().OpenGL46 || GL.getCapabilities().GL_ARB_multi_bind;
 		perspectiveProjectionMatrixBuffer = new PerspectiveProjectionMatrixBuffer("Iris shadow map projection");
 
 		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
-		supportsTesselation = GL.getCapabilities().GL_ARB_tessellation_shader || GL.getCapabilities().OpenGL40;
+		supportsTesselation = GL.getCapabilities().GL_ARB_tessellation_shader || GL.getCapabilities().OpenGL46;
 
 		samplers = new int[SamplerLimits.get().getMaxTextureUnits()];
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glGetIntegerv(pname, params);
+		GL46C.glGetIntegerv(pname, params);
 	}
 
 	public static void getFloatv(int pname, float[] params) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glGetFloatv(pname, params);
+		GL46C.glGetFloatv(pname, params);
 	}
 
 	public static void generateMipmaps(int texture, int mipmapTarget) {
@@ -91,75 +79,75 @@ public class IrisRenderSystem {
 
 	public static void bindAttributeLocation(int program, int index, CharSequence name) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glBindAttribLocation(program, index, name);
+		GL46C.glBindAttribLocation(program, index, name);
 	}
 
 	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThread();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
+		GL46C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
 	}
 
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThread();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+		GL46C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
 	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThread();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
+		GL46C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniformMatrix4fv(location, transpose, matrix);
+		GL46C.glUniformMatrix4fv(location, transpose, matrix);
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, float[] matrix) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniformMatrix4fv(location, transpose, matrix);
+		GL46C.glUniformMatrix4fv(location, transpose, matrix);
 	}
 
 	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
+		GL46C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static void uniform1f(int location, float v0) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform1f(location, v0);
+		GL46C.glUniform1f(location, v0);
 	}
 
 	public static void uniform2f(int location, float v0, float v1) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform2f(location, v0, v1);
+		GL46C.glUniform2f(location, v0, v1);
 	}
 
 	public static void uniform2i(int location, int v0, int v1) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform2i(location, v0, v1);
+		GL46C.glUniform2i(location, v0, v1);
 	}
 
 	public static void uniform3f(int location, float v0, float v1, float v2) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform3f(location, v0, v1, v2);
+		GL46C.glUniform3f(location, v0, v1, v2);
 	}
 
 	public static void uniform3i(int location, int v0, int v1, int v2) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform3i(location, v0, v1, v2);
+		GL46C.glUniform3i(location, v0, v1, v2);
 	}
 
 	public static void uniform4f(int location, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform4f(location, v0, v1, v2, v3);
+		GL46C.glUniform4f(location, v0, v1, v2, v3);
 	}
 
 	public static void uniform4i(int location, int v0, int v1, int v2, int v3) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniform4i(location, v0, v1, v2, v3);
+		GL46C.glUniform4i(location, v0, v1, v2, v3);
 	}
 
 	public static void texParameteriv(int texture, int target, int pname, int[] params) {
@@ -172,7 +160,7 @@ public class IrisRenderSystem {
 	 */
 	public static void texParameterivDirect(int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glTexParameteriv(target, pname, params);
+		GL46C.glTexParameteriv(target, pname, params);
 	}
 
 	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
@@ -191,12 +179,12 @@ public class IrisRenderSystem {
 
 	public static String getProgramInfoLog(int program) {
 		RenderSystem.assertOnRenderThread();
-		return GL32C.glGetProgramInfoLog(program);
+		return GL46C.glGetProgramInfoLog(program);
 	}
 
 	public static String getShaderInfoLog(int shader) {
 		RenderSystem.assertOnRenderThread();
-		return GL32C.glGetShaderInfoLog(shader);
+		return GL46C.glGetShaderInfoLog(shader);
 	}
 
 	public static void drawBuffers(int framebuffer, int[] buffers) {
@@ -226,17 +214,17 @@ public class IrisRenderSystem {
 
 	public static String getActiveUniform(int program, int index, int size, IntBuffer type, IntBuffer name) {
 		RenderSystem.assertOnRenderThread();
-		return GL32C.glGetActiveUniform(program, index, size, type, name);
+		return GL46C.glGetActiveUniform(program, index, size, type, name);
 	}
 
 	public static void readPixels(int x, int y, int width, int height, int format, int type, float[] pixels) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glReadPixels(x, y, width, height, format, type, pixels);
+		GL46C.glReadPixels(x, y, width, height, format, type, pixels);
 	}
 
 	public static void bufferData(int target, float[] data, int usage) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glBufferData(target, data, usage);
+		GL46C.glBufferData(target, data, usage);
 	}
 
 	public static int bufferStorage(int target, float[] data, int usage) {
@@ -246,23 +234,23 @@ public class IrisRenderSystem {
 
 	public static void bufferStorage(int target, long size, int flags) {
 		RenderSystem.assertOnRenderThread();
-		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
-		GL45C.glBufferStorage(target, size, flags);
+		// The ARB version is identical to GL46 and redirects, so this should work on ARB as well.
+		GL46C.glBufferStorage(target, size, flags);
 	}
 
 	public static void bindBufferBase(int target, Integer index, int buffer) {
 		RenderSystem.assertOnRenderThread();
-		GL43C.glBindBufferBase(target, index, buffer);
+		GL46C.glBindBufferBase(target, index, buffer);
 	}
 
 	public static void vertexAttrib4f(int index, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glVertexAttrib4f(index, v0, v1, v2, v3);
+		GL46C.glVertexAttrib4f(index, v0, v1, v2, v3);
 	}
 
 	public static void detachShader(int program, int shader) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glDetachShader(program, shader);
+		GL46C.glDetachShader(program, shader);
 	}
 
 	public static void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
@@ -276,16 +264,16 @@ public class IrisRenderSystem {
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertOnRenderThread();
-		if (GL.getCapabilities().OpenGL42 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
-			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+		if (GL.getCapabilities().OpenGL46 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
+			GL46C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
 		} else {
 			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
 		}
 	}
 
 	public static int getMaxImageUnits() {
-		if (GL.getCapabilities().OpenGL42 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
-			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
+		if (GL.getCapabilities().OpenGL46 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
+			return GlStateManager._getInteger(GL46C.GL_MAX_IMAGE_UNITS);
 		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
 			return GlStateManager._getInteger(EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT);
 		} else {
@@ -294,54 +282,54 @@ public class IrisRenderSystem {
 	}
 
 	public static boolean supportsSSBO() {
-		return GL.getCapabilities().OpenGL44 || (GL.getCapabilities().GL_ARB_shader_storage_buffer_object && GL.getCapabilities().GL_ARB_buffer_storage);
+		return GL.getCapabilities().OpenGL46 || (GL.getCapabilities().GL_ARB_shader_storage_buffer_object && GL.getCapabilities().GL_ARB_buffer_storage);
 	}
 
 	public static boolean supportsImageLoadStore() {
-		return GL.getCapabilities().glBindImageTexture != 0L || GL.getCapabilities().OpenGL42 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
+		return GL.getCapabilities().glBindImageTexture != 0L || GL.getCapabilities().OpenGL46 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
 	}
 
 	public static void genBuffers(int[] buffers) {
-		GL43C.glGenBuffers(buffers);
+		GL46C.glGenBuffers(buffers);
 	}
 
 	public static void clearBufferSubData(int glShaderStorageBuffer, int glR8, long offset, long size, int glRed, int glByte, int[] ints) {
-		GL43C.glClearBufferSubData(glShaderStorageBuffer, glR8, offset, size, glRed, glByte, ints);
+		GL46C.glClearBufferSubData(glShaderStorageBuffer, glR8, offset, size, glRed, glByte, ints);
 	}
 
 	public static void getProgramiv(int program, int value, int[] storage) {
-		GL32C.glGetProgramiv(program, value, storage);
+		GL46C.glGetProgramiv(program, value, storage);
 	}
 
 	public static void dispatchCompute(int workX, int workY, int workZ) {
-		GL45C.glDispatchCompute(workX, workY, workZ);
+		GL46C.glDispatchCompute(workX, workY, workZ);
 	}
 
 	public static void dispatchCompute(Vector3i workGroups) {
-		GL45C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
+		GL46C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
 	}
 
 	public static void memoryBarrier(int barriers) {
 		RenderSystem.assertOnRenderThread();
 
 		if (supportsCompute) {
-			GL45C.glMemoryBarrier(barriers);
+			GL46C.glMemoryBarrier(barriers);
 		}
 	}
 
 	public static boolean supportsBufferBlending() {
-		return GL.getCapabilities().GL_ARB_draw_buffers_blend || GL.getCapabilities().OpenGL40;
+		return GL.getCapabilities().GL_ARB_draw_buffers_blend || GL.getCapabilities().OpenGL46;
 	}
 
 	public static void disableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glDisablei(GL32C.GL_BLEND, buffer);
+		GL46C.glDisablei(GL46C.GL_BLEND, buffer);
 		((BooleanStateExtended) GlStateManagerAccessor.getBLEND().mode).setUnknownState();
 	}
 
 	public static void enableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glEnablei(GL32C.GL_BLEND, buffer);
+		GL46C.glEnablei(GL46C.GL_BLEND, buffer);
 		((BooleanStateExtended) GlStateManagerAccessor.getBLEND().mode).setUnknownState();
 	}
 
@@ -358,12 +346,12 @@ public class IrisRenderSystem {
 
 	public static int getUniformBlockIndex(int program, String uniformBlockName) {
 		RenderSystem.assertOnRenderThread();
-		return GL32C.glGetUniformBlockIndex(program, uniformBlockName);
+		return GL46C.glGetUniformBlockIndex(program, uniformBlockName);
 	}
 
 	public static void uniformBlockBinding(int program, int uniformBlockIndex, int uniformBlockBinding) {
 		RenderSystem.assertOnRenderThread();
-		GL32C.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+		GL46C.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
 	}
 
 	public static void setShadowProjection(Matrix4f shadowProjection) {
@@ -396,12 +384,12 @@ public class IrisRenderSystem {
 		if (glType == GL46C.GL_TEXTURE_2D) {
 			lastTex = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 		}
-		GL30C.glBindTexture(glType, glId);
+		GL46C.glBindTexture(glType, glId);
 	}
 
 	public static void restoreTexture() {
 		if (lastTex != -1) {
-			GL30C.glBindTexture(GL46C.GL_TEXTURE_2D, lastTex);
+			GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, lastTex);
 			lastTex = -1;
 		}
 	}
@@ -415,11 +403,11 @@ public class IrisRenderSystem {
 	}
 
 	public static int genSampler() {
-		return GL33C.glGenSamplers();
+		return GL46C.glGenSamplers();
 	}
 
 	public static void destroySampler(int glId) {
-		GL33C.glDeleteSamplers(glId);
+		GL46C.glDeleteSamplers(glId);
 	}
 
 	public static void bindSamplerToUnit(int unit, int sampler) {
@@ -427,7 +415,7 @@ public class IrisRenderSystem {
 			return;
 		}
 
-		GL33C.glBindSampler(unit, sampler);
+		GL46C.glBindSampler(unit, sampler);
 
 		samplers[unit] = sampler;
 	}
@@ -437,31 +425,31 @@ public class IrisRenderSystem {
 		for (int i = 0; i < samplers.length; i++) {
 			if (samplers[i] != 0) {
 				usedASampler = true;
-				if (!hasMultibind) GL33C.glBindSampler(i, 0);
+				if (!hasMultibind) GL46C.glBindSampler(i, 0);
 				samplers[i] = 0;
 			}
 		}
 		if (usedASampler && hasMultibind) {
-			GL45C.glBindSamplers(0, emptyArray);
+			GL46C.glBindSamplers(0, emptyArray);
 		}
 	}
 
 
 	public static void samplerParameteri(int sampler, int pname, int param) {
-		GL33C.glSamplerParameteri(sampler, pname, param);
+		GL46C.glSamplerParameteri(sampler, pname, param);
 	}
 
 	public static void samplerParameterf(int sampler, int pname, float param) {
-		GL33C.glSamplerParameterf(sampler, pname, param);
+		GL46C.glSamplerParameterf(sampler, pname, param);
 	}
 
 	public static void samplerParameteriv(int sampler, int pname, int[] params) {
-		GL33C.glSamplerParameteriv(sampler, pname, params);
+		GL46C.glSamplerParameteriv(sampler, pname, params);
 	}
 
 	public static long getVRAM() {
 		if (GL.getCapabilities().GL_NVX_gpu_memory_info) {
-			return GL32C.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) * 1024L;
+			return GL46C.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) * 1024L;
 		} else {
 			return 4294967296L;
 		}
@@ -469,28 +457,28 @@ public class IrisRenderSystem {
 
 	public static void deleteBuffers(int glId) {
 		RenderSystem.assertOnRenderThread();
-		GL43C.glDeleteBuffers(glId);
+		GL46C.glDeleteBuffers(glId);
 	}
 
 	public static void setPolygonMode(int mode) {
 		if (mode != polygonMode) {
 			polygonMode = mode;
-			GL43C.glPolygonMode(GL43C.GL_FRONT_AND_BACK, mode);
+			GL46C.glPolygonMode(GL46C.GL_FRONT_AND_BACK, mode);
 		}
 	}
 
 	public static void overridePolygonMode() {
 		backupPolygonMode = polygonMode;
-		setPolygonMode(GL43C.GL_FILL);
+		setPolygonMode(GL46C.GL_FILL);
 	}
 
 	public static void restorePolygonMode() {
 		setPolygonMode(backupPolygonMode);
-		backupPolygonMode = GL43C.GL_FILL;
+		backupPolygonMode = GL46C.GL_FILL;
 	}
 
 	public static void dispatchComputeIndirect(long offset) {
-		GL43C.glDispatchComputeIndirect(offset);
+		GL46C.glDispatchComputeIndirect(offset);
 	}
 
 	public static void bindBuffer(int target, int buffer) {
@@ -525,7 +513,7 @@ public class IrisRenderSystem {
 	public static void onProgramUse() {
 		for (int i = 0; i < textureToUnswizzle.size(); i++) {
 			texParameteriv(textureToUnswizzle.getInt(i), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
-				new int[]{GL30C.GL_RED, GL30C.GL_GREEN, GL30C.GL_BLUE, GL30C.GL_ALPHA});
+				new int[]{GL46C.GL_RED, GL46C.GL_GREEN, GL46C.GL_BLUE, GL46C.GL_ALPHA});
 		}
 		textureToUnswizzle.clear();
 	}
@@ -675,8 +663,8 @@ public class IrisRenderSystem {
 
 		@Override
 		public int bufferStorage(int target, float[] data, int usage) {
-			int buffer = GL45C.glCreateBuffers();
-			GL45C.glNamedBufferData(buffer, data, usage);
+			int buffer = GL46C.glCreateBuffers();
+			GL46C.glNamedBufferData(buffer, data, usage);
 			return buffer;
 		}
 
@@ -711,84 +699,84 @@ public class IrisRenderSystem {
 		public void generateMipmaps(int texture, int target) {
 			int previous = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			GlStateManager._bindTexture(texture);
-			GL32C.glGenerateMipmap(target);
+			GL46C.glGenerateMipmap(target);
 			GlStateManager._bindTexture(previous);
 		}
 
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
 			bindTextureForSetup(target, texture);
-			GL32C.glTexParameteri(target, pname, param);
+			GL46C.glTexParameteri(target, pname, param);
 			restoreTexture();
 		}
 
 		@Override
 		public void texParameterf(int texture, int target, int pname, float param) {
 			bindTextureForSetup(target, texture);
-			GL32C.glTexParameterf(target, pname, param);
+			GL46C.glTexParameterf(target, pname, param);
 			restoreTexture();
 		}
 
 		@Override
 		public void texParameteriv(int texture, int target, int pname, int[] params) {
 			bindTextureForSetup(target, texture);
-			GL32C.glTexParameteriv(target, pname, params);
+			GL46C.glTexParameteriv(target, pname, params);
 			restoreTexture();
 		}
 
 		@Override
 		public void readBuffer(int framebuffer, int buffer) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glReadBuffer(buffer);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
+			GL46C.glReadBuffer(buffer);
 		}
 
 		@Override
 		public void drawBuffers(int framebuffer, int[] buffers) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glDrawBuffers(buffers);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
+			GL46C.glDrawBuffers(buffers);
 		}
 
 		@Override
 		public void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glClearBufferfv(buffer, drawbuffer, values);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
+			GL46C.glClearBufferfv(buffer, drawbuffer, values);
 		}
 
 		@Override
 		public void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glClearBufferiv(buffer, drawbuffer, values);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
+			GL46C.glClearBufferiv(buffer, drawbuffer, values);
 		}
 
 		@Override
 		public void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glClearBufferuiv(buffer, drawbuffer, values);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
+			GL46C.glClearBufferuiv(buffer, drawbuffer, values);
 		}
 
 		@Override
 		public int getTexParameteri(int texture, int target, int pname) {
 			bindTextureForSetup(target, texture);
-			return GL32C.glGetTexParameteri(target, pname);
+			return GL46C.glGetTexParameteri(target, pname);
 		}
 
 		@Override
 		public void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
 			int previous = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			GlStateManager._bindTexture(destTexture);
-			GL32C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
+			GL46C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
 			GlStateManager._bindTexture(previous);
 		}
 
 		@Override
 		public void bindTextureToUnit(int target, int unit, int texture) {
 			int activeTexture = GlStateManagerAccessor.getActiveTexture();
-			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
+			GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + unit);
 			GL46C.glBindTexture(target, texture);
 			if (target == GL46C.GL_TEXTURE_2D) {
 				GlStateManagerAccessor.getTEXTURES()[unit].binding = texture;
 			}
-			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + activeTexture);
+			GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + activeTexture);
 		}
 
 		@Override
@@ -803,21 +791,21 @@ public class IrisRenderSystem {
 
 		@Override
 		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_READ_FRAMEBUFFER, source);
-			GlStateManager._glBindFramebuffer(GL32C.GL_DRAW_FRAMEBUFFER, dest);
-			GL32C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+			GlStateManager._glBindFramebuffer(GL46C.GL_READ_FRAMEBUFFER, source);
+			GlStateManager._glBindFramebuffer(GL46C.GL_DRAW_FRAMEBUFFER, dest);
+			GL46C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 		}
 
 		@Override
 		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 			GlStateManager._glBindFramebuffer(fbtarget, fb);
-			GL32C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
+			GL46C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
 		}
 
 		@Override
 		public int createFramebuffer() {
 			int framebuffer = GlStateManager.glGenFramebuffers();
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, framebuffer);
 			return framebuffer;
 		}
 

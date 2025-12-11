@@ -4,7 +4,7 @@ package net.irisshaders.iris.mixin.integrationtest;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL46;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -54,7 +54,7 @@ public class MixinRenderTarget_StencilBufferTest {
 	public void init2(Args args) {
 		if (STENCIL) {
 			// attachment
-			args.set(1, GL30.GL_DEPTH_STENCIL_ATTACHMENT);
+			args.set(1, GL46.GL_DEPTH_STENCIL_ATTACHMENT);
 		}
 	}
 }

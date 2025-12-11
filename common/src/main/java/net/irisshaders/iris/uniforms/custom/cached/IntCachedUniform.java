@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL46;
 
 import java.util.function.IntSupplier;
 

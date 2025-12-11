@@ -9,7 +9,7 @@ import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
-import org.lwjgl.opengl.GL21C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ import java.util.Map;
 public class ClearPassCreator {
 	public static ImmutableList<ClearPass> createClearPasses(RenderTargets renderTargets, boolean fullClear,
 															 PackRenderTargetDirectives renderTargetDirectives) {
-		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
+		final int maxDrawBuffers = GlStateManager._getInteger(GL46C.GL_MAX_DRAW_BUFFERS);
 
 		// Sort buffers by their clear color so we can group up glClear calls.
 		Map<Vector2i, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
@@ -67,10 +67,10 @@ public class ClearPassCreator {
 
 				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
 				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
-					renderTargets.createClearFramebuffer(true, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+					renderTargets.createClearFramebuffer(true, clearBuffers), GL46C.GL_COLOR_BUFFER_BIT));
 
 				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
-					renderTargets.createClearFramebuffer(false, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+					renderTargets.createClearFramebuffer(false, clearBuffers), GL46C.GL_COLOR_BUFFER_BIT));
 			}
 		}));
 
@@ -83,7 +83,7 @@ public class ClearPassCreator {
 			return ImmutableList.of();
 		}
 
-		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
+		final int maxDrawBuffers = GlStateManager._getInteger(GL46C.GL_MAX_DRAW_BUFFERS);
 
 		// Sort buffers by their clear color so we can group up glClear calls.
 		Map<Vector4f, IntList> clearByColor = new HashMap<>();
@@ -119,10 +119,10 @@ public class ClearPassCreator {
 
 				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
 				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
-					renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+					renderTargets.createFramebufferWritingToAlt(clearBuffers), GL46C.GL_COLOR_BUFFER_BIT));
 
 				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
-					renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+					renderTargets.createFramebufferWritingToMain(clearBuffers), GL46C.GL_COLOR_BUFFER_BIT));
 			}
 		});
 

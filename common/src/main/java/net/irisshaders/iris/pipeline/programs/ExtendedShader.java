@@ -39,8 +39,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GL46C;
 import org.slf4j.Logger;
 
@@ -96,7 +96,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 
 		this.pipeline = parent;
 
-		GLDebug.nameObject(GL43C.GL_PROGRAM, programId, string);
+		GLDebug.nameObject(GL46C.GL_PROGRAM, programId, string);
 
 		((ShaderInstanceInterface) this).setShouldSkip(SkipList.NONE);
 
@@ -200,7 +200,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		if (intensitySwizzle && albedoTex != null) {
 			IrisRenderSystem.addUnswizzle(albedoTex.texture().iris$getGlId());
 			IrisRenderSystem.texParameteriv(albedoTex.texture().iris$getGlId(), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
-				new int[]{GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED});
+				new int[]{GL46C.GL_RED, GL46C.GL_RED, GL46C.GL_RED, GL46C.GL_RED});
 		}
 
 		ImmediateState.usingTessellation = usesTessellation;

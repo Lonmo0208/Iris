@@ -7,7 +7,7 @@ import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.KHRDebug;
 
 public class ProgramCreator {
@@ -46,9 +46,9 @@ public class ProgramCreator {
 			LOGGER.warn("Program link log for " + name + ": " + log);
 		}
 
-		int result = GlStateManager.glGetProgrami(program, GL20C.GL_LINK_STATUS);
+		int result = GlStateManager.glGetProgrami(program, GL46C.GL_LINK_STATUS);
 
-		if (result != GL20C.GL_TRUE) {
+		if (result != GL46C.GL_TRUE) {
 			throw new ShaderCompileException(name, log);
 		}
 

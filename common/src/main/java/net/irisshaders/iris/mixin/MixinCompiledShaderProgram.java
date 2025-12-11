@@ -14,7 +14,7 @@ import net.irisshaders.iris.pipeline.programs.IrisProgram;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL31C;
+import org.lwjgl.opengl.GL46C;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -93,7 +93,7 @@ public abstract class MixinCompiledShaderProgram implements ShaderInstanceInterf
 		if (this instanceof IrisProgram is) {
 			return is.iris$getBlockIndex(program, uniformBlockName);
 		} else {
-			return GL31C.glGetUniformBlockIndex(program, uniformBlockName);
+			return GL46C.glGetUniformBlockIndex(program, uniformBlockName);
 		}
 	}
 

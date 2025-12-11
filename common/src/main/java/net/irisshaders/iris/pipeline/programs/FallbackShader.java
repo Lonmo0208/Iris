@@ -23,7 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL31C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class FallbackShader extends GlProgram implements IrisProgram {
 
 	@Override
 	public int iris$getBlockIndex(int program, CharSequence uniformBlockName) {
-		return GL31C.glGetUniformBlockIndex(program, uniformBlockName);
+		return GL46C.glGetUniformBlockIndex(program, uniformBlockName);
 	}
 
 	@Override

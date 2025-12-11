@@ -5,7 +5,7 @@ import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL46;
 
 public class FloatCachedUniform extends CachedUniform {
 

@@ -8,8 +8,8 @@ import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,13 +26,13 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 		// By default, images are unblurred and not clamped.
 
 		if (textureData.getFilteringData().shouldBlur()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(getId(), GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MIN_FILTER, GL46C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(getId(), GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAG_FILTER, GL46C.GL_LINEAR);
 		}
 
 		if (textureData.getFilteringData().shouldClamp()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(getId(), GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_WRAP_S, GL46C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(getId(), GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_WRAP_T, GL46C.GL_CLAMP_TO_EDGE);
 		}
 
 		this.shouldBlur = textureData.getFilteringData().shouldBlur();

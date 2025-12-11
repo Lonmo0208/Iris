@@ -16,7 +16,7 @@ import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.targets.RenderTarget;
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -183,8 +183,8 @@ public class ShadowRenderTargets {
 			translucentDepthDirty = false;
 			IrisRenderSystem.blitFramebuffer(depthSourceFb.getId(), noTranslucentsDestFb.getId(), 0, 0, resolution, resolution,
 				0, 0, resolution, resolution,
-				GL30C.GL_DEPTH_BUFFER_BIT,
-				GL30C.GL_NEAREST);
+				GL46C.GL_DEPTH_BUFFER_BIT,
+				GL46C.GL_NEAREST);
 		} else {
 			DepthCopyStrategy.fastest(false).copy(depthSourceFb, mainDepth.iris$getGlId(), noTranslucentsDestFb, noTranslucents.iris$getGlId(),
 				resolution, resolution);
@@ -316,7 +316,7 @@ public class ShadowRenderTargets {
 		framebuffer.readBuffer(0);
 
 		int status = framebuffer.getStatus();
-		if (status != GL30C.GL_FRAMEBUFFER_COMPLETE) {
+		if (status != GL46C.GL_FRAMEBUFFER_COMPLETE) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
 

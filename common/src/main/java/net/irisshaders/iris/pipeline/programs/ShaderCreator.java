@@ -47,7 +47,7 @@ import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.KHRDebug;
 
 import java.io.ByteArrayInputStream;
@@ -218,9 +218,9 @@ public class ShaderCreator {
 			Iris.logger.warn("Shader compilation log for " + name + ": " + log);
 		}
 
-		int result = GlStateManager.glGetShaderi(shader, GL20C.GL_COMPILE_STATUS);
+		int result = GlStateManager.glGetShaderi(shader, GL46C.GL_COMPILE_STATUS);
 
-		if (result != GL20C.GL_TRUE) {
+		if (result != GL46C.GL_TRUE) {
 			throw new ShaderCompileException(name, log);
 		}
 

@@ -35,10 +35,10 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32;
-import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryStack;
 
@@ -74,44 +74,44 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	// This will bind  AbstractVertexAttribute
 	private IrisGenericRenderProgram(String name, boolean isShadowPass, boolean translucent, BlendModeOverride override, BufferBlendOverride[] bufferBlendOverrides, String vertex, String tessControl, String tessEval, String geometry, String fragment, CustomUniforms customUniforms, IrisRenderingPipeline pipeline) {
-		id = GL43C.glCreateProgram();
+		id = GL46C.glCreateProgram();
 
-		GL32.glBindAttribLocation(this.id, 0, "vPosition");
+		GL46.glBindAttribLocation(this.id, 0, "vPosition");
 
 		this.bufferBlendOverrides = bufferBlendOverrides;
 
 		GlShader vert = new GlShader(ShaderType.VERTEX, name + ".vsh", vertex);
-		GL43C.glAttachShader(id, vert.getHandle());
+		GL46C.glAttachShader(id, vert.getHandle());
 
 		GlShader tessCont = null;
 		if (tessControl != null) {
 			tessCont = new GlShader(ShaderType.TESSELATION_CONTROL, name + ".tcs", tessControl);
-			GL43C.glAttachShader(id, tessCont.getHandle());
+			GL46C.glAttachShader(id, tessCont.getHandle());
 		}
 
 		GlShader tessE = null;
 		if (tessEval != null) {
 			tessE = new GlShader(ShaderType.TESSELATION_EVAL, name + ".tes", tessEval);
-			GL43C.glAttachShader(id, tessE.getHandle());
+			GL46C.glAttachShader(id, tessE.getHandle());
 		}
 
 		GlShader geom = null;
 		if (geometry != null) {
 			geom = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometry);
-			GL43C.glAttachShader(id, geom.getHandle());
+			GL46C.glAttachShader(id, geom.getHandle());
 		}
 
 		GlShader frag = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragment);
-		GL43C.glAttachShader(id, frag.getHandle());
+		GL46C.glAttachShader(id, frag.getHandle());
 
-		GL32.glLinkProgram(this.id);
-		int status = GL32.glGetProgrami(this.id, 35714);
+		GL46.glLinkProgram(this.id);
+		int status = GL46.glGetProgrami(this.id, 35714);
 		if (status != 1) {
-			String message = "Shader link error in Iris DH program! Details: " + GL32.glGetProgramInfoLog(this.id);
+			String message = "Shader link error in Iris DH program! Details: " + GL46.glGetProgramInfoLog(this.id);
 			this.free();
 			throw new RuntimeException(message);
 		} else {
-			GL32.glUseProgram(this.id);
+			GL46.glUseProgram(this.id);
 		}
 
 		vert.destroy();
@@ -137,8 +137,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 		this.va = GlStateManager._glGenVertexArrays();
 		GlStateManager._glBindVertexArray(va);
-		GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 0, 0);
-		GL32.glEnableVertexAttribArray(0);
+		GL46.glVertexAttribPointer(0, 3, GL46.GL_FLOAT, false, 0, 0);
+		GL46.glEnableVertexAttribArray(0);
 
 		projectionUniform = tryGetUniformLocation2("iris_ProjectionMatrix");
 		projectionInverseUniform = tryGetUniformLocation2("iris_ProjectionMatrixInverse");
@@ -198,7 +198,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	}
 
 	public int tryGetUniformLocation2(CharSequence name) {
-		return GL32.glGetUniformLocation(this.id, name);
+		return GL46.glGetUniformLocation(this.id, name);
 	}
 
 	public void setUniform(int index, Matrix4f matrix) {
@@ -228,7 +228,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	// Override ShaderProgram.bind()
 	public void bind(DhApiRenderParam renderParam) {
 		GlStateManager._glBindVertexArray(va);
-		GL32C.glUseProgram(id);
+		GL46C.glUseProgram(id);
 		if (blend != null) blend.apply();
 
 		for (BufferBlendOverride override : bufferBlendOverrides) {
@@ -252,7 +252,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	public void unbind() {
 		GlStateManager._glBindVertexArray(0);
-		GL43C.glUseProgram(0);
+		GL46C.glUseProgram(0);
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		BlendModeOverride.restore();
@@ -260,8 +260,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	@Override
 	public void bindVertexBuffer(int i) {
-		GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, i);
-		GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 12, 0);
+		GL46.glBindBuffer(GL46.GL_ARRAY_BUFFER, i);
+		GL46.glVertexAttribPointer(0, 3, GL46.GL_FLOAT, false, 12, 0);
 	}
 
 	@Override
@@ -275,13 +275,13 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	}
 
 	public void free() {
-		GL43C.glDeleteProgram(id);
+		GL46C.glDeleteProgram(id);
 	}
 
 	public void fillIndirectUniformData(DhApiRenderParam dhApiRenderParam, DhApiRenderableBoxGroupShading dhApiRenderableBoxGroupShading, IDhApiRenderableBoxGroup boxGroup, DhApiVec3d camPos) {
 		bind(dhApiRenderParam);
 		GlStateManager._enableDepthTest();
-		GlStateManager._depthFunc(GL30C.GL_LEQUAL);
+		GlStateManager._depthFunc(GL46C.GL_LEQUAL);
 		this.setUniform(this.instancedShaderOffsetChunkUniform,
 			new DhApiVec3i(
 				getChunkPosFromDouble(boxGroup.getOriginBlockPos().x),
@@ -329,19 +329,19 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	}
 
 	private void setUniform(int index, int value) {
-		GL43C.glUniform1i(index, value);
+		GL46C.glUniform1i(index, value);
 	}
 
 	private void setUniform(int index, float value) {
-		GL43C.glUniform1f(index, value);
+		GL46C.glUniform1f(index, value);
 	}
 
 	private void setUniform(int index, DhApiVec3f pos) {
-		GL43C.glUniform3f(index, pos.x, pos.y, pos.z);
+		GL46C.glUniform3f(index, pos.x, pos.y, pos.z);
 	}
 
 	private void setUniform(int index, DhApiVec3i pos) {
-		GL43C.glUniform3i(index, pos.x, pos.y, pos.z);
+		GL46C.glUniform3i(index, pos.x, pos.y, pos.z);
 	}
 
 }

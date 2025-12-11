@@ -33,7 +33,7 @@ import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.sodium.terrain.FormatAnalyzer;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -169,7 +169,7 @@ public class SodiumPrograms {
 			.bindAttribute("at_midBlock", 14)
 			.link((shader) -> {
 				int handle = ((GlObject) shader).handle();
-				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
+				GLDebug.nameObject(GL46C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
 
 				if (!hasNormal) hasNormal = IrisRenderSystem.getAttribLocation(handle, "iris_Normal") != -1;
 				if (!hasMidBlock) hasMidBlock = IrisRenderSystem.getAttribLocation(handle, "at_midBlock") != -1;

@@ -51,7 +51,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -128,7 +128,7 @@ public class MixinLevelRenderer {
 		IrisRenderSystem.backupAndDisableCullingState(pipeline.shouldDisableOcclusionCulling());
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
-			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
+			IrisRenderSystem.setPolygonMode(GL46C.GL_LINE);
 		}
 	}
 
@@ -157,7 +157,7 @@ public class MixinLevelRenderer {
 		Profiler.get().popPush("iris_final");
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
-			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
+			IrisRenderSystem.setPolygonMode(GL46C.GL_FILL);
 		}
 		pipeline.finalizeLevelRendering();
 		pipeline = null;

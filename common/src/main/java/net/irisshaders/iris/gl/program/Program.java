@@ -3,7 +3,7 @@ package net.irisshaders.iris.gl.program;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
@@ -25,7 +25,7 @@ public final class Program extends GlResource {
 	}
 
 	public void use() {
-		IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
+		IrisRenderSystem.memoryBarrier(GL46C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL46C.GL_TEXTURE_FETCH_BARRIER_BIT | GL46C.GL_SHADER_STORAGE_BARRIER_BIT);
 		GlStateManager._glUseProgram(getGlId());
 
 		uniforms.update();

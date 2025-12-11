@@ -2,7 +2,7 @@ package net.irisshaders.iris.compat.dh;
 
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
-import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL46;
 
 public class DhFrameBufferWrapper implements IDhApiFramebuffer {
 	private final GlFramebuffer framebuffer;
@@ -36,7 +36,7 @@ public class DhFrameBufferWrapper implements IDhApiFramebuffer {
 	@Override
 	public int getStatus() {
 		this.bind();
-		return GL32.glCheckFramebufferStatus(GL32.GL_FRAMEBUFFER);
+		return GL46.glCheckFramebufferStatus(GL46.GL_FRAMEBUFFER);
 	}
 
 	@Override

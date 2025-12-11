@@ -3,7 +3,7 @@ package net.irisshaders.iris.mixin;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.joml.Vector4i;
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

@@ -19,7 +19,7 @@ import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 
@@ -262,7 +262,7 @@ public class DHCompatInternal {
 			translucentDepthDirty = false;
 			GlStateManager._bindTexture(depthTexNoTranslucent.getTextureId());
 			dhTerrainFramebuffer.bindAsReadBuffer();
-			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, DepthBufferFormat.DEPTH32F.getGlInternalFormat(), 0, 0, width, height, 0);
+			IrisRenderSystem.copyTexImage2D(GL46C.GL_TEXTURE_2D, 0, DepthBufferFormat.DEPTH32F.getGlInternalFormat(), 0, 0, width, height, 0);
 		} else {
 			DepthCopyStrategy.fastest(false).copy(dhTerrainFramebuffer, storedDepthTex, null, depthTexNoTranslucent.getTextureId(), width, height);
 		}

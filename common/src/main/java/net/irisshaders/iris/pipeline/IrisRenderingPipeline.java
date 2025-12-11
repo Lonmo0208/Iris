@@ -107,11 +107,11 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBClearTexture;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL21C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -248,7 +248,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		} else {
 			for (int i = 0; i < Math.min(16, SamplerLimits.get().getMaxShaderStorageUnits()); i++) {
-				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, 0);
+				IrisRenderSystem.bindBufferBase(GL46C.GL_SHADER_STORAGE_BUFFER, i, 0);
 			}
 		}
 
@@ -294,12 +294,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		);
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE2);
 
 		customTextureManager = new CustomTextureManager(programSet.getPackDirectives(), programSet.getPack().getCustomTextureDataMap(), programSet.getPack().getIrisCustomTextureDataMap(), programSet.getPack().getCustomNoiseTexture());
 		whitePixel = new NativeImageBackedSingleColorTexture(255, 255, 255, 255);
 
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE0);
 
 		BufferFlipper flipper = new BufferFlipper();
 
@@ -874,7 +874,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 
 		// Make sure we're using texture unit 0 for this.
-		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
 		GLDebug.pushGroup(100, "Clear textures");
@@ -895,7 +895,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				// Clear depth first, regardless of any color clearing.
 				shadowRenderTargets.getDepthSourceFb().bind();
 				GlStateManager._depthMask(true);
-				GlStateManager._clear(GL21C.GL_DEPTH_BUFFER_BIT);
+				GlStateManager._clear(GL46C.GL_DEPTH_BUFFER_BIT);
 
 				ImmutableList<ClearPass> passes;
 
@@ -1199,7 +1199,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		//
 		// Without this code, there will be weird issues when reloading certain shaderpacks.
 		for (int i = 0; i < 16; i++) {
-			GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + i);
+			GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + i);
 			IrisRenderSystem.unbindAllSamplers();
 			GlStateManager._bindTexture(0);
 		}
@@ -1207,7 +1207,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// Set the active texture unit to unit 0
 		//
 		// This seems to be what most code expects. It's a sane default in any case.
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE0);
 
 		if (shadowCompositeRenderer != null) {
 			shadowCompositeRenderer.destroy();
@@ -1223,9 +1223,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		horizonRenderer.destroy();
 
-		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
-		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
-		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL46C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL46C.GL_DRAW_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, 0);
 
 		renderTargets.destroy();
 		dhCompat.clearPipeline();

@@ -8,12 +8,7 @@ import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.texture.TextureType;
-import org.lwjgl.opengl.ARBClearTexture;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL13C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.*;
 
 public class GlImage extends GlResource {
 	protected final String name;
@@ -35,7 +30,7 @@ public class GlImage extends GlResource {
 		this.pixelType = pixelType;
 		this.clear = clear;
 
-		GLDebug.nameObject(GL43C.GL_TEXTURE, getGlId(), name);
+		GLDebug.nameObject(GL46C.GL_TEXTURE, getGlId(), name);
 
 		IrisRenderSystem.bindTextureForSetup(target.getGlType(), getGlId());
 		target.apply(getGlId(), width, height, depth, internalFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), null);
@@ -49,22 +44,22 @@ public class GlImage extends GlResource {
 
 	protected void setup(int texture, int width, int height, int depth) {
 		boolean isInteger = internalTextureFormat.getPixelFormat().isInteger();
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MIN_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MAG_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_MIN_FILTER, isInteger ? GL46C.GL_NEAREST : GL46C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_MAG_FILTER, isInteger ? GL46C.GL_NEAREST : GL46C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_WRAP_S, GL46C.GL_CLAMP_TO_EDGE);
 
 		if (height > 0) {
-			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_WRAP_T, GL46C.GL_CLAMP_TO_EDGE);
 		}
 
 		if (depth > 0) {
-			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL30C.GL_TEXTURE_WRAP_R, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_WRAP_R, GL46C.GL_CLAMP_TO_EDGE);
 		}
 
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MAX_LEVEL, 0);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MIN_LOD, 0);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MAX_LOD, 0);
-		IrisRenderSystem.texParameterf(texture, target.getGlType(), GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_MAX_LEVEL, 0);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_MIN_LOD, 0);
+		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL46C.GL_TEXTURE_MAX_LOD, 0);
+		IrisRenderSystem.texParameterf(texture, target.getGlType(), GL46C.GL_TEXTURE_LOD_BIAS, 0.0F);
 
 		ARBClearTexture.glClearTexImage(texture, 0, format.getGlFormat(), pixelType.getGlFormat(), (int[]) null);
 	}

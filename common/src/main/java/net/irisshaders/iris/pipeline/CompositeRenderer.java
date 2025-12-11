@@ -57,10 +57,10 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -200,7 +200,7 @@ public class CompositeRenderer {
 		this.passes = passes.build();
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
 
-		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL46C.GL_READ_FRAMEBUFFER, 0);
 	}
 
 	private boolean hasComputes(ComputeSource[][] computes) {
@@ -236,7 +236,7 @@ public class CompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.generateMipmaps(texture, GL46C.GL_TEXTURE_2D);
 
 		target.turnOnMips(readFromAlt);
 	}
@@ -295,7 +295,7 @@ public class CompositeRenderer {
 				}
 
 				if (ranCompute) {
-					IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
+					IrisRenderSystem.memoryBarrier(GL46C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL46C.GL_TEXTURE_FETCH_BARRIER_BIT | GL46C.GL_SHADER_STORAGE_BARRIER_BIT);
 				}
 
 				Program.unbind();
@@ -306,7 +306,7 @@ public class CompositeRenderer {
 				}
 
 				if (!compositePass.mipmappedBuffers.isEmpty()) {
-					GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
+					GlStateManager._activeTexture(GL46C.GL_TEXTURE0);
 
 					for (int index : compositePass.mipmappedBuffers) {
 						setupMipmapping(CompositeRenderer.this.renderTargets.get(index), compositePass.stageReadsFromAlt.contains(index));
@@ -345,12 +345,12 @@ public class CompositeRenderer {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work propely
 			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
-				GlStateManager._activeTexture(GL15C.GL_TEXTURE0 + i);
+				GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + i);
 				GlStateManager._bindTexture(0);
 			}
 		}
 
-		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL46C.GL_TEXTURE0);
 
 		GLDebug.popGroup();
 

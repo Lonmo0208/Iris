@@ -6,27 +6,27 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryUtil;
 
 public interface DepthCopyStrategy {
 	static DepthCopyStrategy fastest(boolean combinedStencilRequired) {
 		// Check whether glCopyImageSubData is available by checking the function directly...
-		// Gl.getCapabilities().OpenGL43 can be false even if OpenGL 4.3 functions are supported,
+		// Gl.getCapabilities().OpenGL46 can be false even if OpenGL 4.3 functions are supported,
 		// because Minecraft requests an OpenGL 3.2 forward compatible function.
 		//
-		// Perhaps calling GL43.isAvailable would be a different option, but we only need one
+		// Perhaps calling GL46.isAvailable would be a different option, but we only need one
 		// function, so we just check for that function.
 		if (GL.getCapabilities().glCopyImageSubData != MemoryUtil.NULL) {
-			return new Gl43CopyImage();
+			return new GL46CopyImage();
 		}
 
 		if (combinedStencilRequired) {
-			return new Gl30BlitFbCombinedDepthStencil();
+			return new GL46BlitFbCombinedDepthStencil();
 		} else {
-			return new Gl20CopyTexture();
+			return new GL46CopyTexture();
 		}
 	}
 
@@ -43,8 +43,8 @@ public interface DepthCopyStrategy {
 	void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height);
 
 	// FB -> T
-	class Gl20CopyTexture implements DepthCopyStrategy {
-		private Gl20CopyTexture() {
+	class GL46CopyTexture implements DepthCopyStrategy {
+		private GL46CopyTexture() {
 			// private
 		}
 
@@ -62,7 +62,7 @@ public interface DepthCopyStrategy {
 			IrisRenderSystem.copyTexSubImage2D(
 				destTexture,
 				// target
-				GL20C.GL_TEXTURE_2D,
+				GL46C.GL_TEXTURE_2D,
 				// level
 				0,
 				// xoffset, yoffset
@@ -79,8 +79,8 @@ public interface DepthCopyStrategy {
 	}
 
 	// FB -> FB
-	class Gl30BlitFbCombinedDepthStencil implements DepthCopyStrategy {
-		private Gl30BlitFbCombinedDepthStencil() {
+	class GL46BlitFbCombinedDepthStencil implements DepthCopyStrategy {
+		private GL46BlitFbCombinedDepthStencil() {
 			// private
 		}
 
@@ -93,15 +93,15 @@ public interface DepthCopyStrategy {
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
 			IrisRenderSystem.blitFramebuffer(sourceFb.getId(), destFb.getId(), 0, 0, width, height,
 				0, 0, width, height,
-				GL30C.GL_DEPTH_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT,
-				GL30C.GL_NEAREST);
+				GL46C.GL_DEPTH_BUFFER_BIT | GL46C.GL_STENCIL_BUFFER_BIT,
+				GL46C.GL_NEAREST);
 		}
 	}
 
 	// T -> T
 	// Fastest
-	class Gl43CopyImage implements DepthCopyStrategy {
-		private Gl43CopyImage() {
+	class GL46CopyImage implements DepthCopyStrategy {
+		private GL46CopyImage() {
 			// private
 		}
 
@@ -114,13 +114,13 @@ public interface DepthCopyStrategy {
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
 			IrisRenderSystem.copyImageSubData(
 				sourceTexture,
-				GL43C.GL_TEXTURE_2D,
+				GL46C.GL_TEXTURE_2D,
 				0,
 				0,
 				0,
 				0,
 				destTexture,
-				GL43C.GL_TEXTURE_2D,
+				GL46C.GL_TEXTURE_2D,
 				0,
 				0,
 				0,

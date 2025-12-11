@@ -15,9 +15,7 @@ import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,8 +46,8 @@ public class StandardMacros {
 		define(standardDefines, "MC_VERSION", getMcVersion());
 		define(standardDefines, "MC_MIPMAP_LEVEL", String.valueOf(Minecraft.getInstance().options.mipmapLevels().get()));
 		define(standardDefines, "IRIS_VERSION", getFormattedIrisVersion());
-		define(standardDefines, "MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION));
-		define(standardDefines, "MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
+		define(standardDefines, "MC_GL_VERSION", getGlVersion(GL46C.GL_VERSION));
+		define(standardDefines, "MC_GLSL_VERSION", getGlVersion(GL46C.GL_SHADING_LANGUAGE_VERSION));
 		define(standardDefines, getOsString());
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
@@ -321,19 +319,19 @@ public class StandardMacros {
 
 	/**
 	 * Returns the list of currently enabled GL extensions
-	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
+	 * This is done by calling {@link GL46#glGetString} with the arg {@link GL46#GL_EXTENSIONS}
 	 *
 	 * @return set of activated extensions prefixed with "MC_"
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 */
 	public static Set<String> getGlExtensions() {
 		// In OpenGL Core, we must use a new way of retrieving extensions.
-		int numExtensions = GlStateManager._getInteger(GL30C.GL_NUM_EXTENSIONS);
+		int numExtensions = GlStateManager._getInteger(GL46C.GL_NUM_EXTENSIONS);
 
 		String[] extensions = new String[numExtensions];
 
 		for (int i = 0; i < numExtensions; i++) {
-			extensions[i] = IrisRenderSystem.getStringi(GL30C.GL_EXTENSIONS, i);
+			extensions[i] = IrisRenderSystem.getStringi(GL46C.GL_EXTENSIONS, i);
 		}
 
 		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
