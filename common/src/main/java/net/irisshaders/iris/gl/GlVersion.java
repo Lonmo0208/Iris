@@ -6,5 +6,6 @@ public enum GlVersion {
 	GL_30,
 	GL_31,
 	GL_33,
-	GL_41
+	GL_41,
+	GL_46
 }
