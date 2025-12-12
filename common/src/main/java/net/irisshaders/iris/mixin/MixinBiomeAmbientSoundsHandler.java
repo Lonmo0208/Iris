@@ -29,7 +29,7 @@ public class MixinBiomeAmbientSoundsHandler implements BiomeAmbienceInterface {
 	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
 		"method_75840",
-		"lambda$tick$3"
+		"lambda$tick$1"
 	}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I", ordinal = 0), require = 1)
 	private void calculateConstantMoodiness(Level level, AmbientMoodSettings ambientMoodSettings, CallbackInfo ci, @Local BlockPos blockPos) {
 		int j = this.player.level().getBrightness(LightLayer.SKY, blockPos);

@@ -51,6 +51,9 @@ config = "mixins.iris.forge.json"
 [mods."sodium:options"]
 "mixin.features.render.world.sky" = false
 
+[modproperties.iris]
+"sodium:config_api_user" = "net.irisshaders.iris.compat.sodium.config.IrisConfig"
+
 [[dependencies.iris]]
 modId = "embeddium"
 type = "incompatible"

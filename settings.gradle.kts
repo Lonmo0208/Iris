@@ -11,5 +11,5 @@ pluginManagement {
 include(
 "common"
 ,"fabric"
-//,"neoforge"
+,"neoforge"
 )
