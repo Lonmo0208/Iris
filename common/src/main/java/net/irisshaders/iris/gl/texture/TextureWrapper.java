@@ -25,6 +25,6 @@ public class TextureWrapper implements TextureAccess {
 
 	@Override
 	public GlSampler getSampling() {
-		return GlSampler.NEAREST; // TODO?
+		return GlSampler.NEAREST_REPEAT; // TODO?
 	}
 }

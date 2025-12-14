@@ -132,6 +132,7 @@ public class SodiumTransformer {
 
 			"const float VERTEX_SCALE = 32.0 / POSITION_MAX_COORD;",
 			"const float VERTEX_OFFSET = -8.0;",
+			"float mc_chunkFade;",
 			"uint _draw_id;",
 			"vec3 irs_Normal;",
 			"vec4 irs_Tangent;",
@@ -177,6 +178,13 @@ vec4 tangent_decode(vec2 e) {
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
+			"uniform int iris_CurrentTime;",
+			"uniform float chunkFadeTimeInv;",
+			"""
+				layout(std140) uniform iris_ChunkData {
+				    ivec4 u_chunkFades[64]; // Packing into ivec4 is needed to avoid wasting 3KB...
+				};
+				""",
 			"void _vert_init() {" +
 				"_vert_position = ((_deinterleave_u20x3(a_Position) * VERTEX_SCALE) + VERTEX_OFFSET);" +
 				"_vert_tex_diffuse_coord = _get_texcoord();" +
@@ -185,7 +193,10 @@ vec4 tangent_decode(vec2 e) {
 				"_vert_color = a_Color;" +
 				(needsNormal ? "irs_Normal = oct_to_vec3(iris_Normal.xy);" : "") +
 				(needsNormal ? "irs_Tangent = tangent_decode(iris_Normal.zw);" : "") +
-				"_draw_id = a_LightAndData[3]; }",
+				"_draw_id = a_LightAndData[3];" +
+				"int chunkFade = u_chunkFades[int(_draw_id) >> 2][int(_draw_id) & 3];" +
+				"float fade = clamp(float(iris_CurrentTime - chunkFade) * chunkFadeTimeInv, 0.0, 1.0);" +
+				"mc_chunkFade = (chunkFade < 0) ? 1.0 : fade; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
 				"    // Packing scheme is defined by LocalSectionIndex\n" +

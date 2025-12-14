@@ -20,7 +20,7 @@ public enum FeatureFlags {
 	BLOCK_EMISSION_ATTRIBUTE(() -> true, () -> true),
 	CAN_DISABLE_WEATHER(() -> true, () -> true),
 	SSBO(() -> true, IrisRenderSystem::supportsSSBO),
-	CHUNK_FADE(() -> true, () -> true),
+	FADE_VARIABLE(() -> true, () -> true),
 	TEXTURE_FILTERING(() -> true, () -> true),
 	UNKNOWN(() -> false, () -> false);
 

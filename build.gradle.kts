@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.8.0+m
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.10.1" }
+val MOD_VERSION by extra { "1.10.3" }
 
 allprojects {
     apply(plugin = "java")

@@ -27,6 +27,7 @@ public class VanillaTransformer {
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			"const float mc_chunkFade = -1.0;",
 			"""
 				layout(std140) uniform iris_Fog {
 				    vec4 FogColor;
