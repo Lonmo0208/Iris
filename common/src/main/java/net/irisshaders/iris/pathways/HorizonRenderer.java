@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Matrix4f;
@@ -19,6 +20,12 @@ import org.joml.Vector4f;
 
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -42,37 +49,147 @@ public class HorizonRenderer {
 	 */
 	private static final float BOTTOM = -16.0F;
 
-	private GpuBuffer buffer;
-	private int currentRenderDistance;
+	private final ExecutorService asyncExecutor;
+	private final AtomicReference<GpuBuffer> bufferRef = new AtomicReference<>();
+	private volatile int currentRenderDistance;
+	private volatile int indexCount = -1;
 
-	private int indexCount = -1;
+	private volatile Future<?> pendingRebuild = null;
+	private final AtomicBoolean destroyed = new AtomicBoolean(false);
+	private volatile GpuBuffer fallbackBuffer = null;
+
+	private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
 
 	public HorizonRenderer() {
-		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		int availableProcessors = Runtime.getRuntime().availableProcessors();
+		int poolSize = Math.max(2, Math.min(availableProcessors, 8));
 
-		rebuildBuffer();
+		this.asyncExecutor = Executors.newFixedThreadPool(poolSize, r -> {
+			Thread thread = new Thread(r, "Iris-Horizon-Renderer-" + THREAD_COUNTER.getAndIncrement());
+			thread.setDaemon(true);
+			thread.setPriority(Thread.MIN_PRIORITY + 1);
+			return thread;
+		});
+
+		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		buildAndUploadBufferSync(currentRenderDistance * 16);
 	}
 
-	private void rebuildBuffer() {
-		if (this.buffer != null) {
-			this.buffer.close();
+	private void buildAndUploadBufferSync(int radius) {
+		if (destroyed.get()) {
+			return;
 		}
 
-		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+		try {
+			BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+			buildHorizon(radius, buffer);
+			MeshData meshData = buffer.buildOrThrow();
 
-		buildHorizon(currentRenderDistance * 16, buffer);
-		MeshData meshData = buffer.buildOrThrow();
+			GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(
+				() -> "Horizon",
+				GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST,
+				meshData.vertexBuffer()
+			);
 
-		this.buffer = RenderSystem.getDevice().createBuffer(() -> "Horizon", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, meshData.vertexBuffer());
-		this.indexCount = meshData.drawState().indexCount();
-		meshData.close();
-		Tesselator.getInstance().clear();
+			this.indexCount = meshData.drawState().indexCount();
+
+			GpuBuffer oldFallback = fallbackBuffer;
+			fallbackBuffer = newBuffer;
+
+			GpuBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
+
+			closeBufferAsync(oldBuffer);
+			closeBufferAsync(oldFallback);
+
+			meshData.close();
+			Tesselator.getInstance().clear();
+		} catch (Exception e) {
+			Iris.logger.error("Failed to build horizon buffer synchronously: ", e);
+		}
+	}
+
+	private void rebuildBufferAsync() {
+		if (destroyed.get()) {
+			return;
+		}
+
+		final int radius = currentRenderDistance * 16;
+
+		buildAndUploadBufferSync(radius);
+
+		if (asyncExecutor.isShutdown() || asyncExecutor.isTerminated()) {
+			return;
+		}
+
+		try {
+			if (pendingRebuild != null && !pendingRebuild.isDone()) {
+				pendingRebuild.cancel(true);
+			}
+
+			pendingRebuild = asyncExecutor.submit(() -> {
+				if (destroyed.get()) {
+					return;
+				}
+
+				try {
+					Tesselator tesselator = new Tesselator();
+					BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+					buildHorizon(radius, buffer);
+					MeshData meshData = buffer.buildOrThrow();
+					tesselator.clear();
+
+					Minecraft.getInstance().execute(() -> {
+						if (!destroyed.get()) {
+							uploadToGPUAsync(meshData);
+						}
+					});
+				} catch (Exception e) {
+					Iris.logger.warn("Failed to build horizon mesh asynchronously: ", e);
+				}
+			});
+		} catch (Exception e) {
+			Iris.logger.warn("Failed to submit horizon rebuild task: ", e);
+		}
+	}
+
+	private void uploadToGPUAsync(MeshData meshData) {
+		try {
+			GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(
+				() -> "Horizon-Async",
+				GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST,
+				meshData.vertexBuffer()
+			);
+
+			int newIndexCount = meshData.drawState().indexCount();
+
+			GpuBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
+			this.indexCount = newIndexCount;
+
+			closeBufferAsync(oldBuffer);
+
+			meshData.close();
+		} catch (Exception e) {
+			try {
+				meshData.close();
+			} catch (Exception ex) {
+			}
+			Iris.logger.warn("Failed to upload horizon buffer asynchronously: ", e);
+		}
+	}
+
+	private void closeBufferAsync(GpuBuffer buffer) {
+		if (buffer != null && !asyncExecutor.isShutdown() && !asyncExecutor.isTerminated()) {
+			asyncExecutor.submit(() -> {
+				try {
+					buffer.close();
+				} catch (Exception e) {
+				}
+			});
+		}
 	}
 
 	private void buildHorizon(int radius, VertexConsumer consumer) {
 		if (radius > 256) {
-			// Prevent the cone from getting too large, this causes issues on some shader packs that modify the vanilla
-			// sky if we don't do this.
 			radius = 256;
 		}
 
@@ -87,27 +204,81 @@ public class HorizonRenderer {
 	}
 
 	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, Vector4f fogColor) {
-		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
-			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-			rebuildBuffer();
+		if (destroyed.get()) {
+			return;
 		}
 
-		RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLE_FAN);
-		GpuBuffer indexBuffer = indices.getBuffer(indexCount);
-		GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms().writeTransform(modelView, fogColor, new Vector3f(), new Matrix4f());
-		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Sky", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty(),
-			Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
-			RenderSystem.bindDefaultUniforms(pass);
-			pass.setUniform("DynamicTransforms", gpuBufferSlice);
+		int newRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 
-			pass.setVertexBuffer(0, buffer);
-			pass.setIndexBuffer(indexBuffer, indices.type());
-			pass.setPipeline(RenderPipelines.SKY);
-			pass.drawIndexed(0, 0, indexCount, 1);
+		if (currentRenderDistance != newRenderDistance) {
+			currentRenderDistance = newRenderDistance;
+			rebuildBufferAsync();
+		}
+
+		GpuBuffer currentBuffer = bufferRef.get();
+		if (currentBuffer == null) {
+			currentBuffer = fallbackBuffer;
+			if (currentBuffer == null) {
+				return;
+			}
+		}
+
+		if (indexCount <= 0) {
+			return;
+		}
+
+		try {
+			RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLE_FAN);
+			GpuBuffer indexBuffer = indices.getBuffer(indexCount);
+			GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms().writeTransform(modelView, fogColor, new Vector3f(), new Matrix4f());
+
+			try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Sky",
+				Minecraft.getInstance().getMainRenderTarget().getColorTextureView(),
+				OptionalInt.empty(),
+				Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(),
+				OptionalDouble.empty())) {
+
+				RenderSystem.bindDefaultUniforms(pass);
+				pass.setUniform("DynamicTransforms", gpuBufferSlice);
+				pass.setVertexBuffer(0, currentBuffer);
+				pass.setIndexBuffer(indexBuffer, indices.type());
+				pass.setPipeline(RenderPipelines.SKY);
+				pass.drawIndexed(0, 0, indexCount, 1);
+			}
+		} catch (Exception e) {
+			Iris.logger.warn("Failed to render horizon: ", e);
 		}
 	}
 
 	public void destroy() {
-		buffer.close();
+		destroyed.set(true);
+
+		if (pendingRebuild != null && !pendingRebuild.isDone()) {
+			pendingRebuild.cancel(true);
+		}
+
+		GpuBuffer buffer = bufferRef.getAndSet(null);
+		closeBufferSync(buffer);
+
+		if (fallbackBuffer != null) {
+			closeBufferSync(fallbackBuffer);
+			fallbackBuffer = null;
+		}
+
+		if (asyncExecutor != null && !asyncExecutor.isShutdown()) {
+			try {
+				asyncExecutor.shutdownNow();
+			} catch (Exception e) {
+			}
+		}
+	}
+
+	private void closeBufferSync(GpuBuffer buffer) {
+		if (buffer != null) {
+			try {
+				buffer.close();
+			} catch (Exception e) {
+			}
+		}
 	}
 }
