@@ -18,6 +18,7 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
@@ -49,6 +50,17 @@ public class HorizonRenderer {
 	 */
 	private static final float BOTTOM = -16.0F;
 
+	private static final float[] OCTAGON_X = new float[9];
+	private static final float[] OCTAGON_Z = new float[9];
+
+	static {
+		for (int i = 0; i <= 8; i++) {
+			float angle = (float) (-i * Math.PI / 4.0);
+			OCTAGON_X[i] = (float) Math.cos(angle);
+			OCTAGON_Z[i] = (float) Math.sin(angle);
+		}
+	}
+
 	private final ExecutorService asyncExecutor;
 	private final AtomicReference<GpuBuffer> bufferRef = new AtomicReference<>();
 	private volatile int currentRenderDistance;
@@ -58,31 +70,41 @@ public class HorizonRenderer {
 	private final AtomicBoolean destroyed = new AtomicBoolean(false);
 	private volatile GpuBuffer fallbackBuffer = null;
 
+	private volatile int lastBuiltRadius = -1;
+
+	private final AtomicBoolean isRebuilding = new AtomicBoolean(false);
+
 	private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
 
 	public HorizonRenderer() {
 		int availableProcessors = Runtime.getRuntime().availableProcessors();
-		int poolSize = Math.max(2, Math.min(availableProcessors, 8));
+		int poolSize = Math.max(1, Math.min(availableProcessors, 2));
+
+		if (poolSize > 1 && availableProcessors <= 2) {
+			poolSize = 1;
+		}
 
 		this.asyncExecutor = Executors.newFixedThreadPool(poolSize, r -> {
 			Thread thread = new Thread(r, "Iris-Horizon-Renderer-" + THREAD_COUNTER.getAndIncrement());
 			thread.setDaemon(true);
-			thread.setPriority(Thread.MIN_PRIORITY + 1);
+			thread.setPriority(Thread.MIN_PRIORITY);
 			return thread;
 		});
 
 		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-		buildAndUploadBufferSync(currentRenderDistance * 16);
+		lastBuiltRadius = currentRenderDistance * 16;
+		rebuildBufferSync();
 	}
 
-	private void buildAndUploadBufferSync(int radius) {
+	private void rebuildBufferSync() {
 		if (destroyed.get()) {
 			return;
 		}
 
 		try {
-			BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
-			buildHorizon(radius, buffer);
+			Tesselator tesselator = Tesselator.getInstance();
+			BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+			buildHorizon(currentRenderDistance * 16, buffer);
 			MeshData meshData = buffer.buildOrThrow();
 
 			GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(
@@ -95,14 +117,15 @@ public class HorizonRenderer {
 
 			GpuBuffer oldFallback = fallbackBuffer;
 			fallbackBuffer = newBuffer;
-
 			GpuBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
 
 			closeBufferAsync(oldBuffer);
 			closeBufferAsync(oldFallback);
 
 			meshData.close();
-			Tesselator.getInstance().clear();
+			lastBuiltRadius = currentRenderDistance * 16;
+
+			tesselator.clear();
 		} catch (Exception e) {
 			Iris.logger.error("Failed to build horizon buffer synchronously: ", e);
 		}
@@ -115,22 +138,26 @@ public class HorizonRenderer {
 
 		final int radius = currentRenderDistance * 16;
 
-		buildAndUploadBufferSync(radius);
+		if (radius == lastBuiltRadius) {
+			return;
+		}
 
-		if (asyncExecutor.isShutdown() || asyncExecutor.isTerminated()) {
+		if (!isRebuilding.compareAndSet(false, true)) {
 			return;
 		}
 
 		try {
+			lastBuiltRadius = radius;
+
+			if (asyncExecutor.isShutdown() || asyncExecutor.isTerminated()) {
+				return;
+			}
+
 			if (pendingRebuild != null && !pendingRebuild.isDone()) {
 				pendingRebuild.cancel(true);
 			}
 
 			pendingRebuild = asyncExecutor.submit(() -> {
-				if (destroyed.get()) {
-					return;
-				}
-
 				try {
 					Tesselator tesselator = new Tesselator();
 					BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
@@ -138,16 +165,25 @@ public class HorizonRenderer {
 					MeshData meshData = buffer.buildOrThrow();
 					tesselator.clear();
 
-					Minecraft.getInstance().execute(() -> {
-						if (!destroyed.get()) {
-							uploadToGPUAsync(meshData);
-						}
-					});
+					if (!destroyed.get() && radius == currentRenderDistance * 16) {
+						Minecraft.getInstance().execute(() -> {
+							if (!destroyed.get() && radius == currentRenderDistance * 16) {
+								uploadToGPUAsync(meshData);
+							} else {
+								meshData.close();
+							}
+						});
+					} else {
+						meshData.close();
+					}
 				} catch (Exception e) {
 					Iris.logger.warn("Failed to build horizon mesh asynchronously: ", e);
+				} finally {
+					isRebuilding.set(false);
 				}
 			});
 		} catch (Exception e) {
+			isRebuilding.set(false);
 			Iris.logger.warn("Failed to submit horizon rebuild task: ", e);
 		}
 	}
@@ -171,7 +207,7 @@ public class HorizonRenderer {
 		} catch (Exception e) {
 			try {
 				meshData.close();
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 			Iris.logger.warn("Failed to upload horizon buffer asynchronously: ", e);
 		}
@@ -182,7 +218,7 @@ public class HorizonRenderer {
 			asyncExecutor.submit(() -> {
 				try {
 					buffer.close();
-				} catch (Exception e) {
+				} catch (Exception ignored) {
 				}
 			});
 		}
@@ -196,9 +232,8 @@ public class HorizonRenderer {
 		consumer.addVertex(0.0F, BOTTOM, 0.0F);
 
 		for (int i = 0; i <= 8; i++) {
-			float angle = (float) (-i * Math.PI / 4.0);
-			float x = (float) (radius * Math.cos(angle));
-			float z = (float) (radius * Math.sin(angle));
+			float x = radius * OCTAGON_X[i];
+			float z = radius * OCTAGON_Z[i];
 			consumer.addVertex(x, TOP, z);
 		}
 	}
@@ -209,7 +244,6 @@ public class HorizonRenderer {
 		}
 
 		int newRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-
 		if (currentRenderDistance != newRenderDistance) {
 			currentRenderDistance = newRenderDistance;
 			rebuildBufferAsync();
@@ -233,7 +267,7 @@ public class HorizonRenderer {
 			GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms().writeTransform(modelView, fogColor, new Vector3f(), new Matrix4f());
 
 			try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Sky",
-				Minecraft.getInstance().getMainRenderTarget().getColorTextureView(),
+				Objects.requireNonNull(Minecraft.getInstance().getMainRenderTarget().getColorTextureView()),
 				OptionalInt.empty(),
 				Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(),
 				OptionalDouble.empty())) {
@@ -268,7 +302,7 @@ public class HorizonRenderer {
 		if (asyncExecutor != null && !asyncExecutor.isShutdown()) {
 			try {
 				asyncExecutor.shutdownNow();
-			} catch (Exception e) {
+			} catch (Exception ignored) {
 			}
 		}
 	}
@@ -277,7 +311,7 @@ public class HorizonRenderer {
 		if (buffer != null) {
 			try {
 				buffer.close();
-			} catch (Exception e) {
+			} catch (Exception ignored) {
 			}
 		}
 	}
