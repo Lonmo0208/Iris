@@ -7,165 +7,262 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
-/**
- * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
- * above the player. This class extends the sky rendering so that an octagonal prism is drawn around the player instead,
- * allowing shaders to perform more advanced sky rendering.
- * <p>
- * However, the horizon rendering is designed so that when sky shaders are not being used, it looks almost exactly the
- * same as vanilla sky rendering, except a few almost entirely imperceptible differences where the walls
- * of the octagonal prism intersect the top plane.
- */
-public class HorizonRenderer {
-	/**
-	 * The Y coordinate of the top skybox plane. Acts as the upper bound for the horizon prism, since the prism lies
-	 * between the bottom and top skybox planes.
-	 */
-	private static final float TOP = 16.0F;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-	/**
-	 * The Y coordinate of the bottom skybox plane. Acts as the lower bound for the horizon prism, since the prism lies
-	 * between the bottom and top skybox planes.
-	 */
+public class HorizonRenderer {
+	private static final float TOP = 16.0F;
 	private static final float BOTTOM = -16.0F;
 
-	/**
-	 * Cosine of 22.5 degrees.
-	 */
-	private static final float COS_22_5 = (float) Math.cos(Math.toRadians(22.5));
+	private static final float[] OCTAGON_X = new float[9];
+	private static final float[] OCTAGON_Z = new float[9];
 
-	/**
-	 * Sine of 22.5 degrees.
-	 */
-	private static final float SIN_22_5 = (float) Math.sin(Math.toRadians(22.5));
-	private VertexBuffer buffer;
-	private int currentRenderDistance;
+	static {
+		for (int i = 0; i <= 8; i++) {
+			float angle = (float) (-i * Math.PI / 4.0);
+			OCTAGON_X[i] = (float) Math.cos(angle);
+			OCTAGON_Z[i] = (float) Math.sin(angle);
+		}
+	}
+
+	private final ExecutorService asyncExecutor;
+	private final AtomicReference<VertexBuffer> bufferRef = new AtomicReference<>();
+	private volatile int currentRenderDistance;
+	private volatile Future<?> pendingRebuild = null;
+	private final AtomicBoolean destroyed = new AtomicBoolean(false);
+	private volatile VertexBuffer fallbackBuffer = null;
+
+	private volatile int lastBuiltRadius = -1;
+
+	private final AtomicBoolean isRebuilding = new AtomicBoolean(false);
+
+	private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
 
 	public HorizonRenderer() {
+		int availableProcessors = Runtime.getRuntime().availableProcessors();
+		int poolSize = Math.max(1, Math.min(availableProcessors, 2));
+
+		if (poolSize > 1 && availableProcessors <= 4) {
+			poolSize = 1;
+		}
+
+		this.asyncExecutor = Executors.newFixedThreadPool(poolSize, r -> {
+			Thread thread = new Thread(r, "Iris-Horizon-Renderer-" + THREAD_COUNTER.getAndIncrement());
+			thread.setDaemon(true);
+			thread.setPriority(Thread.MIN_PRIORITY);
+			return thread;
+		});
+
 		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-
-		rebuildBuffer();
+		lastBuiltRadius = currentRenderDistance * 16;
+		rebuildBufferSync();
 	}
 
-	private void rebuildBuffer() {
-		if (this.buffer != null) {
-			this.buffer.close();
+	private void rebuildBufferSync() {
+		if (destroyed.get()) {
+			return;
 		}
 
-		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+		try {
+			Tesselator tesselator = Tesselator.getInstance();
+			BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+			buildHorizon(currentRenderDistance * 16, buffer);
+			MeshData meshData = buffer.build();
 
-		// Build the horizon quads into a buffer
-		buildHorizon(currentRenderDistance * 16, buffer);
-		MeshData meshData = buffer.build();
+			if (meshData != null) {
+				VertexBuffer newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+				newBuffer.bind();
+				newBuffer.upload(meshData);
+				VertexBuffer.unbind();
 
-		this.buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
-		this.buffer.bind();
-		this.buffer.upload(meshData);
-		Tesselator.getInstance().clear();
-		VertexBuffer.unbind();
-	}
+				VertexBuffer oldFallback = fallbackBuffer;
+				fallbackBuffer = newBuffer;
+				VertexBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
 
-	private void buildQuad(VertexConsumer consumer, float x1, float z1, float x2, float z2) {
-		consumer.addVertex(x1, BOTTOM, z1);
-		consumer.addVertex(x1, TOP, z1);
-		consumer.addVertex(x2, TOP, z2);
-		consumer.addVertex(x2, BOTTOM, z2);
-	}
+				closeBufferAsync(oldBuffer);
+				closeBufferAsync(oldFallback);
 
-	private void buildHalf(VertexConsumer consumer, float adjacent, float opposite, boolean invert) {
-		if (invert) {
-			adjacent = -adjacent;
-			opposite = -opposite;
-		}
-
-		// NB: Make sure that these vertices are being specified in counterclockwise order!
-		// Otherwise back face culling will remove your quads, and you'll be wondering why there's a hole in your horizon.
-		// Don't poke holes in the horizon. Specify vertices in counterclockwise order.
-
-		// +X,-Z face
-		buildQuad(consumer, adjacent, -opposite, opposite, -adjacent);
-		// +X face
-		buildQuad(consumer, adjacent, opposite, adjacent, -opposite);
-		// +X,+Z face
-		buildQuad(consumer, opposite, adjacent, adjacent, opposite);
-		// +Z face
-		buildQuad(consumer, -opposite, adjacent, opposite, adjacent);
-	}
-
-	/**
-	 * @param adjacent the adjacent side length of the a triangle with a hypotenuse extending from the center of the
-	 *                 octagon to a given vertex on the perimeter.
-	 * @param opposite the opposite side length of the a triangle with a hypotenuse extending from the center of the
-	 *                 octagon to a given vertex on the perimeter.
-	 */
-	private void buildOctagonalPrism(VertexConsumer consumer, float adjacent, float opposite) {
-		buildHalf(consumer, adjacent, opposite, false);
-		buildHalf(consumer, adjacent, opposite, true);
-	}
-
-	private void buildRegularOctagonalPrism(VertexConsumer consumer, float radius) {
-		buildOctagonalPrism(consumer, radius * COS_22_5, radius * SIN_22_5);
-	}
-
-	private void buildBottomPlane(VertexConsumer consumer, int radius) {
-		for (int x = -radius; x <= radius; x += 64) {
-			for (int z = -radius; z <= radius; z += 64) {
-				consumer.addVertex(x + 64, BOTTOM, z);
-				consumer.addVertex(x, BOTTOM, z);
-				consumer.addVertex(x, BOTTOM, z + 64);
-				consumer.addVertex(x + 64, BOTTOM, z + 64);
+				meshData.close();
+				lastBuiltRadius = currentRenderDistance * 16;
 			}
+
+			tesselator.clear();
+		} catch (Exception e) {
+			Iris.logger.error("Failed to build horizon buffer synchronously: ", e);
 		}
 	}
 
-	private void buildTopPlane(VertexConsumer consumer, int radius) {
-		// You might be tempted to try to combine this with buildBottomPlane to avoid code duplication,
-		// but that won't work since the winding order has to be reversed or else one of the planes will be
-		// discarded by back face culling.
-		for (int x = -radius; x <= radius; x += 64) {
-			for (int z = -radius; z <= radius; z += 64) {
-				consumer.addVertex(x + 64, TOP, z);
-				consumer.addVertex(x + 64, TOP, z + 64);
-				consumer.addVertex(x, TOP, z + 64);
-				consumer.addVertex(x, TOP, z);
+	private void rebuildBufferAsync() {
+		if (destroyed.get()) {
+			return;
+		}
+
+		final int radius = currentRenderDistance * 16;
+
+		if (radius == lastBuiltRadius) {
+			return;
+		}
+
+		if (!isRebuilding.compareAndSet(false, true)) {
+			return;
+		}
+
+		try {
+			lastBuiltRadius = radius;
+
+			if (asyncExecutor.isShutdown() || asyncExecutor.isTerminated()) {
+				return;
 			}
+
+			if (pendingRebuild != null) {
+				pendingRebuild.cancel(false);
+			}
+
+			pendingRebuild = asyncExecutor.submit(() -> {
+				try {
+					Tesselator tesselator = new Tesselator();
+					BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+					buildHorizon(radius, buffer);
+					MeshData meshData = buffer.build();
+					tesselator.clear();
+
+					if (!destroyed.get() && radius == currentRenderDistance * 16) {
+						Minecraft.getInstance().execute(() -> {
+							if (!destroyed.get() && radius == currentRenderDistance * 16) {
+								uploadToGPUAsync(meshData);
+							} else if (meshData != null) {
+								meshData.close();
+							}
+						});
+					} else if (meshData != null) {
+						meshData.close();
+					}
+				} catch (Exception e) {
+					Iris.logger.warn("Failed to build horizon mesh asynchronously: ", e);
+				} finally {
+					isRebuilding.set(false);
+				}
+			});
+		} catch (Exception e) {
+			isRebuilding.set(false);
+			Iris.logger.warn("Failed to submit horizon rebuild task: ", e);
+		}
+	}
+
+	private void uploadToGPUAsync(MeshData meshData) {
+		if (meshData == null) return;
+
+		try {
+			VertexBuffer newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+			newBuffer.bind();
+			newBuffer.upload(meshData);
+			VertexBuffer.unbind();
+
+			VertexBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
+			closeBufferAsync(oldBuffer);
+
+			meshData.close();
+		} catch (Exception e) {
+			try {
+				meshData.close();
+			} catch (Exception ignored) {
+			}
+			Iris.logger.warn("Failed to upload horizon buffer asynchronously: ", e);
 		}
 	}
 
 	private void buildHorizon(int radius, VertexConsumer consumer) {
 		if (radius > 256) {
-			// Prevent the prism from getting too large, this causes issues on some shader packs that modify the vanilla
-			// sky if we don't do this.
 			radius = 256;
 		}
 
-		buildRegularOctagonalPrism(consumer, radius);
+		consumer.addVertex(0.0F, BOTTOM, 0.0F);
 
-		// Replicate the vanilla top plane since we can't assume that it'll be rendered.
-		// TODO: Remove vanilla top plane
-		buildTopPlane(consumer, 384);
-
-		// Always make the bottom plane have a radius of 384, to match the top plane.
-		buildBottomPlane(consumer, 384);
+		for (int i = 0; i <= 8; i++) {
+			float x = radius * OCTAGON_X[i];
+			float z = radius * OCTAGON_Z[i];
+			consumer.addVertex(x, TOP, z);
+		}
 	}
 
 	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderInstance shader) {
-		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
-			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-			rebuildBuffer();
+		if (destroyed.get()) {
+			return;
 		}
 
-		buffer.bind();
-		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), shader);
-		VertexBuffer.unbind();
+		int newRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		if (currentRenderDistance != newRenderDistance) {
+			currentRenderDistance = newRenderDistance;
+			rebuildBufferAsync();
+		}
+
+		VertexBuffer currentBuffer = bufferRef.get();
+		if (currentBuffer == null) {
+			currentBuffer = fallbackBuffer;
+			if (currentBuffer == null) {
+				return;
+			}
+		}
+
+		try {
+			currentBuffer.bind();
+			currentBuffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), shader);
+			VertexBuffer.unbind();
+		} catch (Exception e) {
+			Iris.logger.warn("Failed to render horizon: ", e);
+		}
 	}
 
 	public void destroy() {
-		buffer.close();
+		destroyed.set(true);
+
+		if (pendingRebuild != null) {
+			pendingRebuild.cancel(true);
+		}
+
+		VertexBuffer buffer = bufferRef.getAndSet(null);
+		closeBufferSync(buffer);
+
+		if (fallbackBuffer != null) {
+			closeBufferSync(fallbackBuffer);
+			fallbackBuffer = null;
+		}
+
+		if (asyncExecutor != null && !asyncExecutor.isShutdown()) {
+			try {
+				asyncExecutor.shutdownNow();
+			} catch (Exception ignored) {
+			}
+		}
+	}
+
+	private void closeBufferSync(VertexBuffer buffer) {
+		if (buffer != null) {
+			try {
+				buffer.close();
+			} catch (Exception ignored) {
+			}
+		}
+	}
+
+	private void closeBufferAsync(VertexBuffer buffer) {
+		if (buffer != null && !asyncExecutor.isShutdown() && !asyncExecutor.isTerminated()) {
+			asyncExecutor.submit(() -> {
+				try {
+					buffer.close();
+				} catch (Exception ignored) {
+				}
+			});
+		}
 	}
 }
