@@ -57,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,6 +67,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -267,7 +269,7 @@ public class DefltShaderPack implements AutoCloseable {
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
 		// Get programs that should be disabled from the detected profile
-		List<String> disabledPrograms = new ArrayList<>();
+		Set<String> disabledPrograms = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 		// Add programs that are disabled by shader options
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
@@ -308,7 +310,7 @@ public class DefltShaderPack implements AutoCloseable {
 
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 
-			if (lines == null) {
+			if (lines == null || lines.isEmpty()) {
 				return null;
 			}
 

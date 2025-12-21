@@ -100,8 +100,8 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		if (colorSpace == ColorSpace.SRGB) return;
 
 		this.target = targetImage;
-		GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(6);
-		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
+		GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLE_FAN).getBuffer(6);
+		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLE_FAN).type();
 
 		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Color space", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
 			pass.setPipeline(COMPOSITE_PIPELINE);

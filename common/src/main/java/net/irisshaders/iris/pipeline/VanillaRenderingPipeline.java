@@ -47,6 +47,11 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public void setupShadowViewport() {
+		// stub: nothing to do here
+	}
+
+	@Override
 	public void addDebugText(DebugScreenDisplayer messages) {
 		// stub: nothing to do here
 	}

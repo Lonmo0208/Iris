@@ -309,7 +309,7 @@ public class AsyncShaderPack implements AutoCloseable {
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
 		// Get programs that should be disabled from the detected profile
-		List<String> disabledPrograms = new ArrayList<>();
+		Set<String> disabledPrograms = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		// Add programs that are disabled by shader options
 		this.profile.current.ifPresent(p -> disabledPrograms.addAll(p.disabledPrograms));
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, option) -> {
@@ -343,7 +343,9 @@ public class AsyncShaderPack implements AutoCloseable {
 			if (disabledPrograms.contains(programString)) return null;
 
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
-			if (lines == null) return null;
+			if (lines == null || lines.isEmpty()) {
+				return null;
+			}
 
 			// Apply GLSL preprocessor to source, while making environment defines available.
 			//
