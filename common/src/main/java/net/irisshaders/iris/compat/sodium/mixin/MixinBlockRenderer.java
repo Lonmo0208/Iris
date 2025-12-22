@@ -38,6 +38,9 @@ public class MixinBlockRenderer implements VertexEncoderInterface {
 	@Unique
 	private int localX, localY, localZ;
 
+	@Unique
+	private int lastBlockId;
+
 	@Inject(method = "renderModel", at = @At("HEAD"))
 	private void iris$renderModelHead(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getBlockTypeIds().containsKey(state.getBlock())) {
@@ -65,6 +68,20 @@ public class MixinBlockRenderer implements VertexEncoderInterface {
 		this.localX = x;
 		this.localY = y;
 		this.localZ = z;
+	}
+
+	@Override
+	public void overrideBlock(int anInt) {
+		if (this.lastBlockId != -1) this.lastBlockId = blockId;
+		this.blockId = anInt;
+	}
+
+	@Override
+	public void restoreBlock() {
+		if (this.lastBlockId != -1) {
+			this.blockId = this.lastBlockId;
+			this.lastBlockId = -1;
+		}
 	}
 
 	@Inject(method = "bufferQuad", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;x:F"))

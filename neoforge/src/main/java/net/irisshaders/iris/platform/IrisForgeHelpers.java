@@ -63,7 +63,7 @@ public class IrisForgeHelpers implements IrisPlatformHelpers {
 	// TODO find a way to do this without breaking Cable Facades...
 	@Override
 	public BlockState getBlockAppearance(BlockAndTintGetter level, BlockState state, Direction cullFace, BlockPos pos) {
-		return state;
+		return state.getAppearance(level, pos, cullFace, null, null); 	
 	}
 
 	@Override

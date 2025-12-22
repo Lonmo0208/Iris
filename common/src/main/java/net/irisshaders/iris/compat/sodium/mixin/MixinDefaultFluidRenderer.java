@@ -35,6 +35,9 @@ public class MixinDefaultFluidRenderer implements VertexEncoderInterface {
 	private int blockId;
 
 	@Unique
+	private int lastBlockId;
+
+	@Unique
 	private byte isFluid;
 
 	@Unique
@@ -52,6 +55,22 @@ public class MixinDefaultFluidRenderer implements VertexEncoderInterface {
 		this.localY = y;
 		this.localZ = z;
 	}
+
+	@Override
+	public void overrideBlock(int anInt) {
+		if (this.lastBlockId != -1) this.lastBlockId = blockId;
+		this.blockId = anInt;
+	}
+
+	@Override
+	public void restoreBlock() {
+		if (this.lastBlockId != -1) {
+			this.blockId = this.lastBlockId;
+			this.lastBlockId = -1;
+		}
+	}
+
+
 
 	@Inject(method = "writeQuad", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;x:F"))
 	private void iris$writeVertex(ChunkModelBuilder builder, TranslucentGeometryCollector collector, Material material, BlockPos offset, ModelQuadView quad, ModelQuadFacing facing, boolean flip, CallbackInfo ci, @Local ChunkVertexEncoder.Vertex vertex) {

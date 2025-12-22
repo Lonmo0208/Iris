@@ -17,4 +17,14 @@ public class MixinFluidRendererImpl implements VertexEncoderInterface {
 	public void beginBlock(int blockId, byte isFluid, byte lightEmission, int x, int y, int z) {
 		((VertexEncoderInterface) this.defaultRenderer).beginBlock(blockId, isFluid, lightEmission, x, y, z);
 	}
+
+	@Override
+	public void overrideBlock(int anInt) {
+		((VertexEncoderInterface) this.defaultRenderer).overrideBlock(anInt);
+	}
+
+	@Override
+	public void restoreBlock() {
+		((VertexEncoderInterface) this.defaultRenderer).restoreBlock();
+	}
 }
