@@ -10,8 +10,6 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.fml.loading.LoadingModList;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.nio.file.Path;
@@ -63,19 +61,15 @@ public class IrisForgeHelpers implements IrisPlatformHelpers {
 	// TODO find a way to do this without breaking Cable Facades...
 	@Override
 	public BlockState getBlockAppearance(BlockAndTintGetter level, BlockState state, Direction cullFace, BlockPos pos) {
-		return state.getAppearance(level, pos, cullFace, null, null); 	
+		return state.getAppearance(level, pos, cullFace, null, null);
 	}
 
 	@Override
 	public TextureFormat mojangDepthFormat(DepthBufferFormat depthFormat) {
 		return switch (depthFormat) {
-			case DEPTH -> TextureFormat.DEPTH32;
-			case DEPTH16 -> null;
-			case DEPTH24 -> null;
-			case DEPTH32 -> TextureFormat.DEPTH32;
-			case DEPTH32F -> null;
-			case DEPTH_STENCIL -> TextureFormat.DEPTH24_STENCIL8;
-			case DEPTH24_STENCIL8 -> TextureFormat.DEPTH24_STENCIL8;
+			case DEPTH, DEPTH32 -> TextureFormat.DEPTH32;
+			case DEPTH16, DEPTH24, DEPTH32F -> null;
+			case DEPTH_STENCIL, DEPTH24_STENCIL8 -> TextureFormat.DEPTH24_STENCIL8;
 			case DEPTH32F_STENCIL8 -> TextureFormat.DEPTH32_STENCIL8;
 		};
 	}
