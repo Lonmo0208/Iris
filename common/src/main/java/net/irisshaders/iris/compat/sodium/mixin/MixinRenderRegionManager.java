@@ -13,10 +13,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collection;
 
-@Mixin(RenderRegionManager.class)
+@Mixin(RenderRegion.class)
 public class MixinRenderRegionManager {
-	@Redirect(method = "uploadResults(Lnet/caffeinemc/mods/sodium/client/gl/device/CommandList;Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;Ljava/util/Collection;)V", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
-	private void iris$forceClear(RenderRegion instance) {
-		((ShadowRenderRegion) instance).iris$forceClearAllBatches();
+	//@Redirect(method = "uploadResults(Lnet/caffeinemc/mods/sodium/client/gl/device/CommandList;Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;Ljava/util/Collection;)V", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
+	//private void iris$forceClear(RenderRegion instance) {
+		//((ShadowRenderRegion) instance).iris$forceClearAllBatches();
+	// }
+	@Inject(method = "clearAllCachedBatches()V", at = @At("HEAD"))
+	private void iris$forceClear(CallbackInfo ci) {
+		RenderRegion instance = (RenderRegion) (Object) this;
+		if (instance instanceof ShadowRenderRegion) {
+			((ShadowRenderRegion) instance).iris$forceClearAllBatches();
+		}
 	}
 }
