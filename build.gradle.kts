@@ -48,7 +48,7 @@ subprojects {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-snapshot")
+            builder.append("-exp-snapshot")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
