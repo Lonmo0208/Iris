@@ -12,6 +12,7 @@ import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
@@ -112,6 +113,10 @@ public class DHCompatInternal {
 	}
 
 	public static float getFarPlane() {
+		return getFarPlane(false);
+	}
+
+	public static float getFarPlane(boolean isReflectionRender) {
 		if (DhApi.Delayed.configs == null) {
 			// Called before DH has finished setup
 			return 0;
@@ -120,7 +125,17 @@ public class DHCompatInternal {
 		int lodChunkDist = DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue();
 		int lodBlockDist = lodChunkDist * 16;
 		// sqrt 2 to prevent the corners from being cut off
-		return (float) ((lodBlockDist + 512) * Math.sqrt(2));
+		float baseDistance = (float) ((lodBlockDist + 512) * Math.sqrt(2));
+
+		// Apply reflection distance multiplier if this is a reflection render
+		if (isReflectionRender) {
+			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+			if (pipeline != null && !pipeline.shouldRenderHighQualityReflections()) {
+				return baseDistance * pipeline.getReflectionDistanceMultiplier();
+			}
+		}
+
+		return baseDistance;
 	}
 
 	public static float getNearPlane() {

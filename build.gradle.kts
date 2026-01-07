@@ -1,13 +1,13 @@
 
 plugins {
     id("java")
-    id("fabric-loom") version("1.9-SNAPSHOT") apply(false)
+    id("fabric-loom") version("1.9.2") apply(false)
 }
 
 val MINECRAFT_VERSION by extra { "1.21.1" }
-val NEOFORGE_VERSION by extra { "21.1.173" }
-val FABRIC_LOADER_VERSION by extra { "0.16.10" }
-val FABRIC_API_VERSION by extra { "0.103.0+1.21.1" }
+val NEOFORGE_VERSION by extra { "21.1.211" }
+val FABRIC_LOADER_VERSION by extra { "0.17.3" }
+val FABRIC_API_VERSION by extra { "0.116.7+1.21.1" }
 
 val SODIUM_DEPENDENCY_FABRIC by extra { "maven.modrinth:sodium:26nVNc41"}
 val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "maven.modrinth:sodium:I9RMZOOH"}
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.8" }
+val MOD_VERSION by extra { "1.8.18" }
 
 allprojects {
     apply(plugin = "java")
@@ -48,16 +48,16 @@ subprojects {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-snapshot")
+            builder.append("-Asycn")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
 
         if (!isReleaseBuild) {
             if (buildId != null) {
-                builder.append("-build.${buildId}")
-            } else {
-                builder.append("-local")
+               builder.append("-build.${buildId}")
+           } else {
+                //builder.append("-local")
             }
         }
 

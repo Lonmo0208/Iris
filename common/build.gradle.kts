@@ -1,12 +1,13 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.9-SNAPSHOT"
+    id("fabric-loom") version "1.9.2"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
 repositories {
     maven("https://maven.parchmentmc.org/")
+    maven {url = uri("file://${projectDir}/libs")}
 
     exclusiveContent {
         forRepository {

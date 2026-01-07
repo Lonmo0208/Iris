@@ -56,12 +56,13 @@ public class ProgramSet implements ProgramSetInterface {
 		//
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
-		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELLATION_SHADERS);
+		boolean readTesselation = shaderProperties.getRequiredFeatureFlags().contains(FeatureFlags.TESSELLATION_SHADERS.name()) || shaderProperties.getOptionalFeatureFlags().contains(FeatureFlags.TESSELLATION_SHADERS.name());
 
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
 
-		try (ExecutorService service = Executors.newFixedThreadPool(10)) {
+		int optimalThreads = Math.max(2, Math.min(16, Runtime.getRuntime().availableProcessors() * 2));
+		try (ExecutorService service = Executors.newFixedThreadPool(optimalThreads)) {
 			for (ProgramArrayId id : ProgramArrayId.values()) {
 				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
 				compositePrograms.put(id, sources);
@@ -163,28 +164,28 @@ public class ProgramSet implements ProgramSetInterface {
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name,
 											 ShaderProperties shaderProperties, boolean readTesselation) {
-		ProgramSource[] programs = new ProgramSource[100];
+		List<ProgramSource> programs = new ArrayList<>();
 
-		for (int i = 0; i < programs.length; i++) {
+		for (int i = 0; i < 100; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties, readTesselation);
+			ProgramSource source = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties, readTesselation);
+			programs.add(source);
 		}
 
-		return programs;
+		return programs.toArray(new ProgramSource[0]);
 	}
 
 	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
-		ComputeSource[] programs = new ComputeSource[100];
+		List<ComputeSource> programs = new ArrayList<>();
 
-		for (int i = 0; i < programs.length; i++) {
+		for (int i = 0; i < 100; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
+			ComputeSource source = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
+			programs.add(source);
 		}
 
-		return programs;
+		return programs.toArray(new ComputeSource[0]);
 	}
 
 	private ComputeSource[] readComputeArray(AbsolutePackPath directory,

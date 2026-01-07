@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
+import net.irisshaders.iris.config.ShaderPackConfig;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
@@ -20,6 +21,8 @@ import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
+import net.irisshaders.iris.shaderpack.AsyncShaderPack;
+import net.irisshaders.iris.shaderpack.DefltShaderPack;
 import net.irisshaders.iris.shaderpack.DimensionId;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
@@ -47,6 +50,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +80,7 @@ public class Iris {
 	 */
 	public static final String MODNAME = "Iris";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+	public static final Gson GSON = new Gson();
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.21";
@@ -94,6 +99,7 @@ public class Iris {
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
 	private static KeyMapping wireframeKeybind;
+	private static KeyMapping toggleShaderPackImplementationKeybind;
 	// Flag variable used when reloading
 	// Used in favor of queueDefaultShaderPackOptionValues() for resetting as the
 	// behavior is more concrete and therefore is more likely to repair a user's issues
@@ -190,6 +196,47 @@ public class Iris {
 		} else if (wireframeKeybind.consumeClick()) {
 			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
 				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
+			}
+		} else if (toggleShaderPackImplementationKeybind.consumeClick()) {
+			try {
+				// Toggle shader pack implementation between AsyncShaderPack (V1) and DefltShaderPack (V2)
+				ShaderPackConfig config = ShaderPackConfig.get();
+				ShaderPackConfig.ShaderPackVersion newVersion = config.getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1 ?
+						ShaderPackConfig.ShaderPackVersion.V2 : ShaderPackConfig.ShaderPackVersion.V1;
+				config.setShaderPackVersion(newVersion);
+
+				// Close the current shader pack first to prevent access to null implementation during reload
+				if (currentPack instanceof AutoCloseable closeable) {
+					try {
+						closeable.close();
+					} catch (Exception e) {
+						logger.error("Failed to close shader pack resources during implementation toggle", e);
+					}
+				}
+				// Clear currentPack reference to avoid using old instance
+				currentPack = null;
+
+				// Reload the shader pack with the new implementation
+				Iris.reload();
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(
+						Component.translatable("iris.shaderPack.implementation.toggled",
+								Component.translatable(newVersion.getTranslationKey())),
+						false
+					);
+				}
+			} catch (Exception e) {
+				logger.error("Error while toggling shader pack implementation!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(
+						Component.translatable("iris.shaderPack.implementation.toggled.failure",
+								Throwables.getRootCause(e).getMessage())
+								.withStyle(ChatFormatting.RED),
+						false
+					);
+				}
 			}
 		}
 	}
@@ -473,17 +520,7 @@ public class Iris {
 			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
-			try (Stream<Path> stream = Files.walk(pack)) {
-				return stream
-					.filter(Files::isDirectory)
-					// Prevent a pack simply named "shaders" from being
-					// identified as a valid pack
-					.filter(path -> !path.equals(pack))
-					.anyMatch(path -> path.endsWith("shaders"));
-			} catch (IOException ignored) {
-				// ignored, not a valid shader pack.
-				return false;
-			}
+			return pack.resolve("shaders").toFile().exists();
 		}
 
 		if (pack.toString().endsWith(".zip")) {
@@ -574,6 +611,14 @@ public class Iris {
 	 * Destroys and deallocates all created OpenGL resources. Useful as part of a reload.
 	 */
 	private static void destroyEverything() {
+		// Close the current shader pack if it's an AutoCloseable
+		if (currentPack instanceof AutoCloseable closeable) {
+			try {
+				closeable.close();
+			} catch (Exception e) {
+				logger.error("Failed to close shader pack resources", e);
+			}
+		}
 		currentPack = null;
 
 		getPipelineManager().destroyPipeline();
@@ -757,6 +802,10 @@ public class Iris {
 		loadShaderPackWhenPossible = true;
 	}
 
+    public static Path getIrisDir() {
+		return IrisPlatformHelpers.getInstance().getConfigDir();
+	}
+
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
@@ -775,6 +824,7 @@ public class Iris {
 		toggleShadersKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 		wireframeKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "iris.keybinds"));
+		toggleShaderPackImplementationKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.toggleShaderPackImplementation", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, "iris.keybinds"));
 
 		DHCompat.run();
 

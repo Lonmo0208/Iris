@@ -24,8 +24,6 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import static java.lang.Math.abs;
-
 public abstract class NormalHelper {
 	private NormalHelper() {
 	}

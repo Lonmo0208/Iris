@@ -12,8 +12,20 @@ import java.io.IOException;
 public class IrisVideoSettings {
 	private static final Tooltip DISABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.disabled"));
 	private static final Tooltip ENABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.enabled"));
+
 	public static int shadowDistance = 32;
+	public static boolean enableShadows = true;
+
+	public static ParticleQuality particleQuality = ParticleQuality.HIGH;
+	public static ReflectionQuality reflectionQuality = ReflectionQuality.HIGH;
+	public static boolean enableClouds = true;
+	public static boolean allowConcurrentCompute = true;
+
+	public static TextureQuality textureQuality = TextureQuality.HIGH;
+	public static int textureResolutionScale = 100;
+
 	public static ColorSpace colorSpace = ColorSpace.SRGB;
+
 	public static final OptionInstance<Integer> RENDER_DISTANCE = new ShadowDistanceOption<>("options.iris.shadowDistance",
 		mc -> {
 			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
@@ -68,5 +80,17 @@ public class IrisVideoSettings {
 		return Iris.getPipelineManager().getPipeline()
 			.map(pipeline -> pipeline.getForcedShadowRenderDistanceChunksForDisplay().isEmpty())
 			.orElse(true);
+	}
+
+	public enum ParticleQuality {
+		OFF, LOW, MEDIUM, HIGH
+	}
+
+	public enum ReflectionQuality {
+		OFF, LOW, MEDIUM, HIGH
+	}
+
+	public enum TextureQuality {
+		LOW, MEDIUM, HIGH
 	}
 }

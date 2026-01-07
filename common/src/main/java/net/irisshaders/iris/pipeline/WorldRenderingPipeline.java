@@ -79,6 +79,10 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldRenderSkyDisc();
 
+	boolean shouldRenderHighQualityReflections();
+
+	float getReflectionDistanceMultiplier();
+
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 
 	ParticleRenderingSettings getParticleRenderingSettings();

@@ -2,7 +2,6 @@ package net.irisshaders.iris.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.irisshaders.iris.Iris;
@@ -52,10 +51,16 @@ public class IrisConfig {
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
+	/**
+	 * @return Whether to use the legacy (V1) shader pack implementation
+	 */
+	public boolean useLegacyShaderPack() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
+	}
 
 	public IrisConfig(Path propertiesPath, Path excluded) {
 		shaderPackName = null;
-		enableShaders = true;
+		enableShaders = false;
 		allowUnknownShaders = false;
 		enableDebugOptions = false;
 		disableUpdateMessage = false;
@@ -99,6 +104,7 @@ public class IrisConfig {
 	public void setShaderPackName(String name) {
 		if (name == null || name.equals("(internal)") || name.isEmpty()) {
 			this.shaderPackName = null;
+			this.enableShaders = false;
 		} else {
 			this.shaderPackName = name;
 		}
@@ -188,6 +194,10 @@ public class IrisConfig {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {
 				shaderPackName = null;
 			}
+		}
+
+		if (shaderPackName == null) {
+			enableShaders = false;
 		}
 	}
 

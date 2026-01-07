@@ -51,6 +51,10 @@ public class CustomUniforms implements FunctionContext {
 				Builder.Variable variable = variables.get(name);
 				if (variable != null)
 					return variable.type;
+				if (name.startsWith("BIOME_")) {
+					Iris.logger.warn("Unknown biome variable: " + name + ", treating as int with default value 0");
+					return Type.Int;
+				}
 				return null;
 			},
 			true);

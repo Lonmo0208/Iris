@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.9-SNAPSHOT")
+    id("fabric-loom") version ("1.9.2")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -12,6 +12,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    maven {url = uri("file://${projectDir}/libs")}
     exclusiveContent {
         forRepository {
             maven {

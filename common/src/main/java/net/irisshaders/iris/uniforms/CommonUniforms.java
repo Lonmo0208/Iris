@@ -165,7 +165,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
+			.uniform1f(PER_FRAME, "dhFarPlane", () -> DHCompat.getFarPlane())
 			.uniform1f(PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
 			.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
 	}

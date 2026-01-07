@@ -20,6 +20,7 @@ public class DHCompat {
 	private static MethodHandle incompatible;
 	private static MethodHandle getDepthTex;
 	private static MethodHandle getFarPlane;
+	private static MethodHandle getFarPlaneReflection;
 	private static MethodHandle getNearPlane;
 	private static MethodHandle getDepthTexNoTranslucent;
 	private static MethodHandle checkFrame;
@@ -46,12 +47,16 @@ public class DHCompat {
 	}
 
 	public static Matrix4f getProjection() {
+		return getProjection(false);
+	}
+
+	public static Matrix4f getProjection(boolean isReflectionRender) {
 		if (!dhPresent) {
 			return new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
 		}
 
 		Matrix4f projection = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
-		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), DHCompat.getNearPlane(), DHCompat.getFarPlane());
+		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), DHCompat.getNearPlane(), DHCompat.getFarPlane(isReflectionRender));
 	}
 
 	public static void run() {
@@ -63,6 +68,7 @@ public class DHCompat {
 				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));
 				getFarPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
+				getFarPlaneReflection = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class, boolean.class));
 				getNearPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
 				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
@@ -95,6 +101,20 @@ public class DHCompat {
 
 		try {
 			return (float) getFarPlane.invoke();
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static float getFarPlane(boolean isReflectionRender) {
+		if (!dhPresent) return 0.01f;
+
+		try {
+			if (isReflectionRender && getFarPlaneReflection != null) {
+				return (float) getFarPlaneReflection.invoke(isReflectionRender);
+			} else {
+				return getFarPlane();
+			}
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
