@@ -30,9 +30,9 @@ public class ShaderPack implements AutoCloseable {
 			closeable.close();
 		}
 	}
-	private final AsyncShaderPack asyncImplementation;
-	private final DefltShaderPack defaultImplementation;
-	private final boolean useLegacyShaderPack;
+	public final AsyncShaderPack asyncImplementation;
+	public final DefltShaderPack defaultImplementation;
+	public final boolean useLegacyShaderPack;
 
 	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		this.useLegacyShaderPack = Iris.getIrisConfig().useLegacyShaderPack();
@@ -79,44 +79,30 @@ public class ShaderPack implements AutoCloseable {
 	}
 
 	public LanguageMap getLanguageMap() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getLanguageMap() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getLanguageMap() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getLanguageMap() : null) : (defaultImplementation != null ? defaultImplementation.getLanguageMap() : null);
 	}
 
 	public ShaderPackOptions getShaderPackOptions() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getShaderPackOptions() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getShaderPackOptions() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getShaderPackOptions() : null) : (defaultImplementation != null ? defaultImplementation.getShaderPackOptions() : null);
 	}
 
 	public OptionMenuContainer getMenuContainer() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getMenuContainer() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getMenuContainer() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getMenuContainer() : null) : (defaultImplementation != null ? defaultImplementation.getMenuContainer() : null);
 	}
 
 	public boolean hasFeature(FeatureFlags feature) {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.hasFeature(feature) : false) : 
-			(defaultImplementation != null ? defaultImplementation.hasFeature(feature) : false);
+		return useLegacyShaderPack ? (asyncImplementation != null && asyncImplementation.hasFeature(feature)) : (defaultImplementation != null && defaultImplementation.hasFeature(feature));
 	}
 
 	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getBufferObjects() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getBufferObjects() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getBufferObjects() : null) : (defaultImplementation != null ? defaultImplementation.getBufferObjects() : null);
 	}
 
 	public CustomUniforms.Builder getCustomUniforms() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getCustomUniforms() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getCustomUniforms() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getCustomUniforms() : null) : (defaultImplementation != null ? defaultImplementation.getCustomUniforms() : null);
 	}
 
 	public Map<NamespacedId, String> getDimensionMap() {
-		return useLegacyShaderPack ? 
-			(asyncImplementation != null ? asyncImplementation.getDimensionMap() : null) : 
-			(defaultImplementation != null ? defaultImplementation.getDimensionMap() : null);
+		return useLegacyShaderPack ? (asyncImplementation != null ? asyncImplementation.getDimensionMap() : null) : (defaultImplementation != null ? defaultImplementation.getDimensionMap() : null);
 	}
 }
