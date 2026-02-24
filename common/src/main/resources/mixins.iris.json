@@ -27,6 +27,7 @@
     "MixinClientLanguage",
     "MixinClientPacketListener",
     "MixinDebugEntries",
+    "MixinDebugScreenEntriesList",
     "MixinEndFlash",
     "MixinEntityRenderDispatcher",
     "MixinFogRenderer",

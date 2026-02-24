@@ -124,6 +124,7 @@ public class SodiumTransformer {
 			"vec4 _vert_color;",
 			"const uint POSITION_BITS        = 20u;",
 			"const uint POSITION_MAX_COORD   = 1u << POSITION_BITS;",
+			"const uint TANGENT_W_BIT   = 16u;",
 			"const uint POSITION_MAX_VALUE   = POSITION_MAX_COORD - 1u;",
 
 			"const uint TEXTURE_BITS         = 15u;",
@@ -138,23 +139,47 @@ public class SodiumTransformer {
 			"vec4 irs_Tangent;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"""
-vec3 oct_to_vec3(vec2 e) {
-	vec2 f = vec2(e.x, e.y);
-	vec3 n = vec3(f.x, f.y, 1.0f - abs(f.x) - abs(f.y));
-	float t = clamp(-n.z, 0.0f, 1.0f);
-	n.x += n.x >= 0.0f ? -t : t;
-	n.y += n.y >= 0.0f ? -t : t;
-	return normalize(n);
+vec2 signNotZero(vec2 v) {
+    return vec2(v.x >= 0.0 ? 1.0 : -1.0,
+                v.y >= 0.0 ? 1.0 : -1.0);
 }
 				""",
 			"""
-vec4 tangent_decode(vec2 e) {
-	vec2 oct_compressed = e;
-	oct_compressed.y *= 127.0f / 64.0f;
-	float r_sign = abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
-	oct_compressed.y = fract(oct_compressed.y) * (64.0f / 63.0f);
-	vec3 res = oct_to_vec3(oct_compressed.xy);
-	return vec4(res, r_sign);
+vec3 decodeOct24(uint packe) {
+    int sx = int(packe);
+    vec2 e = vec2((sx << 8) >> 20, (sx << 20) >> 20) * (1.0 / 2047.0);
+
+    vec3 v = vec3(e, 1.0 - abs(e.x) - abs(e.y));
+
+    v.xy = (v.z >= 0.0) ? v.xy : (1.0 - abs(v.yx)) * signNotZero(v.xy);
+
+    return normalize(v);
+}
+				""",
+			"""
+void onb_from_normal(in vec3 n, out vec3 t1, out vec3 t2) {
+    float s = n.z >= 0.0f ? 1.0f : -1.0f;
+    float a = -1.0f / (s + n.z);
+    float b = n.x * n.y * a;
+    t1 = vec3(1.0f + s * n.x * n.x * a, s * b, -s * n.x);
+    t2 = vec3(b, s + n.y * n.y * a, -n.y);
+}
+				""",
+			"""
+vec2 decode_diamond(float p) {
+    float x = 1.0f - 4.0f * abs(p - 0.5f);
+    float y = (p >= 0.5f ? 1.0f : -1.0f) * (1.0f - abs(x));
+    return vec2(x, y);
+}
+				""",
+			"""
+vec4 decode_diamond_tangent_with_sign(vec3 normal, int qByte, bool signPositive) {
+    vec3 t1, t2;
+    onb_from_normal(normal, t1, t2);
+    float d = float(qByte) / 256.0;
+    vec2 p = decode_diamond(d);
+    vec3 tang = normalize(p.x * t1 + p.y * t2);
+    return vec4(tang, signPositive ? 1.0 : -1.0);
 }
 				""",
 			"""
@@ -191,8 +216,8 @@ vec4 tangent_decode(vec2 e) {
 				"_vert_tex_diffuse_coord_bias = _get_texcoord_bias();" +
 				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
 				"_vert_color = a_Color;" +
-				(needsNormal ? "irs_Normal = oct_to_vec3(iris_Normal.xy);" : "") +
-				(needsNormal ? "irs_Tangent = tangent_decode(iris_Normal.zw);" : "") +
+				(needsNormal ? "irs_Normal = decodeOct24(iris_Normal);" : "") +
+				(needsNormal ? "irs_Tangent = decode_diamond_tangent_with_sign(irs_Normal, (int(iris_Normal >> 24u)), (a_LightAndData.z & 1u) != 0u);" : "") +
 				"_draw_id = a_LightAndData[3];" +
 				"int chunkFade = u_chunkFades[int(_draw_id) >> 2][int(_draw_id) & 3];" +
 				"float fade = clamp(float(iris_CurrentTime - chunkFade) * chunkFadeTimeInv, 0.0, 1.0);" +
@@ -209,7 +234,7 @@ vec4 tangent_decode(vec2 e) {
 		addIfNotExists(root, t, tree, "a_TexCoord", Type.U32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_LightAndData", Type.U32VEC4, StorageQualifier.StorageType.IN);
-		if (needsNormal) addIfNotExists(root, t, tree, "iris_Normal", Type.F32VEC4, StorageQualifier.StorageType.IN);
+		if (needsNormal) addIfNotExists(root, t, tree, "iris_Normal", Type.UINT32, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 

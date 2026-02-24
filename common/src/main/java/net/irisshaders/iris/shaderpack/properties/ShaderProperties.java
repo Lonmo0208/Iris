@@ -103,6 +103,7 @@ public class ShaderProperties {
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
+	private OptionalBoolean breaksAnisotropy = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean skipAllRendering = OptionalBoolean.DEFAULT;
@@ -208,6 +209,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
+			handleBooleanDirective(key, value, "breaksAnisotropy", bool -> breaksAnisotropy = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> {
 				separateEntityDraws = bool;
@@ -402,8 +404,8 @@ public class ShaderProperties {
 						name = parts[1];
 					}
 
-					if (trueIndex > 8) {
-						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					if (trueIndex > 12) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
 						return;
 					}
 
@@ -426,8 +428,8 @@ public class ShaderProperties {
 						return;
 					}
 
-					if (trueIndex > 8) {
-						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					if (trueIndex > 12) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
 						return;
 					}
 
@@ -841,6 +843,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getSeparateAo() {
 		return separateAo;
+	}
+
+	public OptionalBoolean breaksAnisotropy() {
+		return breaksAnisotropy;
 	}
 
 	public OptionalBoolean getVoxelizeLightBlocks() {

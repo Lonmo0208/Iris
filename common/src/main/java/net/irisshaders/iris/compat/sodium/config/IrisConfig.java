@@ -23,6 +23,7 @@ import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Set;
 
 public class IrisConfig implements ConfigEntryPoint {
 	public static final Identifier MONO = Identifier.fromNamespaceAndPath("iris", "textures/gui/config-icon-mono.png");
@@ -47,7 +48,7 @@ public class IrisConfig implements ConfigEntryPoint {
 							}
 						})
 					.setElementNameProvider(ColorSpace::getName))
-					.addOption(builder.createIntegerOption(Identifier.fromNamespaceAndPath("iris", "shadowDistance"))
+					.addOption(builder.createIntegerOption(Identifier.fromNamespaceAndPath("iris", "shadow_distance"))
 						.setDefaultValue(32)
 						.setBinding(value -> IrisVideoSettings.shadowDistance = value, () -> IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance))
 						.setName(Component.translatable("options.iris.shadowDistance"))
@@ -73,13 +74,19 @@ public class IrisConfig implements ConfigEntryPoint {
 				)
 			).registerOptionOverlay(Identifier.parse("sodium:quality.filtering_mode"), builder.createEnumOption(Identifier.parse("sodium:quality.filtering_mode"), TextureFilteringMethod.class)
 				.setTooltip(i -> {
-					if (Iris.getCurrentPack().isPresent() && !Iris.getCurrentPack().get().hasFeature(FeatureFlags.TEXTURE_FILTERING)) {
-						return Component.literal("Your currently active shader pack does not support this.");
+					if (i == TextureFilteringMethod.RGSS) {
+						return Component.translatable("options.textureFiltering." + i.name().toLowerCase(Locale.ROOT) + ".tooltip").append(Component.literal(" (RGSS is not usable with shaders on.)"));
 					} else {
 						return Component.translatable("options.textureFiltering." + i.name().toLowerCase(Locale.ROOT) + ".tooltip");
 					}
 				})
-				.setEnabledProvider(i -> Iris.getCurrentPack().isEmpty() || Iris.getCurrentPack().get().hasFeature(FeatureFlags.TEXTURE_FILTERING), ConfigState.UPDATE_ON_REBUILD)
+				.setAllowedValuesProvider(state -> {
+					if (Iris.getCurrentPack().isPresent()) {
+						return Set.of(TextureFilteringMethod.NONE, TextureFilteringMethod.ANISOTROPIC);
+					} else {
+						return Set.of(TextureFilteringMethod.values());
+					}
+				}, ConfigState.UPDATE_ON_REBUILD)
 			).registerOptionOverlay(Identifier.parse("sodium:quality.graphics"), builder.createBooleanOption(Identifier.parse("sodium:quality.graphics"))
 				.setTooltip(i -> {
 					if (Iris.getCurrentPack().isPresent()) {
@@ -88,8 +95,10 @@ public class IrisConfig implements ConfigEntryPoint {
 						return Component.translatable("options.improvedTransparency.tooltip");
 					}
 				})
-				.setEnabledProvider(i -> Iris.getCurrentPack().isEmpty(), ConfigState.UPDATE_ON_REBUILD)
-			).registerOptionOverlay(Identifier.parse("sodium:quality.anisotropy_bit"), builder.createIntegerOption(Identifier.parse("sodium:quality.anisotropy_bit"))
-				.setEnabledProvider(i -> Iris.getCurrentPack().isEmpty() || Iris.getCurrentPack().get().hasFeature(FeatureFlags.TEXTURE_FILTERING), ConfigState.UPDATE_ON_REBUILD));
+				.setEnabledProvider(i -> {
+					return Iris.getCurrentPack().isEmpty();
+				}, ConfigState.UPDATE_ON_REBUILD)
+			);//.registerOptionOverlay(Identifier.parse("sodium:quality.anisotropy_bit"), builder.createIntegerOption(Identifier.parse("sodium:quality.anisotropy_bit")));
+		;
 	}
 }

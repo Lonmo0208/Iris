@@ -2,6 +2,10 @@ package net.irisshaders.iris.samplers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.image.GlImage;
 import net.irisshaders.iris.gl.sampler.GlSampler;
@@ -11,6 +15,7 @@ import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
@@ -18,6 +23,7 @@ import net.irisshaders.iris.targets.RenderTarget;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -33,6 +39,9 @@ public class IrisSamplers {
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
+
+	private static final GpuSampler[] terrain = new GpuSampler[16];
+	private static final GlSampler[] terrainS = new GlSampler[16];
 
 	private IrisSamplers() {
 		// no construction allowed
@@ -237,5 +246,21 @@ public class IrisSamplers {
 				images.addDynamicSampler(image.getTarget(), image::getId, null, image.getSamplerName());
 			}
 		});
+	}
+
+	public static GpuSampler getTerrainCache(int i) {
+		if (WorldRenderingSettings.INSTANCE.breaksAnisotropy()) i = 1;
+		if (terrain[i] == null) {
+			terrain[i] = RenderSystem.getDevice().createSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST, i, OptionalDouble.empty());
+		}
+		return terrain[i];
+	}
+
+	public static GlSampler getTerrainCacheIris(int i) {
+		if (WorldRenderingSettings.INSTANCE.breaksAnisotropy()) i = 1;
+		if (terrainS[i] == null) {
+			terrainS[i] = new GlSampler(((com.mojang.blaze3d.opengl.GlSampler) getTerrainCache(i)).getId());
+		}
+		return terrainS[i];
 	}
 }

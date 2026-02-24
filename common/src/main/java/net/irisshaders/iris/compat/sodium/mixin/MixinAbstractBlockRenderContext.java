@@ -52,5 +52,4 @@ public class MixinAbstractBlockRenderContext {
 			((VertexEncoderInterface) r).restoreBlock();
 		}
 	}
-
 }

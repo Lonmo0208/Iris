@@ -39,6 +39,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -537,7 +538,9 @@ public class ShadowRenderer {
 			Player player = Minecraft.getInstance().player;
 
 			float g = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-			levelRenderState.entityRenderStates.add(Minecraft.getInstance().getEntityRenderDispatcher().extractEntity(player, g));
+			if (!player.isSpectator() && !player.isInvisible()) {
+				levelRenderState.entityRenderStates.add(Minecraft.getInstance().getEntityRenderDispatcher().extractEntity(player, g));
+			}
 
 			if (player.getVehicle() != null) {
 				levelRenderState.entityRenderStates.add(Minecraft.getInstance().getEntityRenderDispatcher().extractEntity(player.getVehicle(), g));
@@ -678,6 +681,8 @@ public class ShadowRenderer {
 		Entity.setViewScale(Mth.clamp((double)Minecraft.getInstance().options.getEffectiveRenderDistance() / (double)8.0F, (double)1.0F, (double)2.5F) * (Double)Minecraft.getInstance().options.entityDistanceScaling().get());
 
 		for(Entity entity : Minecraft.getInstance().level.entitiesForRendering()) {
+			if (entity instanceof AbstractClientPlayer acp && acp.isSpectator()) continue;
+
 			if (Minecraft.getInstance().getEntityRenderDispatcher().shouldRender(entity, frustum, d, e, f) || entity.hasIndirectPassenger(Minecraft.getInstance().player)) {
 				BlockPos blockPos = entity.blockPosition();
 				if ((Minecraft.getInstance().level.isOutsideBuildHeight(blockPos.getY()) || Minecraft.getInstance().levelRenderer.isSectionCompiledAndVisible(blockPos))) {

@@ -3,6 +3,7 @@ package net.irisshaders.iris.vertices.sodium.terrain;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.irisshaders.iris.pipeline.programs.GlUniformMatrix3f;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.irisshaders.iris.vertices.NormI8;
@@ -21,10 +22,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	private static final int DEFAULT_NORMAL;
 
 	static {
-		Vector2f normE = new Vector2f(), tangE = new Vector2f();
-		NormalHelper.octahedronEncode(normE, 0, 1, 0);
-		NormalHelper.tangentEncode(tangE, new Vector4f(0, 1, 0, 1));
-		DEFAULT_NORMAL = NormI8.pack(normE.x, normE.y, tangE.x, tangE.y);
+		DEFAULT_NORMAL = NormalHelper.encodeNormalTangent(new Vector3f(0, 1, 0), new Vector3f(0, 1, 0), new Vector3f(), new Vector3f(), new Vector3f());
 	}
 
 	private final Vector3f normal = new Vector3f(0.0f, 1.0f, 0.0f);
@@ -34,8 +32,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	private final int midBlockOffset;
 	private final int midUvOffset;
 	private final int stride;
-	private final Vector2f normEncoded = new Vector2f();
-	private final Vector2f tangEncoded = new Vector2f();
+	private final Vector3f[] scratchValues = new Vector3f[3];
+	private final Vector3f tangentSet = new Vector3f();
 
 	public XHFPTerrainVertex(int blockIdOffset, int normalOffset, int midUvOffset, int midBlockOffset, int stride) {
 		this.blockIdOffset = blockIdOffset;
@@ -43,6 +41,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 		this.midUvOffset = midUvOffset;
 		this.midBlockOffset = midBlockOffset;
 		this.stride = stride;
+		for (int i = 0; i < scratchValues.length; i++) {
+			scratchValues[i] = new Vector3f();
+		}
 	}
 
 	private static int packPositionHi(int x, int y, int z) {
@@ -90,8 +91,12 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 		return (x >>> 31);
 	}
 
-	private static int packLightAndData(int light, int material, int section) {
-		return (light & '\uffff') << 0 | (material & 255) << 16 | (section & 255) << 24;
+	private static final int TANGENT_W_BIT = 16;
+
+	private static int packLightAndData(int light, boolean tangentW, int section) {
+		return (light & 0xFFFF)
+			| (((tangentW ? 1 : 0) & 1) << TANGENT_W_BIT)
+			| ((section & 0xFF) << 24);
 	}
 
 	private static int floorInt(float x) {
@@ -123,9 +128,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 				vertices[3].x, vertices[3].y, vertices[3].z);
 
 			int tangent = computeTangentForQuad(normal, vertices);
-			NormalHelper.octahedronEncode(normEncoded, normal.x, normal.y, normal.z);
-			NormalHelper.tangentEncode(tangEncoded, this.tangent);
-			finalNorm = NormI8.pack(normEncoded.x, normEncoded.y, tangEncoded.x, tangEncoded.y);
+			finalNorm = NormalHelper.encodeNormalTangent(normal, this.tangentSet.set(this.tangent), scratchValues[0], scratchValues[1], scratchValues[2]);
 		} else {
 			finalNorm = DEFAULT_NORMAL;
 		}
@@ -147,7 +150,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 			MemoryUtil.memPutInt(ptr + 4L, packPositionLo(x, y, z));
 			MemoryUtil.memPutInt(ptr + 8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorARGB.mulRGB(vertex.color, vertex.ao));
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
-			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
+			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, this.tangent.w >= 0.0, section));
 
 			if (blockIdOffset != 0) {
 				MemoryUtil.memPutInt(ptr + blockIdOffset, packBlockId(extension));

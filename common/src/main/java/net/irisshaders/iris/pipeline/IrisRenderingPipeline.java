@@ -97,6 +97,7 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -106,6 +107,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.ARBClearTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -261,7 +263,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		}
 
-		this.clearImages = customImages.stream().filter(GlImage::shouldClear).map(ImageClearPass::create).collect(ImmutableList.toImmutableList());
+		this.clearImages = customImages.stream()
+			.filter(GlImage::shouldClear)
+			.map(ImageClearPass::create)
+			.collect(ImmutableList.toImmutableList());
 
 		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
 			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
@@ -437,6 +442,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		WorldRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
 		WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		WorldRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
+		WorldRenderingSettings.INSTANCE.setBreaksAnisotropy(programSet.getPackDirectives().breaksAnisotropy());
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(programSet.getPackDirectives().shouldVoxelizeLightBlocks());
 		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 
@@ -841,7 +847,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	public void onSetAlbedoTex(GpuTextureView id) {
 		if (id != null) {
 			albedoTex = id.texture().iris$getGlId();
-
+			int maxAnisotropy = Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.ANISOTROPIC
+				? Minecraft.getInstance().options.maxAnisotropyValue()
+				: 1;
 			if (shouldBindPBR && isRenderingWorld) {
 				PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id.texture().iris$getGlId());
 				currentNormalTexture = pbrHolder.normalTexture();
@@ -849,11 +857,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 				TextureFormat textureFormat = TextureFormatLoader.getFormat();
 				if (textureFormat != null) {
-					this.normalSampler = textureFormat.canInterpolateValues(PBRType.NORMAL) ? GlSampler.MIPPED_NEAREST : GlSampler.MIPPED_NEAREST_NEAREST;
-					this.specularSampler = textureFormat.canInterpolateValues(PBRType.SPECULAR) ? GlSampler.MIPPED_NEAREST : GlSampler.MIPPED_NEAREST_NEAREST;
+					this.normalSampler = textureFormat.canInterpolateValues(PBRType.NORMAL) ? IrisSamplers.getTerrainCacheIris(maxAnisotropy) : GlSampler.MIPPED_NEAREST_NEAREST;
+					this.specularSampler = textureFormat.canInterpolateValues(PBRType.SPECULAR) ? IrisSamplers.getTerrainCacheIris(maxAnisotropy) : GlSampler.MIPPED_NEAREST_NEAREST;
 				} else {
-					this.normalSampler = GlSampler.MIPPED_NEAREST;
-					this.specularSampler = GlSampler.MIPPED_NEAREST;
+					this.normalSampler = IrisSamplers.getTerrainCacheIris(maxAnisotropy);
+					this.specularSampler = IrisSamplers.getTerrainCacheIris(maxAnisotropy);
 				}
 
 				PBRTextureManager.notifyPBRTexturesChanged();
@@ -1237,6 +1245,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		renderTargets.destroy();
 		dhCompat.clearPipeline();
 
+		clearImages.forEach(ImageClearPass::destroy);
 		customImages.forEach(GlImage::destroy);
 		clearImages.forEach(ImageClearPass::destroy);
 

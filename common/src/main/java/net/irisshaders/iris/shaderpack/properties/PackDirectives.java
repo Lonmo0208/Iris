@@ -39,6 +39,7 @@ public class PackDirectives {
 	private boolean sky;
 	private boolean rainDepth;
 	private boolean separateAo;
+	private boolean breaksAnisotropy;
 	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
 	private boolean skipAllRendering;
@@ -81,6 +82,7 @@ public class PackDirectives {
 		sky = properties.getSky().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
+		breaksAnisotropy = properties.breaksAnisotropy().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		skipAllRendering = properties.skipAllRendering().orElse(false);
@@ -200,6 +202,10 @@ public class PackDirectives {
 
 	public boolean shouldUseSeparateAo() {
 		return separateAo;
+	}
+
+	public boolean breaksAnisotropy() {
+		return breaksAnisotropy;
 	}
 
 	public boolean shouldVoxelizeLightBlocks() {

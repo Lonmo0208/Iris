@@ -30,9 +30,9 @@ public class MixinStationaryItemParticle {
 		}
 	}
 
-	@Inject(method = "getLayer", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getLayer", at = @At("RETURN"), cancellable = true)
 	private void iris$overrideParticleRenderType(CallbackInfoReturnable<SingleQuadParticle.Layer> cir) {
-		if (isOpaque) {
+		if (isOpaque && cir.getReturnValue() == SingleQuadParticle.Layer.TERRAIN) {
 			cir.setReturnValue(IrisParticleRenderTypes.TERRAIN_OPAQUE);
 		}
 	}

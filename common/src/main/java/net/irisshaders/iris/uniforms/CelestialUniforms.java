@@ -68,7 +68,7 @@ public final class CelestialUniforms {
 		//
 		// World#isDay appears to do some nontrivial calculations that appear to not entirely work for us here.
 		int timeOfDay = Math.toIntExact((Minecraft.getInstance().level.getDayTime() % 24000));
-		return timeOfDay < 12751 || timeOfDay > 23251; // TODO
+		return timeOfDay < 12751 || timeOfDay > 23219; // TODO
 	}
 
 	private static ClientLevel getWorld() {

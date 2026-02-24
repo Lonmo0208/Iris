@@ -210,17 +210,17 @@ public class IrisRenderSystem {
 	}
 
 	public static void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values) {
-		RenderSystem.isOnRenderThread();
+		RenderSystem.assertOnRenderThread();
 		dsaState.clearBufferfv(framebuffer, buffer, drawbuffer, values);
 	}
 
 	public static void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
-		RenderSystem.isOnRenderThread();
+		RenderSystem.assertOnRenderThread();
 		dsaState.clearBufferiv(framebuffer, buffer, drawbuffer, values);
 	}
 
 	public static void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
-		RenderSystem.isOnRenderThread();
+		RenderSystem.assertOnRenderThread();
 		dsaState.clearBufferuiv(framebuffer, buffer, drawbuffer, values);
 	}
 
