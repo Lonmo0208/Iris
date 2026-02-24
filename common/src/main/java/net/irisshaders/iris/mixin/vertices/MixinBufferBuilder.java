@@ -171,7 +171,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
-		if (mode != VertexFormat.Mode.QUADS && mode != VertexFormat.Mode.TRIANGLES) {
+		if (mode != VertexFormat.Mode.TRIANGLE_FAN && mode != VertexFormat.Mode.TRIANGLES) {
 			return;
 		}
 
@@ -179,7 +179,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 		iris$vertexCount++;
 
-		if (mode == VertexFormat.Mode.QUADS && iris$vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && iris$vertexCount == 3) {
+		if (mode == VertexFormat.Mode.TRIANGLE_FAN && iris$vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && iris$vertexCount == 3) {
 			fillExtendedData(iris$vertexCount);
 		}
 	}

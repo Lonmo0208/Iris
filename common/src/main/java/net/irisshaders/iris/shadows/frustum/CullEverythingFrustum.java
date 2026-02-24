@@ -32,7 +32,7 @@ public class CullEverythingFrustum extends Frustum implements ViewportProvider, 
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new Viewport(this, position);
+		return new Viewport(new SimpleFrustumAdapter(this), position);
 	}
 
 	@Override

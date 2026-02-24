@@ -55,7 +55,7 @@ public class IrisConfig {
 
 	public IrisConfig(Path propertiesPath, Path excluded) {
 		shaderPackName = null;
-		enableShaders = true;
+		enableShaders = false;
 		allowUnknownShaders = false;
 		enableDebugOptions = false;
 		disableUpdateMessage = false;
@@ -99,6 +99,7 @@ public class IrisConfig {
 	public void setShaderPackName(String name) {
 		if (name == null || name.equals("(internal)") || name.isEmpty()) {
 			this.shaderPackName = null;
+			this.enableShaders = false;
 		} else {
 			this.shaderPackName = name;
 		}
@@ -189,6 +190,10 @@ public class IrisConfig {
 				shaderPackName = null;
 			}
 		}
+
+		if (shaderPackName == null) {
+			enableShaders = false;
+		}
 	}
 
 	/**
@@ -222,5 +227,9 @@ public class IrisConfig {
 	public void setUnknown(boolean b) throws IOException {
 		this.allowUnknownShaders = b;
 		save();
+	}
+
+	public boolean useLegacyShaderPack() {
+		return ShaderPackConfig.get().getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1;
 	}
 }

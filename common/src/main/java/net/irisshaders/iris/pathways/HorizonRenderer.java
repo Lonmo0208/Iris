@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Matrix4f;
@@ -17,8 +18,15 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -45,17 +53,35 @@ public class HorizonRenderer {
 	private GpuBuffer buffer;
 	private int currentRenderDistance;
 
-	private int indexCount = -1;
+	private volatile int lastBuiltRadius = -1;
+
+	private final AtomicBoolean isRebuilding = new AtomicBoolean(false);
+
+	private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
 
 	public HorizonRenderer() {
-		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		int availableProcessors = Runtime.getRuntime().availableProcessors();
+		int poolSize = Math.max(1, Math.min(availableProcessors, 2));
 
-		rebuildBuffer();
+		if (poolSize > 1 && availableProcessors <= 2) {
+			poolSize = 1;
+		}
+
+		this.asyncExecutor = Executors.newFixedThreadPool(poolSize, r -> {
+			Thread thread = new Thread(r, "Iris-Horizon-Renderer-" + THREAD_COUNTER.getAndIncrement());
+			thread.setDaemon(true);
+			thread.setPriority(Thread.MIN_PRIORITY);
+			return thread;
+		});
+
+		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		lastBuiltRadius = currentRenderDistance * 16;
+		rebuildBufferSync();
 	}
 
-	private void rebuildBuffer() {
-		if (this.buffer != null) {
-			this.buffer.close();
+	private void rebuildBufferSync() {
+		if (destroyed.get()) {
+			return;
 		}
 
 		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
@@ -63,11 +89,7 @@ public class HorizonRenderer {
 		buildHorizon(currentRenderDistance * 16, buffer);
 		MeshData meshData = buffer.buildOrThrow();
 
-		this.buffer = RenderSystem.getDevice().createBuffer(() -> "Horizon", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, meshData.vertexBuffer());
-		this.indexCount = meshData.drawState().indexCount();
-		meshData.close();
-		Tesselator.getInstance().clear();
-	}
+			this.indexCount = meshData.drawState().indexCount();
 
 	private void buildHorizon(int radius, VertexConsumer consumer) {
 		if (radius > 256) {
@@ -87,9 +109,26 @@ public class HorizonRenderer {
 	}
 
 	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, Vector4f fogColor) {
-		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
-			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-			rebuildBuffer();
+		if (destroyed.get()) {
+			return;
+		}
+
+		int newRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+		if (currentRenderDistance != newRenderDistance) {
+			currentRenderDistance = newRenderDistance;
+			rebuildBufferAsync();
+		}
+
+		GpuBuffer currentBuffer = bufferRef.get();
+		if (currentBuffer == null) {
+			currentBuffer = fallbackBuffer;
+			if (currentBuffer == null) {
+				return;
+			}
+		}
+
+		if (indexCount <= 0) {
+			return;
 		}
 
 		RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLE_FAN);
@@ -100,14 +139,47 @@ public class HorizonRenderer {
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setUniform("DynamicTransforms", gpuBufferSlice);
 
-			pass.setVertexBuffer(0, buffer);
-			pass.setIndexBuffer(indexBuffer, indices.type());
-			pass.setPipeline(RenderPipelines.SKY);
-			pass.drawIndexed(0, 0, indexCount, 1);
+				RenderSystem.bindDefaultUniforms(pass);
+				pass.setUniform("DynamicTransforms", gpuBufferSlice);
+				pass.setVertexBuffer(0, currentBuffer);
+				pass.setIndexBuffer(indexBuffer, indices.type());
+				pass.setPipeline(RenderPipelines.SKY);
+				pass.drawIndexed(0, 0, indexCount, 1);
+			}
+		} catch (Exception e) {
+			Iris.logger.warn("Failed to render horizon: ", e);
 		}
 	}
 
 	public void destroy() {
-		buffer.close();
+		destroyed.set(true);
+
+		if (pendingRebuild != null && !pendingRebuild.isDone()) {
+			pendingRebuild.cancel(true);
+		}
+
+		GpuBuffer buffer = bufferRef.getAndSet(null);
+		closeBufferSync(buffer);
+
+		if (fallbackBuffer != null) {
+			closeBufferSync(fallbackBuffer);
+			fallbackBuffer = null;
+		}
+
+		if (asyncExecutor != null && !asyncExecutor.isShutdown()) {
+			try {
+				asyncExecutor.shutdownNow();
+			} catch (Exception ignored) {
+			}
+		}
+	}
+
+	private void closeBufferSync(GpuBuffer buffer) {
+		if (buffer != null) {
+			try {
+				buffer.close();
+			} catch (Exception ignored) {
+			}
+		}
 	}
 }

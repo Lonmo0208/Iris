@@ -1,6 +1,7 @@
 package net.irisshaders.iris.compat.dh;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
@@ -34,12 +35,12 @@ import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
 
 public class LodRendererEvents {
 	private static boolean eventHandlersBound = false;
 
+	private static boolean previousFramePackInUse;
 	private static boolean atTranslucent = false;
 	private static int textureWidth;
 	private static int textureHeight;
@@ -88,9 +89,19 @@ public class LodRendererEvents {
 			// canceling it will prevent DH from rendering for that frame
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
+				// Check if the Shader Pack enabled status has changed between frames.
+				boolean isPackInUse = Iris.isPackInUseQuick();
 
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(Iris.isPackInUseQuick() && getInstance().shouldOverride);
-				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
+				if (isPackInUse != previousFramePackInUse) {
+					// Shader Pack enabled status has changed between frames; adapt the DH fog settings.
+					DhApi.Delayed.renderProxy.setDeferTransparentRendering(isPackInUse && getInstance().shouldOverride);
+					if (isPackInUse) {
+						DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
+					} else {
+						DhApi.Delayed.configs.graphics().fog().drawMode().clearValue();
+					}
+					previousFramePackInUse = isPackInUse;
+				}
 			}
 		};
 
@@ -182,6 +193,8 @@ public class LodRendererEvents {
 				if (getInstance().shouldOverride) {
 					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						getInstance().getShadowShader().unbind();
+						RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
+						GlStateManager._viewport(0, 0, mainRenderTarget.width, mainRenderTarget.height);
 					} else {
 						getInstance().getSolidShader().unbind();
 					}
@@ -200,7 +213,7 @@ public class LodRendererEvents {
 					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						event.cancelEvent();
 					} else if (getInstance().shouldOverride) {
-						GlStateManager._clear(GL43C.GL_DEPTH_BUFFER_BIT);
+						GlStateManager._clear(GL46C.GL_DEPTH_BUFFER_BIT);
 						event.cancelEvent();
 					}
 				}
@@ -257,6 +270,12 @@ public class LodRendererEvents {
 						OverrideInjector.INSTANCE.bind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
 					}
 				}
+
+				// DH changes viewport using raw LWJGL calls
+				// https://gitlab.com/distant-horizons-team/distant-horizons-core/-/blob/main/core/src/main/java/com/seibel/distanthorizons/core/render/renderer/LodRenderer.java#L577
+				// We need to resynchronize with Iris's framebuffer binding optimization in MixinGlStateManager_FramebufferBinding
+				RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
+				GlStateManager._viewport(0, 0, mainRenderTarget.width, mainRenderTarget.height);
 			}
 		};
 		DhApi.events.bind(DhApiBeforeRenderSetupEvent.class, beforeRenderPassEvent);
@@ -288,6 +307,7 @@ public class LodRendererEvents {
 					if (instance.shouldOverride) {
 						if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 							instance.getShadowShader().bind();
+							Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::setupShadowViewport);
 						} else {
 							instance.getSolidShader().bind();
 						}
@@ -332,6 +352,7 @@ public class LodRendererEvents {
 					if (instance.shouldOverrideShadow && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						instance.getShadowShader().bind();
 						instance.getShadowFB().bind();
+						Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::setupShadowViewport);
 						atTranslucent = true;
 
 						return;

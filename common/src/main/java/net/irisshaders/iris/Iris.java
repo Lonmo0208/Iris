@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
+import net.irisshaders.iris.config.ShaderPackConfig;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
@@ -47,8 +48,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import com.google.gson.Gson;
 import org.lwjgl.opengl.ARBParallelShaderCompile;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.KHRParallelShaderCompile;
@@ -83,6 +86,7 @@ public class Iris {
 	 */
 	public static final String MODNAME = "Iris";
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+	public static final Gson GSON = new Gson();
 	public static final boolean IS_FOOL;
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
@@ -103,6 +107,7 @@ public class Iris {
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
 	private static KeyMapping wireframeKeybind;
+	private static KeyMapping toggleShaderPackImplementationKeybind;
 	// Flag variable used when reloading
 	// Used in favor of queueDefaultShaderPackOptionValues() for resetting as the
 	// behavior is more concrete and therefore is more likely to repair a user's issues
@@ -208,6 +213,47 @@ public class Iris {
 		} else if (wireframeKeybind.consumeClick()) {
 			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
 				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
+			}
+		} else if (toggleShaderPackImplementationKeybind.consumeClick()) {
+			try {
+				// Toggle shader pack implementation between AsyncShaderPack (V1) and DefltShaderPack (V2)
+				ShaderPackConfig config = ShaderPackConfig.get();
+				ShaderPackConfig.ShaderPackVersion newVersion = config.getShaderPackVersion() == ShaderPackConfig.ShaderPackVersion.V1 ?
+					ShaderPackConfig.ShaderPackVersion.V2 : ShaderPackConfig.ShaderPackVersion.V1;
+				config.setShaderPackVersion(newVersion);
+
+				// Close the current shader pack first to prevent access to null implementation during reload
+				if (currentPack instanceof AutoCloseable closeable) {
+					try {
+						closeable.close();
+					} catch (Exception e) {
+						logger.error("Failed to close shader pack resources during implementation toggle", e);
+					}
+				}
+				// Clear currentPack reference to avoid using old instance
+				currentPack = null;
+
+				// Reload the shader pack with the new implementation
+				Iris.reload();
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(
+						Component.translatable("iris.shaderPack.implementation.toggled",
+							Component.translatable(newVersion.getTranslationKey())),
+						false
+					);
+				}
+			} catch (Exception e) {
+				logger.error("Error while toggling shader pack implementation!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(
+						Component.translatable("iris.shaderPack.implementation.toggled.failure",
+								Throwables.getRootCause(e).getMessage())
+							.withStyle(ChatFormatting.RED),
+						false
+					);
+				}
 			}
 		}
 	}
@@ -366,7 +412,7 @@ public class Iris {
 	}
 
 	private static void handleException(Exception e) {
-		if (irisConfig.areDebugOptionsEnabled()) {
+		if (lastDimension != null && irisConfig.areDebugOptionsEnabled()) {
 			Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Minecraft.getInstance().screen, Component.literal(e instanceof ShaderCompileException ? "Failed to compile shaders" : "Exception"), e));
 		} else {
 			if (Minecraft.getInstance().player != null) {
@@ -582,6 +628,14 @@ public class Iris {
 	 * Destroys and deallocates all created OpenGL resources. Useful as part of a reload.
 	 */
 	private static void destroyEverything() {
+		// Close the current shader pack if it's an AutoCloseable
+		if (currentPack instanceof AutoCloseable closeable) {
+			try {
+				closeable.close();
+			} catch (Exception e) {
+				logger.error("Failed to close shader pack resources", e);
+			}
+		}
 		currentPack = null;
 
 		getPipelineManager().destroyPipeline();
@@ -613,18 +667,23 @@ public class Iris {
 				return dimensionId;
 			}
 
-			// Check if the dimension type of the current level has custom effects set (end sky or nether).
-			// This is minecraft:overworld by default, but can also be minecraft:the_nether or minecraft:the_end.
+			// Check if the dimension type of the current level has a custom skybox set (end sky or overworld).
+			// This is OVERWORLD by default, but can also be END or NONE.
 			// The appropriate shader for the dimension should be used by default in order to prevent buggy results.
 			// More information at https://minecraft.wiki/w/Dimension_type
 			// https://github.com/IrisShaders/Iris/issues/2200
-			Identifier effects = level.dimension().identifier();
+			DimensionType.Skybox skybox = level.dimensionType().skybox();
+			DimensionType.CardinalLightType cardinalLightType = level.dimensionType().cardinalLightType();
 
-			if (Level.END.identifier().equals(effects)) {
+			if (skybox == DimensionType.Skybox.END) {
 				return DimensionId.END;
 			}
 
-			if (Level.NETHER.identifier().equals(effects)) {
+			if (skybox == DimensionType.Skybox.OVERWORLD) {
+				return DimensionId.OVERWORLD;
+			}
+
+			if (cardinalLightType == DimensionType.CardinalLightType.NETHER) {
 				return DimensionId.NETHER;
 			}
 
@@ -764,9 +823,13 @@ public class Iris {
 	public static void loadShaderpackWhenPossible() {
 		loadShaderPackWhenPossible = true;
 	}
-
+  
 	public static String getVersionSimple() {
 		return getVersion().split("\\+")[0];
+	}
+  
+  public static Path getIrisDir() {
+		return IrisPlatformHelpers.getInstance().getConfigDir();
 	}
 
     /**
@@ -787,6 +850,7 @@ public class Iris {
 		toggleShadersKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, irisKeybindCategory));
 		shaderpackScreenKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, irisKeybindCategory));
 		wireframeKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), irisKeybindCategory));
+		toggleShaderPackImplementationKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.toggleShaderPackImplementation", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_BACKSLASH, irisKeybindCategory));
 
 		DHCompat.run();
 

@@ -294,7 +294,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
 
-		this.customUniforms = programSet.getPack().customUniforms.build(
+		this.customUniforms = programSet.getPack().getCustomUniforms().build(
 			holder -> CommonUniforms.addNonDynamicUniforms(holder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), this.updateNotifier)
 		);
 
@@ -1032,6 +1032,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	@Override
+	public void setupShadowViewport() {
+		if (shadowRenderer != null) {
+			this.shadowRenderer.setupShadowViewport();
+		}
+	}
+
+	@Override
 	public void addDebugText(DebugScreenDisplayer messages) {
 		if (this.shadowRenderer != null) {
 			shadowRenderer.addDebugText(messages);
@@ -1240,6 +1247,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		clearImages.forEach(ImageClearPass::destroy);
 		customImages.forEach(GlImage::destroy);
+		clearImages.forEach(ImageClearPass::destroy);
 
 		if (shadowRenderTargets != null) {
 			shadowRenderTargets.destroy();

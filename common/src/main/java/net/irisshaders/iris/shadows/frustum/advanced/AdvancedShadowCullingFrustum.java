@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
+import net.irisshaders.iris.shadows.frustum.SimpleFrustumAdapter;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.FrustumIntersection;
@@ -448,7 +449,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new Viewport(this, position.set(x, y, z));
+		return new Viewport(new SimpleFrustumAdapter(this), position.set(x, y, z));
 	}
 
 	private static final float SECTION_HALF_SIZE = OcclusionCuller.CHUNK_SECTION_SIZE;

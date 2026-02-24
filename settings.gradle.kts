@@ -8,4 +8,8 @@ pluginManagement {
     }
 }
 
-include("common", "fabric", "neoforge")
+include(
+"common"
+,"fabric"
+,"neoforge"
+)
