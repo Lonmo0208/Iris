@@ -77,24 +77,22 @@ public class HorizonRenderer {
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
 			buildHorizon(currentRenderDistance * 16, buffer);
-			MeshData meshData = buffer.build();
+			MeshData meshData = buffer.buildOrThrow();
 
-			if (meshData != null) {
-				VertexBuffer newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
-				newBuffer.bind();
-				newBuffer.upload(meshData);
-				VertexBuffer.unbind();
+			VertexBuffer newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+			newBuffer.bind();
+			newBuffer.upload(meshData);
+			VertexBuffer.unbind();
 
-				VertexBuffer oldFallback = fallbackBuffer;
-				fallbackBuffer = newBuffer;
-				VertexBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
+			VertexBuffer oldFallback = fallbackBuffer;
+			fallbackBuffer = newBuffer;
+			VertexBuffer oldBuffer = bufferRef.getAndSet(newBuffer);
 
-				closeBufferAsync(oldBuffer);
-				closeBufferAsync(oldFallback);
+			closeBufferAsync(oldBuffer);
+			closeBufferAsync(oldFallback);
 
-				meshData.close();
-				lastBuiltRadius = currentRenderDistance * 16;
-			}
+			meshData.close();
+			lastBuiltRadius = currentRenderDistance * 16;
 
 			tesselator.clear();
 		} catch (Exception e) {
