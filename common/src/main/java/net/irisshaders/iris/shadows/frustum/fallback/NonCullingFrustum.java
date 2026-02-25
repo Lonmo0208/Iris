@@ -2,7 +2,6 @@ package net.irisshaders.iris.shadows.frustum.fallback;
 
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
-import net.irisshaders.iris.shadows.frustum.SimpleFrustumAdapter;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
@@ -56,7 +55,7 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new Viewport(new SimpleFrustumAdapter(this), position);
+		return new Viewport(this, position);
 	}
 
 	@Override
