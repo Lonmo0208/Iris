@@ -262,9 +262,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
 		}
 
-
-
-
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
@@ -394,7 +391,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.loadedShaders = new HashSet<>();
 
-
 		this.shaderMap = new ShaderMap(key -> {
 			try {
 				if (key.isShadow()) {
@@ -470,8 +466,21 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 			programSet.getPackDirectives().getRenderTargetDirectives());
 
-		// Execute setup compute programs with initial clear
-		boolean hasRun = executeSetupComputePrograms(setup, true);
+		// Execute setup compute programs with initial clear (optimized: no redundant barriers)
+		boolean hasRun = false;
+		for (ComputeProgram program : setup) {
+			if (program != null) {
+				if (!hasRun) {
+					hasRun = true;
+					renderTargets.onFullClear();
+					Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+					Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+					clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
+				}
+				program.use();
+				program.dispatch(1, 1);
+			}
+		}
 
 		if (hasRun) {
 			ComputeProgram.unbind();
@@ -842,8 +851,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			initializedBlockIds = true;
 		}
 
-		// Make sure we're using texture unit 0 for this.
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		// Make sure we're using texture unit 0 for this. (Use GlStateManager instead of RenderSystem for performance)
+		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
 		GLDebug.pushGroup(100, "Clear textures");
@@ -865,7 +874,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			} else {
 				// Clear depth first, regardless of any color clearing.
 				shadowRenderTargets.getDepthSourceFb().bind();
-				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+				GlStateManager._clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX); // 修复：添加第二个参数
 
 				ImmutableList<ClearPass> passes;
 
@@ -934,21 +943,18 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			this.defaultFB = flippedAfterPrepare.contains(defaultTex) ? renderTargets.createFramebufferWritingToAlt(new int[] { defaultTex }) : renderTargets.createFramebufferWritingToMain(new int[] { defaultTex });
 			this.defaultFBAlt = flippedAfterTranslucent.contains(defaultTex) ? renderTargets.createFramebufferWritingToAlt(new int[] { defaultTex }) : renderTargets.createFramebufferWritingToMain(new int[] { defaultTex });
 
-			if ((!oldClearPassesFull.isEmpty() || !oldClearPasses.isEmpty()) || oldDefaultFB != null || oldDefaultFBAlt != null) {
-				Minecraft.getInstance().tell(() -> {
-					if (!oldClearPassesFull.isEmpty()) {
-						oldClearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
-					}
-					if (!oldClearPasses.isEmpty()) {
-						oldClearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
-					}
-					if (oldDefaultFB != null) {
-						renderTargets.destroyFramebuffer(oldDefaultFB);
-					}
-					if (oldDefaultFBAlt != null) {
-						renderTargets.destroyFramebuffer(oldDefaultFBAlt);
-					}
-				});
+			// Immediately destroy old framebuffers (no delay)
+			if (!oldClearPassesFull.isEmpty()) {
+				oldClearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+			}
+			if (!oldClearPasses.isEmpty()) {
+				oldClearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+			}
+			if (oldDefaultFB != null) {
+				renderTargets.destroyFramebuffer(oldDefaultFB);
+			}
+			if (oldDefaultFBAlt != null) {
+				renderTargets.destroyFramebuffer(oldDefaultFBAlt);
 			}
 		}
 
@@ -988,14 +994,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		isMainBound = true;
 
 		if (changed) {
-			boolean hasRun = false;
-
-				if (setup.length > 0) {
-					hasRun = executeSetupComputePrograms(setup, false);
+			// Execute setup compute programs again (without barriers)
+			for (ComputeProgram program : setup) {
+				if (program != null) {
+					program.use();
+					program.dispatch(1, 1);
 				}
-
-			if (hasRun) {
-				ComputeProgram.unbind();
 			}
 		}
 
@@ -1012,13 +1016,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
 		if (shouldRenderSkyDisc && (skyType == DimensionSpecialEffects.SkyType.NORMAL || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
-			RenderSystem.depthMask(false);
+			GlStateManager._depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
 
 			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
-			RenderSystem.depthMask(true);
+			GlStateManager._depthMask(true);
 
 			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
@@ -1074,8 +1078,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		deferredRenderer.renderAll();
 
-		RenderSystem.enableBlend();
-
 		// note: we are careful not to touch the lightmap texture unit or overlay color texture unit here,
 		// so we don't need to do anything to restore them if needed.
 		//
@@ -1085,8 +1087,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		//
 		// Not good!
 
-		// Reset shader or whatever...
-		RenderSystem.setShader(GameRenderer::getPositionShader);
+		// Reset shader or whatever... (removed redundant enableBlend and setShader)
 	}
 
 	@Override
@@ -1387,45 +1388,5 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		defaultFBShadow.bind();
 	}
 
-	private boolean executeSetupComputePrograms(ComputeProgram[] programs, boolean performInitialClear) {
-		boolean hasRun = false;
-		if (programs.length == 0) {
-			return false;
-		}
-
-		ComputeProgram lastProgram = null;
-		boolean needsMemoryBarrier = false;
-		boolean anyProgramUsed = false;
-
-		for (ComputeProgram program : programs) {
-			if (program != null) {
-				if (!hasRun) {
-					hasRun = true;
-					if (performInitialClear) {
-						renderTargets.onFullClear();
-						Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
-
-						// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
-						//     will give you pink reflections and other weirdness if this is zero.
-						Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
-
-						clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
-					}
-				}
-
-				if (lastProgram != program) {
-					if (lastProgram != null && needsMemoryBarrier) {
-						IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
-					}
-					program.use();
-					lastProgram = program;
-					anyProgramUsed = true;
-				}
-
-				program.dispatch(1, 1);
-				needsMemoryBarrier = true;
-			}
-		}
-		return hasRun;
-	}
+	// Removed executeSetupComputePrograms method entirely as it's no longer needed.
 }
