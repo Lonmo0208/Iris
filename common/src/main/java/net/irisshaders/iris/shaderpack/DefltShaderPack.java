@@ -431,16 +431,6 @@ public class DefltShaderPack implements AutoCloseable {
 		return overrides;
 	}
 
-	@Nullable
-	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
-											ShaderProperties shaderProperties, ShaderPack pack) {
-		if (has) {
-			return new ProgramSet(path, sourceProvider, shaderProperties, pack);
-		}
-
-		return null;
-	}
-
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
