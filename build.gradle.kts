@@ -9,8 +9,8 @@ val NEOFORGE_VERSION by extra { "21.11.5-beta" }
 val FABRIC_LOADER_VERSION by extra { "0.18.1" }
 val FABRIC_API_VERSION by extra { "0.140.2+1.21.11" }
 
-val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium/sodium-fabric-0.8.6-SNAPSHOT+mc1.21.11-local.jar")) }
-val SODIUM_DEPENDENCY_NEO by extra { files(rootDir.resolve("custom_sodium/net.caffeinemc.sodium-neoforge-0.8.6+mc1.21.11-mod.jar")) }
+val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium/sodium-fabric-0.8.6.1-SNAPSHOT+mc1.21.11-local.jar")) }
+val SODIUM_DEPENDENCY_NEO by extra { files(rootDir.resolve("custom_sodium/net.caffeinemc.sodium-neoforge-0.8.6.1+mc1.21.11-mod.jar")) }
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment
