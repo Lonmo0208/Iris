@@ -100,4 +100,6 @@ public interface WorldRenderingPipeline {
     boolean supportsEndFlash();
 
 	int getAlbedoTex();
+
+    void setupShadowViewport();
 }
