@@ -295,7 +295,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
 
-		this.customUniforms = programSet.getPack().customUniforms.build(
+		this.customUniforms = programSet.getPack().getCustomUniforms().build(
 			holder -> CommonUniforms.addNonDynamicUniforms(holder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), this.updateNotifier)
 		);
 
@@ -1031,6 +1031,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 
 		prepareRenderer.renderAll();
+	}
+
+	@Override
+	public void setupShadowViewport() {
+		if (shadowRenderer != null) {
+			this.shadowRenderer.setupShadowViewport();
+		}
 	}
 
 	@Override

@@ -27,6 +27,7 @@ public class MixinWindow {
 	@Inject(method = "setWindowHints", at = @At(value = "RETURN"))
 	private void iris$enableDebugContext(CallbackInfo ci) {
 		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
 			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_NO_ERROR, GLFW.GLFW_FALSE);
 			Iris.logger.info("OpenGL debug context activated.");

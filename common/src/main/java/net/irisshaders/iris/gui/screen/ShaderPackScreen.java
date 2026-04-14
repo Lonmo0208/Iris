@@ -35,6 +35,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -141,7 +142,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
+	public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
 		notifier.onNewFrame();
 		backgroundInit = 1.0f;
 
@@ -171,6 +172,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (!this.guiHidden) {
 			super.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+
+			if (optionMenuOpen && this.shaderOptionList != null) {
+				this.shaderOptionList.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+			} else {
+				this.shaderPackList.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+			}
 		} else {
 			this.showHideButton.extractRenderState(guiGraphics, mouseX, mouseY, delta);
 		}
@@ -250,7 +257,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		boolean inWorld = this.minecraft.level != null;
 
 		this.removeWidget(this.shaderPackList);
-		this.removeWidget(this.shaderOptionList);
+		if (this.shaderOptionList != null) {
+			this.removeWidget(this.shaderOptionList);
+		}
 
 		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 36, 0, this.width);
 
@@ -287,6 +296,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.openFolderButton = IrisButton.iris$builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder(), buttonTransition).bounds(topCenter - 78, this.height - 51, 152, 20
 			).build();
 			this.addRenderableWidget(openFolderButton);
+
+			this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("iris.shaderPackConfig.title"),
+					button -> this.minecraft.setScreen(new ShaderPackConfigScreen(this)), buttonTransition)
+				.bounds(bottomCenter + 208, this.height - 27, 100, 20)
+				.build());
 
 			this.screenSwitchButton = this.addRenderableWidget(IrisButton.iris$builder(Component.translatable("options.iris.shaderPackList"), button -> {
 					this.optionMenuOpen = !this.optionMenuOpen;
@@ -435,7 +449,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
-	public void onFilesDrop(List<Path> paths) {
+	public void onFilesDrop(@NotNull List<Path> paths) {
 		if (this.optionMenuOpen) {
 			onOptionMenuFilesDrop(paths);
 		} else {

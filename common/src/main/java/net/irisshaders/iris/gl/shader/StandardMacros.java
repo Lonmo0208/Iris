@@ -128,18 +128,21 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = Iris.getReleaseTarget();
-		if (version == null) {
-			throw new IllegalStateException("Could not get the current Minecraft version!");
-		}
-		String formattedVersion = formatVersionString(version);
-		if (formattedVersion == null) {
-			throw new IllegalStateException("Could not parse game version \"" + version + "\"");
-		} else {
-			return formattedVersion;
-		}
+		return "26101";
 	}
 
+	//public static String getMcVersion() {
+		//String version = Iris.getReleaseTarget();
+		//if (version == null) {
+			//throw new IllegalStateException("Could not get the current Minecraft version!");
+		//}
+		//String formattedVersion = formatVersionString(version);
+		//if (formattedVersion == null) {
+			//throw new IllegalStateException("Could not parse game version \"" + version + "\"");
+		//} else {
+			//return formattedVersion;
+		//}
+	//}
 
 	/**
 	 * Gets the current Iris version String in a 5 digit format
