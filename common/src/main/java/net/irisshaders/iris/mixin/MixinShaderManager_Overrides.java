@@ -55,6 +55,15 @@ public abstract class MixinShaderManager_Overrides {
 		if (renderPipeline == CompositeRenderer.COMPOSITE_PIPELINE) return;
 		if (renderPipeline == RenderPipelines.ANIMATE_SPRITE_BLIT || renderPipeline == RenderPipelines.ANIMATE_SPRITE_INTERPOLATE) return;
 
+		String location = renderPipeline.getLocation().toString();
+		if (location.contains("entity_outline") || 
+		    location.contains("pipeline/outline") || 
+		    location.contains("blur/") || 
+		    location.contains("pipeline/panorama") ||
+		    location.contains("pipeline/gui")) {
+			return;
+		}
+
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof IrisRenderingPipeline irisPipeline && irisPipeline.shouldOverrideShaders() && !ImmediateState.bypass) {

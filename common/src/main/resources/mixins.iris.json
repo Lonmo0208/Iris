@@ -106,6 +106,7 @@
     "shadows.MixinBeaconRenderer",
     "shadows.MixinLevelRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
+    "shadows.MixinFeatureRenderDispatcher",
     "sky.MixinClientLevelData_DisableVoidPlane",
     "sky.MixinDimensionSpecialEffects",
     "sky.MixinOptions_CloudsOverride",
