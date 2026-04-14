@@ -1,5 +1,4 @@
-# custom sodium versions
-custom_sodium/
+
 
 # gradle
 
@@ -11,9 +10,6 @@ classes/
 # brachyura
 .brachyura
 *.jfr
-
-# custom sodium
-/custom_sodium/
 
 # idea
 
