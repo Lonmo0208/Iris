@@ -41,7 +41,7 @@ public class MixinSodiumWorldRenderer {
 
 	@Redirect(method = "setupTerrain", remap = false,
 		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 0,
+			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z",
 			remap = false))
 	private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
@@ -53,19 +53,6 @@ public class MixinSodiumWorldRenderer {
 		}
 
 		return instance.needsUpdate();
-	}
-
-	@Redirect(method = "setupTerrain", remap = false,
-		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 1,
-			remap = false))
-	private boolean iris$forceEndGraphRebuild(RenderSectionManager instance) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			// TODO: Detect when the sun/moon isn't moving
-			return false;
-		} else {
-			return instance.needsUpdate();
-		}
 	}
 
 	@Inject(method = "isEntityVisible", at = @At("HEAD"), cancellable = true)

@@ -10,7 +10,7 @@ val FABRIC_LOADER_VERSION by extra { "0.18.6" }
 val FABRIC_API_VERSION by extra { "0.145.2+26w14a" }
 
 
-val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.8.9-SNAPSHOT+mc26.1.1-local.jar")) }
+val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.8.10-SNAPSHOT+mc26w14a-local.jar")) }
 val SODIUM_DEPENDENCY_NEO by extra { files(rootDir.resolve("custom_sodium").resolve("net.caffeinemc.sodium-neoforge-0.8.9-SNAPSHOT+mc26.1.1-local-mod.jar")) }
 
 
