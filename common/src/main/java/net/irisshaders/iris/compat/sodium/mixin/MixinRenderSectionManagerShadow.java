@@ -105,6 +105,11 @@ public abstract class MixinRenderSectionManagerShadow {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowRenderLists : renderLists;
 	}
 
+	@Redirect(method = "submitDeferredSectionTasks", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;taskLists:Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/DeferredTaskList;"), remap = false)
+	private DeferredTaskList useShadowTaskList2(RenderSectionManager instance) {
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowTaskLists : taskLists;
+	}
+
 	@Inject(method = "updateChunks", at = @At("HEAD"), cancellable = true, remap = false)
 	private void doNotUpdateDuringShadow(Viewport viewport, boolean updateImmediately, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) ci.cancel();
@@ -119,8 +124,12 @@ public abstract class MixinRenderSectionManagerShadow {
 		"readRenderListFromTree",
 		"renderOutOfGraph"
 	}, at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;taskLists:Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/DeferredTaskList;"), remap = false)
-	private DeferredTaskList useShadowTaskList3(RenderSectionManager instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowTaskLists : taskLists;
+	private void useShadowTaskList3(RenderSectionManager instance, DeferredTaskList value) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			shadowTaskLists = value;
+		} else {
+			taskLists = value;
+		}
 	}
 
 	@Redirect(method = {
